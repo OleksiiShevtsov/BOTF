@@ -1,6 +1,8 @@
 #pragma once
 
 #include "app/input_handler.h"
+#include "app/map_draw.h"
+#include "app/object_draw.h"
 #include "app/player.h"
 #include "app/types.h"
 
@@ -11,6 +13,7 @@
 
 namespace botf::app {
 
+// Window + input + draw orchestration (MapDraw → ObjectDraw).
 class AppRendering {
 public:
 	AppRendering();
@@ -28,16 +31,16 @@ public:
 	void setSceneObject(common::ID id, common::Point position, common::Angle angle);
 	void setScene(std::vector<SceneObject> objects);
 
+	void setMapId(common::ID mapId);
+
 	[[nodiscard]] bool isWindowOpen() const;
 	void draw();
 
 private:
-	void drawMap();
-	void drawSceneObjects();
-
 	Player m_player{};
 	InputHandler m_inputHandler{};
-	std::vector<SceneObject> m_scene;
+	MapDraw m_mapDraw{};
+	ObjectDraw m_objectDraw{};
 	std::shared_ptr<sf::RenderWindow> m_window;
 };
 
