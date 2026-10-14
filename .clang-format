@@ -1,0 +1,45 @@
+# BattleOfTheFlatland — tab indentation (width 4), Attach braces.
+# Visual Studio: enables Format Document with ClangFormat when this file is present.
+#
+# Naming (not enforced by clang-format — see docs/STYLE.md):
+#   functions / locals / params  → camelCase  (sceneFromWorldState)
+#   members                      → m_ + camelCase  (m_latestWorld)
+#   types                        → PascalCase
+#   constants                    → k + PascalCase
+# Keep STL / language / protobuf identifiers in their native snake_case.
+BasedOnStyle: Google
+Language: Cpp
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+ColumnLimit: 100
+
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 4
+PackConstructorInitializers: NextLine
+
+IncludeBlocks: Preserve
+SortIncludes: CaseSensitive
+
+# Keep [[nodiscard]] / attributes readable.
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: true
+BinPackParameters: false
+
+PenaltyBreakAssignment: 2
+PenaltyReturnTypeOnItsOwnLine: 1000

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package botf;
+
+// Movement *state* for one client tick (not a one-shot key event).
+// Client should send this every tick, including idle (dx=0, dy=0).
+//
+// Axes are clamped to {-1, 0, 1} on the server:
+//   dx: -1 = left,  0 = none, +1 = right
+//   dy: -1 = down,  0 = none, +1 = up
+// Diagonals are allowed, e.g. dx=+1, dy=+1 → up-right.
+message Move {
+  int32 dx = 1;
+  int32 dy = 2;
+  uint32 tick = 3;
+}

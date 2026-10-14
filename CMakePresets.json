@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "binaryDir": "$env{CMAKE_BUILDS_ROOT}/${sourceDirName}/debug"
+    },
+    {
+      "name": "release",
+      "binaryDir": "$env{CMAKE_BUILDS_ROOT}/${sourceDirName}/release"
+    }
+  ]
+}

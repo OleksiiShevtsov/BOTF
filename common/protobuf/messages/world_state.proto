@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package botf;
+
+message Vec2 {
+  float x = 1;
+  float y = 2;
+}
+
+message PlayerState {
+  uint32 id = 1;
+  Vec2 position = 2;
+  Vec2 velocity = 3;
+  float aim_angle = 4;
+  int32 hp = 5;
+}
+
+message ProjectileState {
+  uint32 id = 1;
+  uint32 owner_id = 2;
+  Vec2 position = 3;
+  Vec2 velocity = 4;
+}
+
+// Server → client authoritative snapshot.
+message WorldState {
+  uint32 tick = 1;
+  repeated PlayerState players = 2;
+  repeated ProjectileState projectiles = 3;
+}

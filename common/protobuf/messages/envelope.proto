@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package botf;
+
+// Wire envelope: SFML TCP sends [uint32 le length][serialized Envelope].
+// `payload` holds a serialized message matching `type`.
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_HELLO = 1;
+  MESSAGE_TYPE_CLIENT_INPUT = 2;
+  MESSAGE_TYPE_WORLD_STATE = 3;
+  MESSAGE_TYPE_MOVE = 4;
+}
+
+message Envelope {
+  MessageType type = 1;
+  uint64 sequence = 2;
+  bytes payload = 3;
+}
+
+message Hello {
+  string player_name = 1;
+}
