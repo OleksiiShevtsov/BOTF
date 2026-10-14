@@ -1,16 +1,16 @@
-#include "app/map_draw.h"
+#include "app/game_map.h"
 
 #include "common/global_settings.hpp"
 
-void botf::app::MapDraw::setMapId(common::ID mapId) {
+void botf::app::GameMap::setMapId(common::ID mapId) {
 	m_mapId = mapId;
 }
 
-botf::common::ID botf::app::MapDraw::mapId() const {
+botf::common::ID botf::app::GameMap::mapId() const {
 	return m_mapId;
 }
 
-void botf::app::MapDraw::draw(sf::RenderTarget& target) const {
+void botf::app::GameMap::draw(sf::RenderTarget& target) const {
 	// MVP: one default arena. mapId reserved for alternate visuals later.
 	(void)m_mapId;
 

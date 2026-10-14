@@ -6,8 +6,8 @@
 
 namespace botf::app {
 
-// Client-side map / arena layer. Visual only — no collision logic.
-class MapDraw {
+// Client arena / map layer. Not an IViewObject — different role from movers.
+class GameMap {
 public:
 	void setMapId(common::ID mapId);
 	[[nodiscard]] common::ID mapId() const;

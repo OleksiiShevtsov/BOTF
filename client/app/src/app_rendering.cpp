@@ -33,22 +33,12 @@ const botf::app::InputHandler& botf::app::AppRendering::inputHandler() const {
 	return m_inputHandler;
 }
 
-void botf::app::AppRendering::clearScene() {
-	m_objectDraw.clear();
+botf::app::Match& botf::app::AppRendering::match() {
+	return m_match;
 }
 
-void botf::app::AppRendering::setSceneObject(common::ID id,
-											 common::Point position,
-											 common::Angle angle) {
-	m_objectDraw.setObject(id, position, angle);
-}
-
-void botf::app::AppRendering::setScene(std::vector<SceneObject> objects) {
-	m_objectDraw.setObjects(std::move(objects));
-}
-
-void botf::app::AppRendering::setMapId(common::ID mapId) {
-	m_mapDraw.setMapId(mapId);
+const botf::app::Match& botf::app::AppRendering::match() const {
+	return m_match;
 }
 
 bool botf::app::AppRendering::isWindowOpen() const {
@@ -76,10 +66,6 @@ void botf::app::AppRendering::draw() {
 #endif
 
 	m_window->clear(sf::Color(25, 25, 25));
-	m_mapDraw.draw(*m_window);
-	m_objectDraw.draw(*m_window);
+	m_match.draw(*m_window);
 	m_window->display();
-
-	// Fresh scene each frame; caller fills from WorldState before draw().
-	m_objectDraw.clear();
 }
