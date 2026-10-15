@@ -17,41 +17,28 @@ botf::app::AppRendering::AppRendering()
 	m_window->setFramerateLimit(60);
 }
 
-botf::app::Player& botf::app::AppRendering::player() {
+botf::app::Player& botf::app::AppRendering::getPlayer() {
 	return m_player;
 }
 
-const botf::app::Player& botf::app::AppRendering::player() const {
+const botf::app::Player& botf::app::AppRendering::getPlayer() const {
 	return m_player;
 }
 
-botf::app::InputHandler& botf::app::AppRendering::inputHandler() {
+botf::app::InputHandler& botf::app::AppRendering::getInputHandler() {
 	return m_inputHandler;
 }
 
-const botf::app::InputHandler& botf::app::AppRendering::inputHandler() const {
+const botf::app::InputHandler& botf::app::AppRendering::getInputHandler() const {
 	return m_inputHandler;
 }
 
-void botf::app::AppRendering::clearScene() {
-	m_scene.clear();
+botf::app::Match& botf::app::AppRendering::getMatch() {
+	return m_match;
 }
 
-void botf::app::AppRendering::setSceneObject(common::ID id,
-											 common::Point position,
-											 common::Angle angle) {
-	for (auto& obj : m_scene) {
-		if (obj.id == id) {
-			obj.position = position;
-			obj.angle = angle;
-			return;
-		}
-	}
-	m_scene.push_back(SceneObject{id, position, angle});
-}
-
-void botf::app::AppRendering::setScene(std::vector<SceneObject> objects) {
-	m_scene = std::move(objects);
+const botf::app::Match& botf::app::AppRendering::getMatch() const {
+	return m_match;
 }
 
 bool botf::app::AppRendering::isWindowOpen() const {
@@ -79,29 +66,6 @@ void botf::app::AppRendering::draw() {
 #endif
 
 	m_window->clear(sf::Color(25, 25, 25));
-	drawMap();
-	drawSceneObjects();
+	m_match.draw(*m_window);
 	m_window->display();
-
-	// Fresh scene each frame; caller fills from WorldState before draw().
-	m_scene.clear();
-}
-
-void botf::app::AppRendering::drawMap() {
-	// Map rendering later.
-}
-
-void botf::app::AppRendering::drawSceneObjects() {
-	for (const auto& el : m_scene) {
-		sf::CircleShape circle(10.f);
-		circle.setFillColor(sf::Color(120, 20, 20));
-#if SFML_VERSION_MAJOR >= 3
-		circle.setOrigin({10.f, 10.f});
-		circle.setPosition({el.position.x, el.position.y});
-#else
-		circle.setOrigin(10.f, 10.f);
-		circle.setPosition(el.position.x, el.position.y);
-#endif
-		m_window->draw(circle);
-	}
 }

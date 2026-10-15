@@ -7,6 +7,7 @@
 | Члены класса | `m_` + camelCase | `m_position`, `m_latestWorld` |
 | Локальные / параметры | camelCase без префикса | `clientId`, `tickStart` |
 | Свободные функции / методы | camelCase | `sceneFromWorldState`, `buildWorldState` |
+| Геттеры (client/app) | `get` + PascalCase | `getId`, `getMap`, `getPosition` |
 | Константы | `k` + PascalCase | `kTickHz`, `kPort` |
 | Типы / классы | PascalCase | `GameLogic`, `TcpServer` |
 | Namespaces | `botf::…` | `botf::net`, `botf::logic`, `botf::app` |

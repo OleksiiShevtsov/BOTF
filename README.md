@@ -131,7 +131,7 @@ BOTF/
 │   ├── engine/          # ServerEngine (tick loop)
 │   └── logic/           # GameLogic / DynamicObject (no *.pb.h)
 ├── client/
-│   └── app/             # ClientApp + scene (no *.pb.h)
+│   └── app/             # ClientApp, AppRendering, Match (GameMap + Scene/IViewObject) (no *.pb.h)
 └── tests/               # gtest: helpers + smoke (свой main.cpp)
 ```
 

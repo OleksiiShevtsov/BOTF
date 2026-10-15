@@ -6,13 +6,10 @@
 
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 namespace botf::app {
 
-[[nodiscard]] std::vector<SceneObject> sceneFromSnapshot(const common::WorldSnapshot& snapshot);
-
-// Client runtime: window + input + TcpClient + WorldSnapshot → scene.
+// Client runtime: window + input + TcpClient + WorldSnapshot → Match.
 class ClientApp {
 public:
 	ClientApp();

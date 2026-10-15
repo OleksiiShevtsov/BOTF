@@ -1,15 +1,8 @@
 #pragma once
 
-#include "common/types.hpp"
+#include <cstdint>
 
 namespace botf::app {
-
-// Client-side view model for drawing (not server logic::DynamicObject).
-struct SceneObject {
-	common::ID id{};
-	common::Point position{};
-	common::Angle angle{};
-};
 
 struct MoveInput {
 	int8_t dx{};
