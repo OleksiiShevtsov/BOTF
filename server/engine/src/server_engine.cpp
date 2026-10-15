@@ -139,6 +139,8 @@ int botf::ServerEngine::runLoop() {
 	botf::log::info("[server] running on port {} at {} Hz (Ctrl+C to stop)", port(), kTickHz);
 
 	m_running = true;
+	auto lastOverrunLog = std::chrono::steady_clock::time_point{};
+
 	while (m_running) {
 		const auto tickStart = std::chrono::steady_clock::now();
 
@@ -148,7 +150,16 @@ int botf::ServerEngine::runLoop() {
 		pollNetwork();
 
 		const auto elapsed = std::chrono::steady_clock::now() - tickStart;
-		if (elapsed < kTickPeriod) {
+		if (elapsed > kTickPeriod) {
+			constexpr auto kOverrunLogCooldown = std::chrono::seconds(1);
+			if (tickStart - lastOverrunLog >= kOverrunLogCooldown) {
+				const auto ms =
+					std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+				botf::log::warn("[server] tick overrun: {} ms (budget {} ms)", ms,
+								kTickPeriod.count());
+				lastOverrunLog = tickStart;
+			}
+		} else {
 			std::this_thread::sleep_for(kTickPeriod - elapsed);
 		}
 	}
