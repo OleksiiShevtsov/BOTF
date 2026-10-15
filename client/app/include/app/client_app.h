@@ -2,6 +2,7 @@
 
 #include "app/app_rendering.h"
 #include "common/dto.hpp"
+#include "common/types.hpp"
 #include "net/tcp_client.hpp"
 
 #include <cstdint>
@@ -21,6 +22,7 @@ public:
 	int run(std::uint16_t port = 54545);
 
 private:
+	void sendHello();
 	void applyInbound();
 	void maybeSendMove(const MoveInput& input, std::uint32_t tick);
 
@@ -32,6 +34,8 @@ private:
 	std::uint64_t m_sequence = 1;
 	MoveInput m_lastSent{};
 	bool m_forceSend = true;
+	bool m_helloSent = false;
+	std::optional<common::ObjectID> m_selfId;
 	std::optional<common::WorldSnapshot> m_latestWorld;
 };
 

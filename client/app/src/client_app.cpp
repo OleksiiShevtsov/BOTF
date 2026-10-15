@@ -9,6 +9,20 @@
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
 
+void botf::app::ClientApp::sendHello() {
+	if (!m_net.isConnected() || m_helloSent) {
+		return;
+	}
+
+	m_outbound.push(net::OutboundNotification{
+		std::nullopt,
+		protocol::encodeHello(common::HelloMessage{}, m_sequence),
+	});
+	++m_sequence;
+	m_helloSent = true;
+	botf::log::info("[client] Hello sent");
+}
+
 void botf::app::ClientApp::applyInbound() {
 	while (auto note = m_inbound.tryPop()) {
 		auto decoded = protocol::decode(note->payload);
@@ -17,16 +31,25 @@ void botf::app::ClientApp::applyInbound() {
 			continue;
 		}
 
-		const auto* world = std::get_if<protocol::DecodedWorldState>(&*decoded);
-		if (!world) {
+		if (const auto* hello = std::get_if<protocol::DecodedHello>(&*decoded)) {
+			if (hello->hello.objectId == 0) {
+				botf::log::warn("[client] Hello ack without object_id");
+				continue;
+			}
+			m_selfId = hello->hello.objectId;
+			m_rendering.getPlayer().setId(*m_selfId);
+			botf::log::info("[client] bound to entity {}", *m_selfId);
 			continue;
 		}
-		m_latestWorld = world->snapshot;
+
+		if (const auto* world = std::get_if<protocol::DecodedWorldState>(&*decoded)) {
+			m_latestWorld = world->snapshot;
+		}
 	}
 }
 
 void botf::app::ClientApp::maybeSendMove(const MoveInput& input, std::uint32_t tick) {
-	if (!m_net.isConnected()) {
+	if (!m_net.isConnected() || !m_selfId.has_value()) {
 		return;
 	}
 	if (!(m_forceSend || input.dx != m_lastSent.dx || input.dy != m_lastSent.dy ||
@@ -55,6 +78,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 						port);
 	} else {
 		botf::log::info("[client] connected to server");
+		sendHello();
 	}
 
 	std::uint32_t tick = 1;
@@ -67,6 +91,8 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 			m_net.poll();
 			if (!m_net.isConnected()) {
 				botf::log::warn("[client] disconnected from server");
+				m_helloSent = false;
+				m_selfId.reset();
 			}
 		}
 

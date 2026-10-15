@@ -17,7 +17,12 @@ struct DecodedWorldState {
 	std::uint64_t sequence{};
 };
 
-// Extensible: add Hello / Input here without touching net framing.
-using DecodedMessage = std::variant<DecodedMove, DecodedWorldState>;
+struct DecodedHello {
+	common::HelloMessage hello{};
+	std::uint64_t sequence{};
+};
+
+// Extensible: add Input here without touching net framing.
+using DecodedMessage = std::variant<DecodedMove, DecodedWorldState, DecodedHello>;
 
 }  // namespace botf::protocol

@@ -3,6 +3,7 @@
 #include "common/types.hpp"
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace botf::common {
@@ -12,6 +13,12 @@ struct MoveCommand {
 	int dx{};
 	int dy{};
 	std::uint32_t tick{};
+};
+
+// Hello / Hello-ack (login-role). objectId == 0 on client request.
+struct HelloMessage {
+	std::string playerName;
+	ObjectID objectId{};
 };
 
 // Pose of a controllable actor in a world snapshot.

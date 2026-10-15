@@ -23,6 +23,9 @@ public:
 	// Bind a network client to a logic entity (one entity per client).
 	void bindClient(common::ClientID clientId, common::ObjectID entityId);
 
+	// Drop session → entity mapping (entity stays until destroy path exists).
+	void unbindClient(common::ClientID clientId);
+
 	// Apply Move-state input for a network client (no-op if unbound).
 	void setClientInput(common::ClientID clientId, int dx, int dy);
 
