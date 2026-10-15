@@ -15,7 +15,7 @@ message PlayerState {
   int32 hp = 5;
 }
 
-message ProjectileState {
+message BulletState {
   uint32 id = 1;
   uint32 owner_id = 2;
   Vec2 position = 3;
@@ -26,5 +26,5 @@ message ProjectileState {
 message WorldState {
   uint32 tick = 1;
   repeated PlayerState players = 2;
-  repeated ProjectileState projectiles = 3;
+  repeated BulletState bullets = 3;
 }

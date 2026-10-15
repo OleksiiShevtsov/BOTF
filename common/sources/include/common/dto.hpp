@@ -21,8 +21,8 @@ struct PlayerPose {
 	Angle angle{};
 };
 
-// Reserved for future projectiles (mapped from proto when present).
-struct ProjectilePose {
+// Reserved for future bullets (mapped from proto when present).
+struct BulletPose {
 	ID id{};
 	ID ownerId{};
 	Point position{};
@@ -33,7 +33,7 @@ struct ProjectilePose {
 struct WorldSnapshot {
 	std::uint32_t tick{};
 	std::vector<PlayerPose> players;
-	std::vector<ProjectilePose> projectiles;
+	std::vector<BulletPose> bullets;
 };
 
 }  // namespace botf::common

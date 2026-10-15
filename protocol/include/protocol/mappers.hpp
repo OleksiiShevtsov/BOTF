@@ -29,14 +29,14 @@ namespace botf::protocol {
 		position->set_y(pose.position.y);
 		player->set_aim_angle(pose.angle);
 	}
-	for (const auto& pose : snapshot.projectiles) {
-		ProjectileState* projectile = state.add_projectiles();
-		projectile->set_id(pose.id);
-		projectile->set_owner_id(pose.ownerId);
-		auto* position = projectile->mutable_position();
+	for (const auto& pose : snapshot.bullets) {
+		BulletState* bullet = state.add_bullets();
+		bullet->set_id(pose.id);
+		bullet->set_owner_id(pose.ownerId);
+		auto* position = bullet->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
-		auto* velocity = projectile->mutable_velocity();
+		auto* velocity = bullet->mutable_velocity();
 		velocity->set_x(pose.velocity.x);
 		velocity->set_y(pose.velocity.y);
 	}
@@ -54,13 +54,13 @@ namespace botf::protocol {
 			player.aim_angle(),
 		});
 	}
-	snapshot.projectiles.reserve(static_cast<std::size_t>(state.projectiles_size()));
-	for (const auto& projectile : state.projectiles()) {
-		snapshot.projectiles.push_back(common::ProjectilePose{
-			projectile.id(),
-			projectile.owner_id(),
-			common::Point{projectile.position().x(), projectile.position().y()},
-			common::Point{projectile.velocity().x(), projectile.velocity().y()},
+	snapshot.bullets.reserve(static_cast<std::size_t>(state.bullets_size()));
+	for (const auto& bullet : state.bullets()) {
+		snapshot.bullets.push_back(common::BulletPose{
+			bullet.id(),
+			bullet.owner_id(),
+			common::Point{bullet.position().x(), bullet.position().y()},
+			common::Point{bullet.velocity().x(), bullet.velocity().y()},
 		});
 	}
 	return snapshot;
