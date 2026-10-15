@@ -1,6 +1,6 @@
 #include "app/scene.h"
 
-#include "app/player_view.h"
+#include "app/figure_view.h"
 
 #include <algorithm>
 #include <unordered_set>
@@ -21,14 +21,15 @@ void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot)
 			continue;
 		}
 
-		auto view = std::make_unique<PlayerView>(pose.id);
+		auto view = std::make_unique<FigureView>(pose.id);
 		view->setPose(pose.position, pose.angle);
 		m_objects.push_back(std::move(view));
 	}
 
-	m_objects.erase(std::remove_if(m_objects.begin(), m_objects.end(),
+	m_objects.erase(std::remove_if(m_objects.begin(),
+								   m_objects.end(),
 								   [&seen](const std::unique_ptr<IViewObject>& obj) {
-									   return !seen.contains(obj->id());
+									   return !seen.contains(obj->getId());
 								   }),
 					m_objects.end());
 }
@@ -39,7 +40,7 @@ std::size_t botf::app::Scene::size() const {
 
 botf::app::IViewObject* botf::app::Scene::find(common::ID id) {
 	for (auto& obj : m_objects) {
-		if (obj && obj->id() == id) {
+		if (obj && obj->getId() == id) {
 			return obj.get();
 		}
 	}
@@ -48,7 +49,7 @@ botf::app::IViewObject* botf::app::Scene::find(common::ID id) {
 
 const botf::app::IViewObject* botf::app::Scene::find(common::ID id) const {
 	for (const auto& obj : m_objects) {
-		if (obj && obj->id() == id) {
+		if (obj && obj->getId() == id) {
 			return obj.get();
 		}
 	}

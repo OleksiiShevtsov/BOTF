@@ -40,28 +40,28 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 
 	botf::app::Match match;
 	match.applyWorldSnapshot(world->snapshot);
-	ASSERT_EQ(match.scene().size(), 1u);
+	ASSERT_EQ(match.getScene().size(), 1u);
 
-	const botf::app::IViewObject* view = match.scene().find(7);
+	const botf::app::IViewObject* view = match.getScene().find(7);
 	ASSERT_NE(view, nullptr);
-	EXPECT_EQ(view->id(), 7u);
-	EXPECT_FLOAT_EQ(view->position().x, 100.f);
-	EXPECT_FLOAT_EQ(view->position().y, 300.f);
-	EXPECT_FLOAT_EQ(view->angle(), 1.25f);
+	EXPECT_EQ(view->getId(), 7u);
+	EXPECT_FLOAT_EQ(view->getPosition().x, 100.f);
+	EXPECT_FLOAT_EQ(view->getPosition().y, 300.f);
+	EXPECT_FLOAT_EQ(view->getAngle(), 1.25f);
 
 	// Upsert keeps the same object and updates pose.
 	botf::common::WorldSnapshot next = world->snapshot;
 	next.players[0].position = botf::common::Point{110.f, 310.f};
 	match.applyWorldSnapshot(next);
-	ASSERT_EQ(match.scene().size(), 1u);
-	view = match.scene().find(7);
+	ASSERT_EQ(match.getScene().size(), 1u);
+	view = match.getScene().find(7);
 	ASSERT_NE(view, nullptr);
-	EXPECT_FLOAT_EQ(view->position().x, 110.f);
-	EXPECT_FLOAT_EQ(view->position().y, 310.f);
+	EXPECT_FLOAT_EQ(view->getPosition().x, 110.f);
+	EXPECT_FLOAT_EQ(view->getPosition().y, 310.f);
 
 	botf::app::Player localPlayer;
 	localPlayer.setId(1);
-	EXPECT_EQ(localPlayer.id(), 1u);
+	EXPECT_EQ(localPlayer.getId(), 1u);
 
 	EXPECT_EQ(world->snapshot.tick, 42u);
 	EXPECT_FALSE(framed.empty());

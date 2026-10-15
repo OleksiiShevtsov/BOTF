@@ -10,7 +10,7 @@ namespace botf::app {
 class GameMap {
 public:
 	void setMapId(common::ID mapId);
-	[[nodiscard]] common::ID mapId() const;
+	[[nodiscard]] common::ID getId() const;
 
 	void draw(sf::RenderTarget& target) const;
 

@@ -4,7 +4,7 @@ botf::app::Player::Player() : m_id{0} {}
 
 botf::app::Player::Player(common::ID id) : m_id{id} {}
 
-botf::common::ID botf::app::Player::id() const {
+botf::common::ID botf::app::Player::getId() const {
 	return m_id;
 }
 

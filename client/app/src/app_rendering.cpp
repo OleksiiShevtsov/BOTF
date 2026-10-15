@@ -17,27 +17,27 @@ botf::app::AppRendering::AppRendering()
 	m_window->setFramerateLimit(60);
 }
 
-botf::app::Player& botf::app::AppRendering::player() {
+botf::app::Player& botf::app::AppRendering::getPlayer() {
 	return m_player;
 }
 
-const botf::app::Player& botf::app::AppRendering::player() const {
+const botf::app::Player& botf::app::AppRendering::getPlayer() const {
 	return m_player;
 }
 
-botf::app::InputHandler& botf::app::AppRendering::inputHandler() {
+botf::app::InputHandler& botf::app::AppRendering::getInputHandler() {
 	return m_inputHandler;
 }
 
-const botf::app::InputHandler& botf::app::AppRendering::inputHandler() const {
+const botf::app::InputHandler& botf::app::AppRendering::getInputHandler() const {
 	return m_inputHandler;
 }
 
-botf::app::Match& botf::app::AppRendering::match() {
+botf::app::Match& botf::app::AppRendering::getMatch() {
 	return m_match;
 }
 
-const botf::app::Match& botf::app::AppRendering::match() const {
+const botf::app::Match& botf::app::AppRendering::getMatch() const {
 	return m_match;
 }
 

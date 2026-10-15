@@ -18,10 +18,10 @@ public:
 	void applyWorldSnapshot(const common::WorldSnapshot& snapshot);
 	void draw(sf::RenderTarget& target) const;
 
-	[[nodiscard]] GameMap& map();
-	[[nodiscard]] const GameMap& map() const;
-	[[nodiscard]] Scene& scene();
-	[[nodiscard]] const Scene& scene() const;
+	[[nodiscard]] GameMap& getMap();
+	[[nodiscard]] const GameMap& getMap() const;
+	[[nodiscard]] Scene& getScene();
+	[[nodiscard]] const Scene& getScene() const;
 
 private:
 	GameMap m_map{};

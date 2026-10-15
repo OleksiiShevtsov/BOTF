@@ -25,18 +25,18 @@ void botf::app::Match::draw(sf::RenderTarget& target) const {
 	m_scene.draw(target);
 }
 
-botf::app::GameMap& botf::app::Match::map() {
+botf::app::GameMap& botf::app::Match::getMap() {
 	return m_map;
 }
 
-const botf::app::GameMap& botf::app::Match::map() const {
+const botf::app::GameMap& botf::app::Match::getMap() const {
 	return m_map;
 }
 
-botf::app::Scene& botf::app::Match::scene() {
+botf::app::Scene& botf::app::Match::getScene() {
 	return m_scene;
 }
 
-const botf::app::Scene& botf::app::Match::scene() const {
+const botf::app::Scene& botf::app::Match::getScene() const {
 	return m_scene;
 }

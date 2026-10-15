@@ -4,15 +4,15 @@
 
 namespace botf::app {
 
-// Visual + pose for one player from WorldSnapshot.
+// Visual + pose for one moving figure from WorldSnapshot.
 // Not the local input Player (app/player.h).
-class PlayerView : public IViewObject {
+class FigureView : public IViewObject {
 public:
-	explicit PlayerView(common::ID id);
+	explicit FigureView(common::ID id);
 
-	[[nodiscard]] common::ID id() const override;
-	[[nodiscard]] common::Point position() const override;
-	[[nodiscard]] common::Angle angle() const override;
+	[[nodiscard]] common::ID getId() const override;
+	[[nodiscard]] common::Point getPosition() const override;
+	[[nodiscard]] common::Angle getAngle() const override;
 
 	void setPose(common::Point position, common::Angle angle) override;
 	void draw(sf::RenderTarget& target) const override;

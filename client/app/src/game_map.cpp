@@ -6,7 +6,7 @@ void botf::app::GameMap::setMapId(common::ID mapId) {
 	m_mapId = mapId;
 }
 
-botf::common::ID botf::app::GameMap::mapId() const {
+botf::common::ID botf::app::GameMap::getId() const {
 	return m_mapId;
 }
 

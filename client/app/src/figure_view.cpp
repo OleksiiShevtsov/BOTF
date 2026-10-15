@@ -1,25 +1,25 @@
-#include "app/player_view.h"
+#include "app/figure_view.h"
 
-botf::app::PlayerView::PlayerView(common::ID id) : m_id(id) {}
+botf::app::FigureView::FigureView(common::ID id) : m_id(id) {}
 
-botf::common::ID botf::app::PlayerView::id() const {
+botf::common::ID botf::app::FigureView::getId() const {
 	return m_id;
 }
 
-botf::common::Point botf::app::PlayerView::position() const {
+botf::common::Point botf::app::FigureView::getPosition() const {
 	return m_position;
 }
 
-botf::common::Angle botf::app::PlayerView::angle() const {
+botf::common::Angle botf::app::FigureView::getAngle() const {
 	return m_angle;
 }
 
-void botf::app::PlayerView::setPose(common::Point position, common::Angle angle) {
+void botf::app::FigureView::setPose(common::Point position, common::Angle angle) {
 	m_position = position;
 	m_angle = angle;
 }
 
-void botf::app::PlayerView::draw(sf::RenderTarget& target) const {
+void botf::app::FigureView::draw(sf::RenderTarget& target) const {
 	sf::CircleShape circle(10.f);
 	circle.setFillColor(sf::Color(120, 20, 20));
 #if SFML_VERSION_MAJOR >= 3

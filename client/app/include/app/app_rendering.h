@@ -18,12 +18,12 @@ public:
 	AppRendering(const AppRendering&) = delete;
 	AppRendering(AppRendering&&) = delete;
 
-	[[nodiscard]] Player& player();
-	[[nodiscard]] const Player& player() const;
-	[[nodiscard]] InputHandler& inputHandler();
-	[[nodiscard]] const InputHandler& inputHandler() const;
-	[[nodiscard]] Match& match();
-	[[nodiscard]] const Match& match() const;
+	[[nodiscard]] Player& getPlayer();
+	[[nodiscard]] const Player& getPlayer() const;
+	[[nodiscard]] InputHandler& getInputHandler();
+	[[nodiscard]] const InputHandler& getInputHandler() const;
+	[[nodiscard]] Match& getMatch();
+	[[nodiscard]] const Match& getMatch() const;
 
 	[[nodiscard]] bool isWindowOpen() const;
 	void draw();
