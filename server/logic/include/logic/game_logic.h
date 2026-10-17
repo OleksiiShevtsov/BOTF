@@ -29,13 +29,13 @@ public:
 	// Apply Move-state input for a network client (no-op if unbound).
 	void setClientInput(common::ClientID clientId, int dx, int dy);
 
-	// Aim world point → atan2 from entity pos (no-op if unbound / aim≈pos).
+	// Store aim world point for the bound entity; angle applied now and each tick.
 	void setClientAim(common::ClientID clientId, common::Point aimWorld);
 
 	// Apply input directly by entity id.
 	void setPlayerInput(common::ObjectID entityId, int dx, int dy);
 
-	// Advance the world by dt seconds.
+	// Advance the world by dt seconds, then retarget angles from stored aim points.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<DynamicObject>& objects() const;
@@ -43,9 +43,13 @@ public:
 
 private:
 	DynamicObject* findMutable(common::ObjectID entityId);
+	void applyAimForClient(common::ClientID clientId);
+	void applyStoredAims();
 
 	std::vector<DynamicObject> m_objects;
 	std::unordered_map<common::ClientID, common::ObjectID> m_clientToEntity;
+	// Last aim world point per client; angle = atan2(aim − pos) after each move tick.
+	std::unordered_map<common::ClientID, common::Point> m_clientAimWorld;
 	common::ObjectID m_nextEntityId{1};
 };
 
