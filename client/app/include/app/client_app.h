@@ -25,6 +25,8 @@ private:
 	void sendHello();
 	void applyInbound();
 	void maybeSendMove(const MoveInput& input, std::uint32_t tick);
+	void maybeSendAim(std::uint32_t tick);
+	[[nodiscard]] std::optional<common::Point> selfWorldPosition() const;
 
 	net::ClientInboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
@@ -35,6 +37,8 @@ private:
 	MoveInput m_lastSent{};
 	bool m_forceSend = true;
 	bool m_helloSent = false;
+	bool m_forceAimSend = true;
+	std::optional<common::Angle> m_lastAimSent;
 	std::optional<common::ObjectID> m_selfId;
 	std::optional<common::WorldSnapshot> m_latestWorld;
 };

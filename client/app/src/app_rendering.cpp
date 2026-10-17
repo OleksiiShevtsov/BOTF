@@ -2,6 +2,8 @@
 
 #include "common/global_settings.hpp"
 
+#include <SFML/Window/Mouse.hpp>
+
 botf::app::AppRendering::AppRendering()
 #if SFML_VERSION_MAJOR >= 3
 	: m_window{std::make_shared<sf::RenderWindow>(
@@ -43,6 +45,19 @@ const botf::app::Match& botf::app::AppRendering::getMatch() const {
 
 bool botf::app::AppRendering::isWindowOpen() const {
 	return m_window && m_window->isOpen();
+}
+
+botf::common::Point botf::app::AppRendering::mouseWorldPosition() const {
+	if (!m_window) {
+		return {};
+	}
+#if SFML_VERSION_MAJOR >= 3
+	const sf::Vector2i pixel = sf::Mouse::getPosition(*m_window);
+	return common::Point{static_cast<float>(pixel.x), static_cast<float>(pixel.y)};
+#else
+	const sf::Vector2i pixel = sf::Mouse::getPosition(*m_window);
+	return common::Point{static_cast<float>(pixel.x), static_cast<float>(pixel.y)};
+#endif
 }
 
 void botf::app::AppRendering::draw() {

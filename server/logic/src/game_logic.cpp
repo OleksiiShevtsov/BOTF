@@ -26,6 +26,16 @@ void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) 
 	setPlayerInput(it->second, dx, dy);
 }
 
+void botf::GameLogic::setClientAim(common::ClientID clientId, common::Angle angle) {
+	const auto it = m_clientToEntity.find(clientId);
+	if (it == m_clientToEntity.end()) {
+		return;
+	}
+	if (DynamicObject* obj = findMutable(it->second)) {
+		obj->setAngle(angle);
+	}
+}
+
 void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) {
 	if (DynamicObject* obj = findMutable(entityId)) {
 		obj->setInput(dx, dy);

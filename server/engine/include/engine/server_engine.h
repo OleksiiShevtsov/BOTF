@@ -29,7 +29,7 @@ public:
 	bool startListen(std::uint16_t port);
 	void shutdown();
 	void pollNetwork();
-	// Hello (spawn/bind + ack) and Move (own entity only).
+	// Hello (spawn/bind + ack), Move, Aim (own entity only).
 	void applyInbound();
 	// game.tick(dt) + enqueue WorldState for the new sim tick.
 	void advanceSim(float dt);
@@ -39,10 +39,16 @@ public:
 	[[nodiscard]] const GameLogic& game() const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::MoveCommand> lastMove(common::ClientID clientId) const;
+	[[nodiscard]] std::optional<common::AimCommand> lastAim(common::ClientID clientId) const;
 
 private:
 	struct ClientInputState {
 		common::MoveCommand command{};
+		std::uint64_t sequence = 0;
+	};
+
+	struct ClientAimState {
+		common::AimCommand command{};
 		std::uint64_t sequence = 0;
 	};
 
@@ -53,6 +59,9 @@ private:
 	void handleMove(common::ClientID clientId,
 					const common::MoveCommand& command,
 					std::uint64_t sequence);
+	void handleAim(common::ClientID clientId,
+				   const common::AimCommand& command,
+				   std::uint64_t sequence);
 	void enqueueWorldState(std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
@@ -61,6 +70,7 @@ private:
 	net::TcpServer m_server;
 	GameLogic m_game;
 	std::unordered_map<common::ClientID, ClientInputState> m_inputStates;
+	std::unordered_map<common::ClientID, ClientAimState> m_aimStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };

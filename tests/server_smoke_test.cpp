@@ -298,3 +298,75 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
 	clientC.disconnect();
 	engine.shutdown();
 }
+
+TEST(ServerSmoke, HelloAimUpdatesEntityAngleInWorldState) {
+	const auto port = botf::test::ephemeralPort();
+	ASSERT_TRUE(port.has_value());
+
+	botf::ServerEngine engine;
+	ASSERT_TRUE(engine.startListen(*port));
+
+	sf::TcpSocket client;
+	client.setBlocking(true);
+	ASSERT_EQ(client.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+
+	std::vector<std::uint8_t> recvBuffer;
+	client.setBlocking(false);
+	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
+	ASSERT_TRUE(selfId.has_value());
+
+	constexpr float kAim = 1.25f;
+	client.setBlocking(true);
+	ASSERT_TRUE(
+		sendFramed(client, botf::protocol::encodeAim(botf::common::AimCommand{kAim, 7}, 2)));
+
+	bool gotAim = false;
+	for (int i = 0; i < 100 && !gotAim; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		const auto aim = engine.lastAim(1);
+		if (aim && aim->tick == 7) {
+			gotAim = true;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	ASSERT_TRUE(gotAim);
+
+	EXPECT_FLOAT_EQ(engine.game().objects().front().angle(), kAim);
+
+	engine.advanceSim(kDt);
+	engine.pollNetwork();
+
+	client.setBlocking(false);
+	bool gotWorld = false;
+	float worldAngle = 0.f;
+	for (int i = 0; i < 200 && !gotWorld; ++i) {
+		engine.pollNetwork();
+		std::string payload;
+		if (!recvOneFrame(client, recvBuffer, payload, 1)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+			continue;
+		}
+		auto decoded = botf::protocol::decode(payload);
+		if (!decoded) {
+			continue;
+		}
+		const auto* world = std::get_if<botf::protocol::DecodedWorldState>(&*decoded);
+		if (!world) {
+			continue;
+		}
+		const auto* pose = findPlayer(world->snapshot, *selfId);
+		if (!pose) {
+			continue;
+		}
+		worldAngle = pose->angle;
+		gotWorld = true;
+	}
+
+	ASSERT_TRUE(gotWorld);
+	EXPECT_FLOAT_EQ(worldAngle, kAim);
+
+	client.disconnect();
+	engine.shutdown();
+}

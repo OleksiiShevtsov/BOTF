@@ -3,9 +3,17 @@
 #include "common/log.hpp"
 #include "protocol/protocol.hpp"
 
+#include <cmath>
 #include <variant>
 
 #include <SFML/Network.hpp>
+
+namespace {
+
+constexpr float kAimEpsilon = 1.0f;
+constexpr float kAimAngleDelta = 0.01f;
+
+}  // namespace
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
 
@@ -48,6 +56,18 @@ void botf::app::ClientApp::applyInbound() {
 	}
 }
 
+std::optional<botf::common::Point> botf::app::ClientApp::selfWorldPosition() const {
+	if (!m_selfId || !m_latestWorld) {
+		return std::nullopt;
+	}
+	for (const auto& pose : m_latestWorld->players) {
+		if (pose.id == *m_selfId) {
+			return pose.position;
+		}
+	}
+	return std::nullopt;
+}
+
 void botf::app::ClientApp::maybeSendMove(const MoveInput& input, std::uint32_t tick) {
 	if (!m_net.isConnected() || !m_selfId.has_value()) {
 		return;
@@ -64,6 +84,38 @@ void botf::app::ClientApp::maybeSendMove(const MoveInput& input, std::uint32_t t
 	});
 	m_lastSent = input;
 	m_forceSend = false;
+	++m_sequence;
+}
+
+void botf::app::ClientApp::maybeSendAim(std::uint32_t tick) {
+	if (!m_net.isConnected() || !m_selfId.has_value()) {
+		return;
+	}
+
+	const auto selfPos = selfWorldPosition();
+	if (!selfPos) {
+		return;
+	}
+
+	const common::Point mouse = m_rendering.mouseWorldPosition();
+	const float dx = mouse.x - selfPos->x;
+	const float dy = mouse.y - selfPos->y;
+	if (dx * dx + dy * dy < kAimEpsilon * kAimEpsilon) {
+		return;
+	}
+
+	const common::Angle angle = std::atan2(dy, dx);
+	if (!(m_forceAimSend || !m_lastAimSent.has_value() ||
+		  std::fabs(angle - *m_lastAimSent) > kAimAngleDelta || (tick % 3u) == 0u)) {
+		return;
+	}
+
+	m_outbound.push(net::OutboundNotification{
+		std::nullopt,
+		protocol::encodeAim(common::AimCommand{angle, tick}, m_sequence),
+	});
+	m_lastAimSent = angle;
+	m_forceAimSend = false;
 	++m_sequence;
 }
 
@@ -85,6 +137,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 	while (m_rendering.isWindowOpen()) {
 		const MoveInput input = m_rendering.getInputHandler().readMoveInput();
 		maybeSendMove(input, tick);
+		maybeSendAim(tick);
 		++tick;
 
 		if (m_net.isConnected()) {
@@ -93,6 +146,8 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 				botf::log::warn("[client] disconnected from server");
 				m_helloSent = false;
 				m_selfId.reset();
+				m_forceAimSend = true;
+				m_lastAimSent.reset();
 			}
 		}
 

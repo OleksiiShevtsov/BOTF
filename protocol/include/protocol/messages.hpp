@@ -22,7 +22,12 @@ struct DecodedHello {
 	std::uint64_t sequence{};
 };
 
+struct DecodedAim {
+	common::AimCommand command{};
+	std::uint64_t sequence{};
+};
+
 // Extensible: add Input here without touching net framing.
-using DecodedMessage = std::variant<DecodedMove, DecodedWorldState, DecodedHello>;
+using DecodedMessage = std::variant<DecodedMove, DecodedWorldState, DecodedHello, DecodedAim>;
 
 }  // namespace botf::protocol
