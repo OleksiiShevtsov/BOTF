@@ -135,7 +135,7 @@ void botf::ServerEngine::handleAim(common::ClientID clientId,
 	m_aimStates[clientId] = ClientAimState{command, sequence};
 
 	// Aim applies only to the entity bound via Hello. Unbound → no-op.
-	m_game.setClientAim(clientId, command.angle);
+	m_game.setClientAim(clientId, command.aim);
 }
 
 void botf::ServerEngine::applyInbound() {

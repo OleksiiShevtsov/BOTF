@@ -4,6 +4,7 @@
 
 namespace {
 
+// TODO: replace procedural triangle with sprite/texture figures later.
 // Tip along local +Y; atan2(0)=+X → rotate by angle_deg - 90 so tip faces aim.
 constexpr float kTipLocalX = 0.f;
 constexpr float kTipLocalY = 20.f;

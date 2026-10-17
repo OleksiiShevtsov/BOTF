@@ -15,9 +15,9 @@ struct MoveCommand {
 	std::uint32_t tick{};
 };
 
-// Client → server aim intent (radians, game space).
+// Client → server aim point (world space). Server derives angle.
 struct AimCommand {
-	Angle angle{};
+	Point aim{};
 	std::uint32_t tick{};
 };
 

@@ -10,8 +10,7 @@
 
 namespace {
 
-constexpr float kAimEpsilon = 1.0f;
-constexpr float kAimAngleDelta = 0.01f;
+constexpr float kAimPointDelta = 1.0f;
 
 }  // namespace
 
@@ -56,18 +55,6 @@ void botf::app::ClientApp::applyInbound() {
 	}
 }
 
-std::optional<botf::common::Point> botf::app::ClientApp::selfWorldPosition() const {
-	if (!m_selfId || !m_latestWorld) {
-		return std::nullopt;
-	}
-	for (const auto& pose : m_latestWorld->players) {
-		if (pose.id == *m_selfId) {
-			return pose.position;
-		}
-	}
-	return std::nullopt;
-}
-
 void botf::app::ClientApp::maybeSendMove(const MoveInput& input, std::uint32_t tick) {
 	if (!m_net.isConnected() || !m_selfId.has_value()) {
 		return;
@@ -92,29 +79,23 @@ void botf::app::ClientApp::maybeSendAim(std::uint32_t tick) {
 		return;
 	}
 
-	const auto selfPos = selfWorldPosition();
-	if (!selfPos) {
-		return;
-	}
-
 	const common::Point mouse = m_rendering.mouseWorldPosition();
-	const float dx = mouse.x - selfPos->x;
-	const float dy = mouse.y - selfPos->y;
-	if (dx * dx + dy * dy < kAimEpsilon * kAimEpsilon) {
-		return;
-	}
-
-	const common::Angle angle = std::atan2(dy, dx);
-	if (!(m_forceAimSend || !m_lastAimSent.has_value() ||
-		  std::fabs(angle - *m_lastAimSent) > kAimAngleDelta || (tick % 3u) == 0u)) {
+	if (m_lastAimSent) {
+		const float dx = mouse.x - m_lastAimSent->x;
+		const float dy = mouse.y - m_lastAimSent->y;
+		const bool moved = dx * dx + dy * dy > kAimPointDelta * kAimPointDelta;
+		if (!(m_forceAimSend || moved || (tick % 3u) == 0u)) {
+			return;
+		}
+	} else if (!m_forceAimSend && (tick % 3u) != 0u) {
 		return;
 	}
 
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
-		protocol::encodeAim(common::AimCommand{angle, tick}, m_sequence),
+		protocol::encodeAim(common::AimCommand{mouse, tick}, m_sequence),
 	});
-	m_lastAimSent = angle;
+	m_lastAimSent = mouse;
 	m_forceAimSend = false;
 	++m_sequence;
 }

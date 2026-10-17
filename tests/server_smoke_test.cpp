@@ -299,7 +299,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, HelloAimUpdatesEntityAngleInWorldState) {
+TEST(ServerSmoke, HelloAimPointUpdatesEntityAngleInWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -316,10 +316,12 @@ TEST(ServerSmoke, HelloAimUpdatesEntityAngleInWorldState) {
 	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 
-	constexpr float kAim = 1.25f;
+	const auto pos = engine.game().objects().front().position();
+	// Aim due +X from entity → expected angle 0.
+	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
 	client.setBlocking(true);
 	ASSERT_TRUE(
-		sendFramed(client, botf::protocol::encodeAim(botf::common::AimCommand{kAim, 7}, 2)));
+		sendFramed(client, botf::protocol::encodeAim(botf::common::AimCommand{aimPoint, 7}, 2)));
 
 	bool gotAim = false;
 	for (int i = 0; i < 100 && !gotAim; ++i) {
@@ -328,12 +330,14 @@ TEST(ServerSmoke, HelloAimUpdatesEntityAngleInWorldState) {
 		const auto aim = engine.lastAim(1);
 		if (aim && aim->tick == 7) {
 			gotAim = true;
+			EXPECT_FLOAT_EQ(aim->aim.x, aimPoint.x);
+			EXPECT_FLOAT_EQ(aim->aim.y, aimPoint.y);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
 	ASSERT_TRUE(gotAim);
 
-	EXPECT_FLOAT_EQ(engine.game().objects().front().angle(), kAim);
+	EXPECT_NEAR(engine.game().objects().front().angle(), 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();
@@ -365,7 +369,7 @@ TEST(ServerSmoke, HelloAimUpdatesEntityAngleInWorldState) {
 	}
 
 	ASSERT_TRUE(gotWorld);
-	EXPECT_FLOAT_EQ(worldAngle, kAim);
+	EXPECT_NEAR(worldAngle, 0.f, 1e-4f);
 
 	client.disconnect();
 	engine.shutdown();

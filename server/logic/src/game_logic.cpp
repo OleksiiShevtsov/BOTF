@@ -2,6 +2,14 @@
 
 #include "common/global_settings.hpp"
 
+#include <cmath>
+
+namespace {
+
+constexpr float kAimEpsilon = 1.0f;
+
+}  // namespace
+
 botf::GameLogic::GameLogic() = default;
 
 botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
@@ -26,14 +34,23 @@ void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) 
 	setPlayerInput(it->second, dx, dy);
 }
 
-void botf::GameLogic::setClientAim(common::ClientID clientId, common::Angle angle) {
+void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimWorld) {
 	const auto it = m_clientToEntity.find(clientId);
 	if (it == m_clientToEntity.end()) {
 		return;
 	}
-	if (DynamicObject* obj = findMutable(it->second)) {
-		obj->setAngle(angle);
+	DynamicObject* obj = findMutable(it->second);
+	if (!obj) {
+		return;
 	}
+
+	const common::Point pos = obj->position();
+	const float dx = aimWorld.x - pos.x;
+	const float dy = aimWorld.y - pos.y;
+	if (dx * dx + dy * dy < kAimEpsilon * kAimEpsilon) {
+		return;
+	}
+	obj->setAngle(std::atan2(dy, dx));
 }
 
 void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) {

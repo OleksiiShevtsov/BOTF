@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package botf;
 
-// Client → server aim intent (radians). Server stores on bound entity.
+// Client → server aim point in world space.
+// Server computes angle from bound entity position → this point.
 message Aim {
-  float angle = 1;
-  uint32 tick = 2;
+  float aim_x = 1;
+  float aim_y = 2;
+  uint32 tick = 3;
 }

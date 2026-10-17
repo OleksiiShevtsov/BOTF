@@ -29,8 +29,8 @@ public:
 	// Apply Move-state input for a network client (no-op if unbound).
 	void setClientInput(common::ClientID clientId, int dx, int dy);
 
-	// Apply aim angle (radians) for a network client (no-op if unbound).
-	void setClientAim(common::ClientID clientId, common::Angle angle);
+	// Aim world point → atan2 from entity pos (no-op if unbound / aim≈pos).
+	void setClientAim(common::ClientID clientId, common::Point aimWorld);
 
 	// Apply input directly by entity id.
 	void setPlayerInput(common::ObjectID entityId, int dx, int dy);
