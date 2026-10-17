@@ -4,12 +4,6 @@
 
 #include <cmath>
 
-namespace {
-
-constexpr float kAimEpsilon = 1.0f;
-
-}  // namespace
-
 botf::GameLogic::GameLogic() = default;
 
 botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
@@ -47,7 +41,8 @@ void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimW
 	const common::Point pos = obj->position();
 	const float dx = aimWorld.x - pos.x;
 	const float dy = aimWorld.y - pos.y;
-	if (dx * dx + dy * dy < kAimEpsilon * kAimEpsilon) {
+	if (dx * dx + dy * dy < common::GlobalSettings::aimEpsilon *
+								common::GlobalSettings::aimEpsilon) {
 		return;
 	}
 	obj->setAngle(std::atan2(dy, dx));

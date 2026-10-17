@@ -13,5 +13,7 @@ constexpr std::chrono::milliseconds pauseBetweenButtonPresses{50};
 constexpr float defaultPlayerSpeedLimit{200.0f};
 constexpr float defaultSpawnX{100.0f};
 constexpr float defaultSpawnY{300.0f};
+// Ignore aim updates when the cursor is this close to the entity (world units).
+constexpr float aimEpsilon{1.0f};
 
 }  // namespace botf::common::GlobalSettings
