@@ -2,11 +2,11 @@
 
 #include "common/global_settings.hpp"
 
-void botf::app::GameMap::setMapId(common::ObjectID mapId) {
+void botf::app::GameMap::setMapId(common::MapID mapId) {
 	m_mapId = mapId;
 }
 
-botf::common::ObjectID botf::app::GameMap::getId() const {
+botf::common::MapID botf::app::GameMap::getId() const {
 	return m_mapId;
 }
 

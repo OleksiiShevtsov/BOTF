@@ -9,13 +9,13 @@ namespace botf::app {
 // Client arena / map layer. Not an IViewObject — different role from movers.
 class GameMap {
 public:
-	void setMapId(common::ObjectID mapId);
-	[[nodiscard]] common::ObjectID getId() const;
+	void setMapId(common::MapID mapId);
+	[[nodiscard]] common::MapID getId() const;
 
 	void draw(sf::RenderTarget& target) const;
 
 private:
-	common::ObjectID m_mapId{1};
+	common::MapID m_mapId{1};
 };
 
 }  // namespace botf::app

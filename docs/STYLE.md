@@ -10,7 +10,7 @@
 | Геттеры (client/app) | `get` + PascalCase | `getId`, `getMap`, `getPosition` |
 | Константы | `k` + PascalCase | `kTickHz`, `kPort` |
 | Типы / классы | PascalCase | `GameLogic`, `TcpServer` |
-| ID-алиасы | `ClientID` / `ObjectID` | TCP-сессия vs game/view entity (`common/types.hpp`) |
+| ID-алиасы | `ClientID` / `ObjectID` / `MapID` | TCP-сессия vs entity vs arena (`common/types.hpp`) |
 | Namespaces | `botf::…` | `botf::net`, `botf::logic`, `botf::app` |
 
 Не использовать trailing underscore (`foo_`) для members.
