@@ -18,6 +18,7 @@ void botf::GameLogic::bindClient(common::ClientID clientId, common::ObjectID ent
 
 void botf::GameLogic::unbindClient(common::ClientID clientId) {
 	m_clientToEntity.erase(clientId);
+	m_clientAimWorld.erase(clientId);
 }
 
 void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) {
@@ -29,23 +30,11 @@ void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) 
 }
 
 void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimWorld) {
-	const auto it = m_clientToEntity.find(clientId);
-	if (it == m_clientToEntity.end()) {
+	if (!m_clientToEntity.contains(clientId)) {
 		return;
 	}
-	DynamicObject* obj = findMutable(it->second);
-	if (!obj) {
-		return;
-	}
-
-	const common::Point pos = obj->position();
-	const float dx = aimWorld.x - pos.x;
-	const float dy = aimWorld.y - pos.y;
-	if (dx * dx + dy * dy < common::GlobalSettings::aimEpsilon *
-								common::GlobalSettings::aimEpsilon) {
-		return;
-	}
-	obj->setAngle(std::atan2(dy, dx));
+	m_clientAimWorld[clientId] = aimWorld;
+	applyAimForClient(clientId);
 }
 
 void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) {
@@ -58,6 +47,7 @@ void botf::GameLogic::tick(float dt) {
 	for (auto& obj : m_objects) {
 		obj.update(dt);
 	}
+	applyStoredAims();
 }
 
 const std::vector<botf::DynamicObject>& botf::GameLogic::objects() const {
@@ -80,4 +70,34 @@ botf::DynamicObject* botf::GameLogic::findMutable(common::ObjectID entityId) {
 		}
 	}
 	return nullptr;
+}
+
+void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
+	const auto aimIt = m_clientAimWorld.find(clientId);
+	if (aimIt == m_clientAimWorld.end()) {
+		return;
+	}
+	const auto bindIt = m_clientToEntity.find(clientId);
+	if (bindIt == m_clientToEntity.end()) {
+		return;
+	}
+	DynamicObject* obj = findMutable(bindIt->second);
+	if (!obj) {
+		return;
+	}
+
+	const common::Point pos = obj->position();
+	const float dx = aimIt->second.x - pos.x;
+	const float dy = aimIt->second.y - pos.y;
+	if (dx * dx + dy * dy <
+		common::GlobalSettings::aimEpsilon * common::GlobalSettings::aimEpsilon) {
+		return;
+	}
+	obj->setAngle(std::atan2(dy, dx));
+}
+
+void botf::GameLogic::applyStoredAims() {
+	for (const auto& [clientId, _] : m_clientAimWorld) {
+		applyAimForClient(clientId);
+	}
 }
