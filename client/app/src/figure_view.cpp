@@ -55,7 +55,11 @@ void botf::app::FigureView::draw(sf::RenderTarget& target) const {
 	triangle.setPosition(m_position.x, m_position.y);
 #endif
 	// Radians (logic) → degrees (SFML). Tip is +Y local; aim 0 is +X.
-	const float degrees = m_angle * (180.f / std::numbers::pi_v<float>)-90.f;
+	const float degrees = m_angle * (180.f / std::numbers::pi_v<float>) - 90.f;
+#if SFML_VERSION_MAJOR >= 3
+	triangle.setRotation(sf::degrees(degrees));
+#else
 	triangle.setRotation(degrees);
+#endif
 	target.draw(triangle);
 }
