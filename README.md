@@ -139,8 +139,8 @@ BOTF/
 
 ```
 Hello → spawn/bind entity → Hello ack (object_id)
-MoveCommand → protocol encode → net → decode → GameLogic (own entity only)
-  → tick → WorldSnapshot → protocol encode → net → scene
+MoveCommand / AimCommand → protocol encode → net → decode → GameLogic (own entity only)
+  → tick → WorldSnapshot (pos + aim_angle) → protocol encode → net → Scene (triangle)
 ```
 
 ## Tests

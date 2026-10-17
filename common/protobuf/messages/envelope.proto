@@ -11,6 +11,7 @@ enum MessageType {
   MESSAGE_TYPE_CLIENT_INPUT = 2;
   MESSAGE_TYPE_WORLD_STATE = 3;
   MESSAGE_TYPE_MOVE = 4;
+  MESSAGE_TYPE_AIM = 5;
 }
 
 message Envelope {

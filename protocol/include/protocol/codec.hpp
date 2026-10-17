@@ -71,6 +71,14 @@ inline std::string encodeMove(const common::MoveCommand& command, std::uint64_t 
 	return envelope.SerializeAsString();
 }
 
+inline std::string encodeAim(const common::AimCommand& command, std::uint64_t sequence) {
+	botf::Envelope envelope;
+	envelope.set_type(botf::MESSAGE_TYPE_AIM);
+	envelope.set_sequence(sequence);
+	envelope.set_payload(toProto(command).SerializeAsString());
+	return envelope.SerializeAsString();
+}
+
 inline std::string encodeWorldSnapshot(const common::WorldSnapshot& snapshot,
 									   std::uint64_t sequence) {
 	botf::Envelope envelope;
@@ -100,6 +108,13 @@ inline std::optional<DecodedMessage> decode(const std::string& envelopeBytes) {
 				return std::nullopt;
 			}
 			return DecodedMessage{DecodedMove{normalizeMove(fromProto(move)), envelope.sequence()}};
+		}
+		case botf::MESSAGE_TYPE_AIM: {
+			botf::Aim aim;
+			if (!aim.ParseFromString(envelope.payload())) {
+				return std::nullopt;
+			}
+			return DecodedMessage{DecodedAim{fromProto(aim), envelope.sequence()}};
 		}
 		case botf::MESSAGE_TYPE_WORLD_STATE: {
 			botf::WorldState state;

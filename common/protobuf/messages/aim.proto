@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package botf;
+
+// Client → server aim intent (radians). Server stores on bound entity.
+message Aim {
+  float angle = 1;
+  uint32 tick = 2;
+}

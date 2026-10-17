@@ -3,6 +3,7 @@
 #include "app/input_handler.h"
 #include "app/match.h"
 #include "app/player.h"
+#include "common/types.hpp"
 
 #include <memory>
 
@@ -26,6 +27,8 @@ public:
 	[[nodiscard]] const Match& getMatch() const;
 
 	[[nodiscard]] bool isWindowOpen() const;
+	// Window pixel coords (identity with world while camera is 1:1).
+	[[nodiscard]] common::Point mouseWorldPosition() const;
 	void draw();
 
 private:
