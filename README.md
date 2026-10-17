@@ -138,8 +138,9 @@ BOTF/
 `main` тонкий: только runtime (`ServerEngine` / `ClientApp`). Smoke живёт в `tests/`.
 
 ```
-MoveCommand → protocol encode → net → decode → GameLogic.tick
-  → WorldSnapshot → protocol encode → net → scene
+Hello → spawn/bind entity → Hello ack (object_id)
+MoveCommand → protocol encode → net → decode → GameLogic (own entity only)
+  → tick → WorldSnapshot → protocol encode → net → scene
 ```
 
 ## Tests

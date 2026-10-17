@@ -54,6 +54,14 @@ inline std::string toString(const common::MoveCommand& command) {
 	return out;
 }
 
+inline std::string encodeHello(const common::HelloMessage& hello, std::uint64_t sequence) {
+	botf::Envelope envelope;
+	envelope.set_type(botf::MESSAGE_TYPE_HELLO);
+	envelope.set_sequence(sequence);
+	envelope.set_payload(toProto(hello).SerializeAsString());
+	return envelope.SerializeAsString();
+}
+
 inline std::string encodeMove(const common::MoveCommand& command, std::uint64_t sequence) {
 	const common::MoveCommand normalized = normalizeMove(command);
 	botf::Envelope envelope;
@@ -79,6 +87,13 @@ inline std::optional<DecodedMessage> decode(const std::string& envelopeBytes) {
 	}
 
 	switch (envelope.type()) {
+		case botf::MESSAGE_TYPE_HELLO: {
+			botf::Hello hello;
+			if (!hello.ParseFromString(envelope.payload())) {
+				return std::nullopt;
+			}
+			return DecodedMessage{DecodedHello{fromProto(hello), envelope.sequence()}};
+		}
 		case botf::MESSAGE_TYPE_MOVE: {
 			botf::Move move;
 			if (!move.ParseFromString(envelope.payload())) {

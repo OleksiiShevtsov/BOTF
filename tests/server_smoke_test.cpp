@@ -5,6 +5,7 @@
 
 #include <array>
 #include <chrono>
+#include <optional>
 #include <thread>
 #include <variant>
 #include <vector>
@@ -46,19 +47,73 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
+std::optional<botf::common::ObjectID> helloBind(botf::ServerEngine& engine,
+												sf::TcpSocket& client,
+												std::vector<std::uint8_t>& recvBuffer,
+												botf::common::ClientID expectedClientId,
+												std::uint64_t sequence) {
+	EXPECT_TRUE(
+		sendFramed(client, botf::protocol::encodeHello(botf::common::HelloMessage{}, sequence)));
+
+	for (int i = 0; i < 200; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		engine.pollNetwork();
+
+		std::string payload;
+		if (!recvOneFrame(client, recvBuffer, payload, 1)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+			continue;
+		}
+
+		auto decoded = botf::protocol::decode(payload);
+		if (!decoded) {
+			continue;
+		}
+		const auto* hello = std::get_if<botf::protocol::DecodedHello>(&*decoded);
+		if (!hello || hello->hello.objectId == 0) {
+			continue;
+		}
+
+		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->hello.objectId);
+		return hello->hello.objectId;
+	}
+	return std::nullopt;
+}
+
+const botf::common::PlayerPose* findPlayer(const botf::common::WorldSnapshot& snapshot,
+										   botf::common::ObjectID id) {
+	for (const auto& player : snapshot.players) {
+		if (player.id == id) {
+			return &player;
+		}
+	}
+	return nullptr;
+}
+
 }  // namespace
 
-TEST(ServerSmoke, MoveTickWorldStateRoundTrip) {
+TEST(ServerSmoke, HelloBindThenMoveWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
+	EXPECT_TRUE(engine.game().objects().empty());
 
 	sf::TcpSocket client;
 	client.setBlocking(true);
 	ASSERT_EQ(client.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
 			  sf::Socket::Status::Done);
+
+	std::vector<std::uint8_t> recvBuffer;
+	client.setBlocking(false);
+	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
+	ASSERT_TRUE(selfId.has_value());
+	ASSERT_EQ(engine.game().objects().size(), 1u);
+	ASSERT_EQ(engine.game().objects().front().id(), *selfId);
+
+	const auto start = engine.game().objects().front().position();
 
 	struct Sample {
 		int dx;
@@ -67,16 +122,13 @@ TEST(ServerSmoke, MoveTickWorldStateRoundTrip) {
 		std::uint64_t seq;
 	};
 	const Sample samples[] = {
-		{0, 1, 1, 1},
-		{1, 1, 2, 2},
-		{-1, 0, 3, 3},
-		{0, 0, 4, 4},
+		{0, 1, 1, 2},
+		{1, 1, 2, 3},
+		{-1, 0, 3, 4},
+		{0, 0, 4, 5},
 	};
 
-	ASSERT_FALSE(engine.game().objects().empty());
-	const auto start = engine.game().objects().front().position();
-	std::vector<std::uint8_t> recvBuffer;
-
+	client.setBlocking(true);
 	for (const auto& sample : samples) {
 		ASSERT_TRUE(sendFramed(
 			client, botf::protocol::encodeMove(
@@ -85,7 +137,7 @@ TEST(ServerSmoke, MoveTickWorldStateRoundTrip) {
 		bool got = false;
 		for (int i = 0; i < 100 && !got; ++i) {
 			engine.pollNetwork();
-			engine.applyInboundMoves();
+			engine.applyInbound();
 			const auto move = engine.lastMove(1);
 			if (move && move->tick == sample.tick) {
 				got = true;
@@ -142,10 +194,107 @@ TEST(ServerSmoke, MoveTickWorldStateRoundTrip) {
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "DynamicObject did not move";
 
 	ASSERT_TRUE(gotWorld);
-	const auto& p0 = lastSnapshot.players.front();
-	const float dx = p0.position.x - end.x;
-	const float dy = p0.position.y - end.y;
+	const auto* pose = findPlayer(lastSnapshot, *selfId);
+	ASSERT_NE(pose, nullptr);
+	const float dx = pose->position.x - end.x;
+	const float dy = pose->position.y - end.y;
 	EXPECT_LE(dx * dx + dy * dy, 0.01f);
 
+	engine.shutdown();
+}
+
+TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
+	const auto port = botf::test::ephemeralPort();
+	ASSERT_TRUE(port.has_value());
+
+	botf::ServerEngine engine;
+	ASSERT_TRUE(engine.startListen(*port));
+
+	sf::TcpSocket clientA;
+	sf::TcpSocket clientB;
+	clientA.setBlocking(true);
+	clientB.setBlocking(true);
+	ASSERT_EQ(clientA.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+	ASSERT_EQ(clientB.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+
+	std::vector<std::uint8_t> bufferA;
+	std::vector<std::uint8_t> bufferB;
+	clientA.setBlocking(false);
+	clientB.setBlocking(false);
+
+	const auto idA = helloBind(engine, clientA, bufferA, 1, 1);
+	const auto idB = helloBind(engine, clientB, bufferB, 2, 1);
+	ASSERT_TRUE(idA.has_value());
+	ASSERT_TRUE(idB.has_value());
+	EXPECT_NE(*idA, *idB);
+	ASSERT_EQ(engine.game().objects().size(), 2u);
+
+	botf::common::Point startA{};
+	botf::common::Point startB{};
+	for (const auto& obj : engine.game().objects()) {
+		if (obj.id() == *idA) {
+			startA = obj.position();
+		}
+		if (obj.id() == *idB) {
+			startB = obj.position();
+		}
+	}
+
+	clientA.setBlocking(true);
+	ASSERT_TRUE(
+		sendFramed(clientA, botf::protocol::encodeMove(botf::common::MoveCommand{1, 0, 10}, 2)));
+
+	bool gotMove = false;
+	for (int i = 0; i < 100 && !gotMove; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		const auto move = engine.lastMove(1);
+		if (move && move->tick == 10) {
+			gotMove = true;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	ASSERT_TRUE(gotMove);
+
+	for (int j = 0; j < 20; ++j) {
+		engine.advanceSim(kDt);
+		engine.pollNetwork();
+	}
+
+	botf::common::Point endA{};
+	botf::common::Point endB{};
+	for (const auto& obj : engine.game().objects()) {
+		if (obj.id() == *idA) {
+			endA = obj.position();
+		}
+		if (obj.id() == *idB) {
+			endB = obj.position();
+		}
+	}
+
+	EXPECT_FALSE(endA.x == startA.x && endA.y == startA.y) << "client A entity should move";
+	EXPECT_FLOAT_EQ(endB.x, startB.x);
+	EXPECT_FLOAT_EQ(endB.y, startB.y);
+
+	// Unbound Move (no Hello) must not spawn a third entity.
+	sf::TcpSocket clientC;
+	clientC.setBlocking(true);
+	ASSERT_EQ(clientC.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+	ASSERT_TRUE(
+		sendFramed(clientC, botf::protocol::encodeMove(botf::common::MoveCommand{0, 1, 1}, 1)));
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	EXPECT_EQ(engine.game().objects().size(), 2u);
+	EXPECT_FALSE(engine.game().entityForClient(3).has_value());
+
+	clientA.disconnect();
+	clientB.disconnect();
+	clientC.disconnect();
 	engine.shutdown();
 }

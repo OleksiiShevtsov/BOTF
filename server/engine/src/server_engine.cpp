@@ -87,23 +87,40 @@ std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(
 	return it->second.command;
 }
 
-void botf::ServerEngine::ensureClientBound(common::ClientID clientId) {
-	if (m_game.entityForClient(clientId).has_value()) {
-		return;
-	}
-
-	if (!m_game.objects().empty() && clientId == m_game.objects().front().id()) {
-		m_game.bindClient(clientId, m_game.objects().front().id());
-		return;
+botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(common::ClientID clientId) {
+	if (const auto existing = m_game.entityForClient(clientId)) {
+		return *existing;
 	}
 
 	const common::ObjectID entity = m_game.spawnPlayer(
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
 	m_game.bindClient(clientId, entity);
+	botf::log::info("[server] session {} bound to entity {}", clientId, entity);
+	return entity;
 }
 
-void botf::ServerEngine::applyInboundMoves() {
+void botf::ServerEngine::handleHello(common::ClientID clientId,
+									 const common::HelloMessage& hello,
+									 std::uint64_t sequence) {
+	const common::ObjectID entityId = bindOrSpawnForClient(clientId);
+	const common::HelloMessage ack{hello.playerName, entityId};
+	m_outbound.push(net::OutboundNotification{
+		clientId,
+		protocol::encodeHello(ack, sequence),
+	});
+}
+
+void botf::ServerEngine::handleMove(common::ClientID clientId,
+									const common::MoveCommand& command,
+									std::uint64_t sequence) {
+	m_inputStates[clientId] = ClientInputState{command, sequence};
+
+	// Move applies only to the entity bound via Hello. Unbound → no-op.
+	m_game.setClientInput(clientId, command.dx, command.dy);
+}
+
+void botf::ServerEngine::applyInbound() {
 	while (auto note = m_inbound.tryPop()) {
 		auto decoded = protocol::decode(note->payload);
 		if (!decoded) {
@@ -111,15 +128,15 @@ void botf::ServerEngine::applyInboundMoves() {
 			continue;
 		}
 
-		const auto* move = std::get_if<protocol::DecodedMove>(&*decoded);
-		if (!move) {
+		if (const auto* hello = std::get_if<protocol::DecodedHello>(&*decoded)) {
+			handleHello(note->clientId, hello->hello, hello->sequence);
 			continue;
 		}
 
-		m_inputStates[note->clientId] = ClientInputState{move->command, move->sequence};
-
-		ensureClientBound(note->clientId);
-		m_game.setClientInput(note->clientId, move->command.dx, move->command.dy);
+		if (const auto* move = std::get_if<protocol::DecodedMove>(&*decoded)) {
+			handleMove(note->clientId, move->command, move->sequence);
+			continue;
+		}
 	}
 }
 
@@ -146,7 +163,7 @@ int botf::ServerEngine::runLoop() {
 		const auto tickStart = std::chrono::steady_clock::now();
 
 		pollNetwork();
-		applyInboundMoves();
+		applyInbound();
 		advanceSim(kDt);
 		pollNetwork();
 

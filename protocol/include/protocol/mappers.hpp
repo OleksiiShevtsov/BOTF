@@ -1,10 +1,22 @@
 #pragma once
 
 #include "common/dto.hpp"
+#include "envelope.pb.h"
 #include "move.pb.h"
 #include "world_state.pb.h"
 
 namespace botf::protocol {
+
+[[nodiscard]] inline botf::Hello toProto(const common::HelloMessage& hello) {
+	botf::Hello message;
+	message.set_player_name(hello.playerName);
+	message.set_object_id(hello.objectId);
+	return message;
+}
+
+[[nodiscard]] inline common::HelloMessage fromProto(const botf::Hello& hello) {
+	return common::HelloMessage{hello.player_name(), hello.object_id()};
+}
 
 [[nodiscard]] inline botf::Move toProto(const common::MoveCommand& command) {
 	botf::Move move;

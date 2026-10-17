@@ -2,12 +2,7 @@
 
 #include "common/global_settings.hpp"
 
-botf::GameLogic::GameLogic() {
-	const common::ObjectID id = spawnPlayer(
-		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
-		common::GlobalSettings::defaultPlayerSpeedLimit);
-	(void)id;
-}
+botf::GameLogic::GameLogic() = default;
 
 botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
 	const common::ObjectID id = m_nextEntityId++;
@@ -17,6 +12,10 @@ botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float spee
 
 void botf::GameLogic::bindClient(common::ClientID clientId, common::ObjectID entityId) {
 	m_clientToEntity[clientId] = entityId;
+}
+
+void botf::GameLogic::unbindClient(common::ClientID clientId) {
+	m_clientToEntity.erase(clientId);
 }
 
 void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) {

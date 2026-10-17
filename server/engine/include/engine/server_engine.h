@@ -29,7 +29,8 @@ public:
 	bool startListen(std::uint16_t port);
 	void shutdown();
 	void pollNetwork();
-	void applyInboundMoves();
+	// Hello (spawn/bind + ack) and Move (own entity only).
+	void applyInbound();
 	// game.tick(dt) + enqueue WorldState for the new sim tick.
 	void advanceSim(float dt);
 
@@ -45,7 +46,13 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	void ensureClientBound(common::ClientID clientId);
+	common::ObjectID bindOrSpawnForClient(common::ClientID clientId);
+	void handleHello(common::ClientID clientId,
+					 const common::HelloMessage& hello,
+					 std::uint64_t sequence);
+	void handleMove(common::ClientID clientId,
+					const common::MoveCommand& command,
+					std::uint64_t sequence);
 	void enqueueWorldState(std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
