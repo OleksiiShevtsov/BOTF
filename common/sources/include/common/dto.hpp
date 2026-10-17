@@ -15,6 +15,12 @@ struct MoveCommand {
 	std::uint32_t tick{};
 };
 
+// Client → server aim point (world space). Server derives angle.
+struct AimCommand {
+	Point aim{};
+	std::uint32_t tick{};
+};
+
 // Hello / Hello-ack (login-role). objectId == 0 on client request.
 struct HelloMessage {
 	std::string playerName;

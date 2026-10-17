@@ -87,6 +87,15 @@ std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(
 	return it->second.command;
 }
 
+std::optional<botf::common::AimCommand> botf::ServerEngine::lastAim(
+	common::ClientID clientId) const {
+	const auto it = m_aimStates.find(clientId);
+	if (it == m_aimStates.end()) {
+		return std::nullopt;
+	}
+	return it->second.command;
+}
+
 botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(common::ClientID clientId) {
 	if (const auto existing = m_game.entityForClient(clientId)) {
 		return *existing;
@@ -120,6 +129,15 @@ void botf::ServerEngine::handleMove(common::ClientID clientId,
 	m_game.setClientInput(clientId, command.dx, command.dy);
 }
 
+void botf::ServerEngine::handleAim(common::ClientID clientId,
+								   const common::AimCommand& command,
+								   std::uint64_t sequence) {
+	m_aimStates[clientId] = ClientAimState{command, sequence};
+
+	// Aim applies only to the entity bound via Hello. Unbound → no-op.
+	m_game.setClientAim(clientId, command.aim);
+}
+
 void botf::ServerEngine::applyInbound() {
 	while (auto note = m_inbound.tryPop()) {
 		auto decoded = protocol::decode(note->payload);
@@ -135,6 +153,11 @@ void botf::ServerEngine::applyInbound() {
 
 		if (const auto* move = std::get_if<protocol::DecodedMove>(&*decoded)) {
 			handleMove(note->clientId, move->command, move->sequence);
+			continue;
+		}
+
+		if (const auto* aim = std::get_if<protocol::DecodedAim>(&*decoded)) {
+			handleAim(note->clientId, aim->command, aim->sequence);
 			continue;
 		}
 	}
@@ -166,7 +189,7 @@ int botf::ServerEngine::runLoop() {
 		applyInbound();
 		advanceSim(kDt);
 		pollNetwork();
-		
+
 		// tick overrun
 		const auto elapsed = std::chrono::steady_clock::now() - tickStart;
 		if (elapsed > kTickPeriod) {

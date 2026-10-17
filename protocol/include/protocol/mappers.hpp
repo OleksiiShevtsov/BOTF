@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aim.pb.h"
 #include "common/dto.hpp"
 #include "envelope.pb.h"
 #include "move.pb.h"
@@ -28,6 +29,18 @@ namespace botf::protocol {
 
 [[nodiscard]] inline common::MoveCommand fromProto(const botf::Move& move) {
 	return common::MoveCommand{move.dx(), move.dy(), move.tick()};
+}
+
+[[nodiscard]] inline botf::Aim toProto(const common::AimCommand& command) {
+	botf::Aim aim;
+	aim.set_aim_x(command.aim.x);
+	aim.set_aim_y(command.aim.y);
+	aim.set_tick(command.tick);
+	return aim;
+}
+
+[[nodiscard]] inline common::AimCommand fromProto(const botf::Aim& aim) {
+	return common::AimCommand{common::Point{aim.aim_x(), aim.aim_y()}, aim.tick()};
 }
 
 [[nodiscard]] inline botf::WorldState toProto(const common::WorldSnapshot& snapshot) {
