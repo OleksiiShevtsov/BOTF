@@ -166,7 +166,8 @@ int botf::ServerEngine::runLoop() {
 		applyInbound();
 		advanceSim(kDt);
 		pollNetwork();
-
+		
+		// tick overrun
 		const auto elapsed = std::chrono::steady_clock::now() - tickStart;
 		if (elapsed > kTickPeriod) {
 			constexpr auto kOverrunLogCooldown = std::chrono::seconds(1);
