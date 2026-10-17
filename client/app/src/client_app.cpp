@@ -1,16 +1,48 @@
 #include "app/client_app.h"
 
+#include "common/global_settings.hpp"
 #include "common/log.hpp"
 #include "protocol/protocol.hpp"
 
 #include <cmath>
+#include <numbers>
+#include <optional>
 #include <variant>
 
 #include <SFML/Network.hpp>
 
 namespace {
 
-constexpr float kAimPointDelta = 1.0f;
+[[nodiscard]] std::optional<botf::common::Point> selfPosition(
+	const std::optional<botf::common::WorldSnapshot>& world,
+	botf::common::ObjectID selfId) {
+	if (!world) {
+		return std::nullopt;
+	}
+	for (const auto& pose : world->players) {
+		if (pose.id == selfId) {
+			return pose.position;
+		}
+	}
+	return std::nullopt;
+}
+
+[[nodiscard]] float angleFromTo(botf::common::Point from, botf::common::Point to) {
+	return std::atan2(to.y - from.y, to.x - from.x);
+}
+
+[[nodiscard]] float absAngleDelta(float a, float b) {
+	float d = a - b;
+	constexpr float kPi = std::numbers::pi_v<float>;
+	constexpr float kTwoPi = 2.f * kPi;
+	while (d > kPi) {
+		d -= kTwoPi;
+	}
+	while (d < -kPi) {
+		d += kTwoPi;
+	}
+	return std::fabs(d);
+}
 
 }  // namespace
 
@@ -80,15 +112,23 @@ void botf::app::ClientApp::maybeSendAim(std::uint32_t tick) {
 	}
 
 	const common::Point mouse = m_rendering.mouseWorldPosition();
-	if (m_lastAimSent) {
-		const float dx = mouse.x - m_lastAimSent->x;
-		const float dy = mouse.y - m_lastAimSent->y;
-		const bool moved = dx * dx + dy * dy > kAimPointDelta * kAimPointDelta;
-		if (!(m_forceAimSend || moved || (tick % 3u) == 0u)) {
+	// Every frame when aim meaningfully changes (no tick%3 throttle).
+	// Prefer angular delta vs self pose; fall back to a low point delta.
+	if (!m_forceAimSend && m_lastAimSent) {
+		bool shouldSend = false;
+		if (const auto selfPos = selfPosition(m_latestWorld, *m_selfId)) {
+			const float now = angleFromTo(*selfPos, mouse);
+			const float prev = angleFromTo(*selfPos, *m_lastAimSent);
+			shouldSend = absAngleDelta(now, prev) >= common::GlobalSettings::aimSendAngleEpsilon;
+		} else {
+			const float dx = mouse.x - m_lastAimSent->x;
+			const float dy = mouse.y - m_lastAimSent->y;
+			const float thr = common::GlobalSettings::aimSendPointDelta;
+			shouldSend = dx * dx + dy * dy > thr * thr;
+		}
+		if (!shouldSend) {
 			return;
 		}
-	} else if (!m_forceAimSend && (tick % 3u) != 0u) {
-		return;
 	}
 
 	m_outbound.push(net::OutboundNotification{

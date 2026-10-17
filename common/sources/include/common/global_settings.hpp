@@ -15,5 +15,8 @@ constexpr float defaultSpawnX{100.0f};
 constexpr float defaultSpawnY{300.0f};
 // Ignore aim updates when the cursor is this close to the entity (world units).
 constexpr float aimEpsilon{1.0f};
+// Client Aim send: fire every frame when angle or point moves past these.
+constexpr float aimSendAngleEpsilon{0.03f};  // ~1.7°
+constexpr float aimSendPointDelta{0.25f};
 
 }  // namespace botf::common::GlobalSettings
