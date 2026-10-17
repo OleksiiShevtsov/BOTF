@@ -10,7 +10,7 @@ void botf::app::Scene::clear() {
 }
 
 void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot) {
-	std::unordered_set<common::ID> seen;
+	std::unordered_set<common::ObjectID> seen;
 	seen.reserve(snapshot.players.size());
 
 	for (const auto& pose : snapshot.players) {
@@ -26,8 +26,7 @@ void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot)
 		m_objects.push_back(std::move(view));
 	}
 
-	m_objects.erase(std::remove_if(m_objects.begin(),
-								   m_objects.end(),
+	m_objects.erase(std::remove_if(m_objects.begin(), m_objects.end(),
 								   [&seen](const std::unique_ptr<IViewObject>& obj) {
 									   return !seen.contains(obj->getId());
 								   }),
@@ -38,7 +37,7 @@ std::size_t botf::app::Scene::size() const {
 	return m_objects.size();
 }
 
-botf::app::IViewObject* botf::app::Scene::find(common::ID id) {
+botf::app::IViewObject* botf::app::Scene::find(common::ObjectID id) {
 	for (auto& obj : m_objects) {
 		if (obj && obj->getId() == id) {
 			return obj.get();
@@ -47,7 +46,7 @@ botf::app::IViewObject* botf::app::Scene::find(common::ID id) {
 	return nullptr;
 }
 
-const botf::app::IViewObject* botf::app::Scene::find(common::ID id) const {
+const botf::app::IViewObject* botf::app::Scene::find(common::ObjectID id) const {
 	for (const auto& obj : m_objects) {
 		if (obj && obj->getId() == id) {
 			return obj.get();
