@@ -1,8 +1,8 @@
 #include "app/figure_view.h"
 
-botf::app::FigureView::FigureView(common::ID id) : m_id(id) {}
+botf::app::FigureView::FigureView(common::ObjectID id) : m_id(id) {}
 
-botf::common::ID botf::app::FigureView::getId() const {
+botf::common::ObjectID botf::app::FigureView::getId() const {
 	return m_id;
 }
 

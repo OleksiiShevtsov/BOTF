@@ -81,7 +81,7 @@ void botf::net::TcpServer::acceptNewClients() {
 	}
 
 	socket->setBlocking(false);
-	const botf::ClientId id = m_nextClientId++;
+	const botf::common::ClientID id = m_nextClientId++;
 	m_selector.add(*socket);
 
 	Client client;
@@ -93,7 +93,7 @@ void botf::net::TcpServer::acceptNewClients() {
 }
 
 void botf::net::TcpServer::receiveFromClients() {
-	std::vector<botf::ClientId> toDrop;
+	std::vector<botf::common::ClientID> toDrop;
 
 	for (auto& [id, client] : m_clients) {
 		if (!m_selector.isReady(*client.socket)) {
@@ -119,7 +119,7 @@ void botf::net::TcpServer::receiveFromClients() {
 		}
 	}
 
-	for (const botf::ClientId id : toDrop) {
+	for (const botf::common::ClientID id : toDrop) {
 		dropClient(id);
 	}
 }
@@ -145,7 +145,7 @@ void botf::net::TcpServer::dispatchOutbound() {
 }
 
 void botf::net::TcpServer::flushSendBuffers() {
-	std::vector<botf::ClientId> toDrop;
+	std::vector<botf::common::ClientID> toDrop;
 
 	for (auto& [id, client] : m_clients) {
 		while (!client.sendBuffer.empty()) {
@@ -173,12 +173,12 @@ void botf::net::TcpServer::flushSendBuffers() {
 		}
 	}
 
-	for (const botf::ClientId id : toDrop) {
+	for (const botf::common::ClientID id : toDrop) {
 		dropClient(id);
 	}
 }
 
-void botf::net::TcpServer::dropClient(botf::ClientId id) {
+void botf::net::TcpServer::dropClient(botf::common::ClientID id) {
 	const auto it = m_clients.find(id);
 	if (it == m_clients.end()) {
 		return;

@@ -11,13 +11,13 @@ int clampAxis(int value) {
 
 }  // namespace
 
-botf::DynamicObject::DynamicObject(common::ID id, common::Point dot, float speedLimit)
+botf::DynamicObject::DynamicObject(common::ObjectID id, common::Point dot, float speedLimit)
 	: m_id{id}, m_position{dot}, m_angle{0.0f}, m_speedLimit{speedLimit} {
 	m_movement.initialX = m_position.x;
 	m_movement.initialY = m_position.y;
 }
 
-botf::common::ID botf::DynamicObject::id() const {
+botf::common::ObjectID botf::DynamicObject::id() const {
 	return m_id;
 }
 

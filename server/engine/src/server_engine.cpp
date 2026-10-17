@@ -78,7 +78,8 @@ std::uint32_t botf::ServerEngine::simTick() const {
 	return m_simTick;
 }
 
-std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(ClientId clientId) const {
+std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(
+	common::ClientID clientId) const {
 	const auto it = m_inputStates.find(clientId);
 	if (it == m_inputStates.end()) {
 		return std::nullopt;
@@ -86,7 +87,7 @@ std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(ClientId c
 	return it->second.command;
 }
 
-void botf::ServerEngine::ensureClientBound(ClientId clientId) {
+void botf::ServerEngine::ensureClientBound(common::ClientID clientId) {
 	if (m_game.entityForClient(clientId).has_value()) {
 		return;
 	}
@@ -96,7 +97,7 @@ void botf::ServerEngine::ensureClientBound(ClientId clientId) {
 		return;
 	}
 
-	const common::ID entity = m_game.spawnPlayer(
+	const common::ObjectID entity = m_game.spawnPlayer(
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
 	m_game.bindClient(clientId, entity);

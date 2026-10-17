@@ -10,6 +10,7 @@
 | Геттеры (client/app) | `get` + PascalCase | `getId`, `getMap`, `getPosition` |
 | Константы | `k` + PascalCase | `kTickHz`, `kPort` |
 | Типы / классы | PascalCase | `GameLogic`, `TcpServer` |
+| ID-алиасы | `ClientID` / `ObjectID` | TCP-сессия vs game/view entity (`common/types.hpp`) |
 | Namespaces | `botf::…` | `botf::net`, `botf::logic`, `botf::app` |
 
 Не использовать trailing underscore (`foo_`) для members.
@@ -37,7 +38,7 @@ botf::net::TcpClient::TcpClient(ClientInboundQueue& inbound, OutboundQueue& outb
     : m_inbound(inbound), m_outbound(outbound) {}
 
 // return type вне class-scope lookup — квалифицируем явно:
-botf::common::ID botf::DynamicObject::id() const { return m_id; }
+botf::common::ObjectID botf::DynamicObject::id() const { return m_id; }
 ```
 
 Не использовать `using namespace botf::…` в `.cpp`. Generated `*.pb.cc` не трогаем.

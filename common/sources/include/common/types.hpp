@@ -2,15 +2,15 @@
 
 #include <cstdint>
 
-namespace botf {
+namespace botf::common {
 
-// Network-facing client id (TCP session).
-using ClientId = std::uint32_t;
+// TCP session id (assigned by TcpServer). Not a game entity.
+using ClientID = std::uint32_t;
 
-namespace common {
+// Game / view object id (players, bullets, map objects, …).
+using ObjectID = std::uint32_t;
 
 using Coordinate = float;
-using ID = std::uint32_t;
 using Angle = float;
 
 struct Point {
@@ -18,6 +18,4 @@ struct Point {
 	Coordinate y{};
 };
 
-}  // namespace common
-
-}  // namespace botf
+}  // namespace botf::common

@@ -19,8 +19,8 @@ public:
 	void upsertFromSnapshot(const common::WorldSnapshot& snapshot);
 
 	[[nodiscard]] std::size_t size() const;
-	[[nodiscard]] IViewObject* find(common::ID id);
-	[[nodiscard]] const IViewObject* find(common::ID id) const;
+	[[nodiscard]] IViewObject* find(common::ObjectID id);
+	[[nodiscard]] const IViewObject* find(common::ObjectID id) const;
 
 	void draw(sf::RenderTarget& target) const;
 

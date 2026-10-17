@@ -34,7 +34,7 @@ public:
 
 private:
 	struct Client {
-		botf::ClientId id{};
+		botf::common::ClientID id{};
 		std::unique_ptr<sf::TcpSocket> socket;
 		std::vector<std::uint8_t> recvBuffer;
 		std::vector<std::uint8_t> sendBuffer;
@@ -44,16 +44,16 @@ private:
 	void receiveFromClients();
 	void dispatchOutbound();
 	void flushSendBuffers();
-	void dropClient(botf::ClientId id);
+	void dropClient(botf::common::ClientID id);
 
 	InboundQueue& m_inbound;
 	OutboundQueue& m_outbound;
 
 	sf::TcpListener m_listener;
 	sf::SocketSelector m_selector;
-	std::unordered_map<botf::ClientId, Client> m_clients;
+	std::unordered_map<botf::common::ClientID, Client> m_clients;
 
-	botf::ClientId m_nextClientId = 1;
+	botf::common::ClientID m_nextClientId = 1;
 	std::uint16_t m_port = 0;
 	bool m_listening = false;
 };

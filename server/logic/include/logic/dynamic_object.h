@@ -7,9 +7,9 @@ namespace botf {
 // Movable entity with acceleration / inertia (from old DynamicObject, adapted to dx/dy + dt).
 class DynamicObject {
 public:
-	DynamicObject(common::ID id, common::Point dot, float speedLimit);
+	DynamicObject(common::ObjectID id, common::Point dot, float speedLimit);
 
-	[[nodiscard]] common::ID id() const;
+	[[nodiscard]] common::ObjectID id() const;
 	[[nodiscard]] common::Point position() const;
 	[[nodiscard]] common::Angle angle() const;
 	[[nodiscard]] int inputDx() const;
@@ -47,7 +47,7 @@ private:
 	static constexpr float kAcceleration{50.0f};
 	static constexpr float kFriction{-9.81f / 0.4f};
 
-	common::ID m_id;
+	common::ObjectID m_id;
 	common::Point m_position{};
 	common::Angle m_angle{0.0f};
 	float m_speedLimit;

@@ -16,15 +16,15 @@ struct MoveCommand {
 
 // Pose of a controllable actor in a world snapshot.
 struct PlayerPose {
-	ID id{};
+	ObjectID id{};
 	Point position{};
 	Angle angle{};
 };
 
 // Reserved for future bullets (mapped from proto when present).
 struct BulletPose {
-	ID id{};
-	ID ownerId{};
+	ObjectID id{};
+	ObjectID ownerId{};
 	Point position{};
 	Point velocity{};
 };

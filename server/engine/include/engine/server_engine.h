@@ -37,7 +37,7 @@ public:
 	[[nodiscard]] std::size_t clientCount() const;
 	[[nodiscard]] const GameLogic& game() const;
 	[[nodiscard]] std::uint32_t simTick() const;
-	[[nodiscard]] std::optional<common::MoveCommand> lastMove(ClientId clientId) const;
+	[[nodiscard]] std::optional<common::MoveCommand> lastMove(common::ClientID clientId) const;
 
 private:
 	struct ClientInputState {
@@ -45,7 +45,7 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	void ensureClientBound(ClientId clientId);
+	void ensureClientBound(common::ClientID clientId);
 	void enqueueWorldState(std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
@@ -53,7 +53,7 @@ private:
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
 	GameLogic m_game;
-	std::unordered_map<ClientId, ClientInputState> m_inputStates;
+	std::unordered_map<common::ClientID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };
