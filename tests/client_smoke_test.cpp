@@ -34,12 +34,12 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 
 	auto decoded = botf::protocol::decode(*consumed);
 	ASSERT_TRUE(decoded.has_value());
-	const auto* world = std::get_if<botf::protocol::DecodedWorldState>(&*decoded);
+	const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
 	ASSERT_NE(world, nullptr);
-	ASSERT_EQ(world->snapshot.players.size(), 1u);
+	ASSERT_EQ(world->players.size(), 1u);
 
 	botf::app::Match match;
-	match.applyWorldSnapshot(world->snapshot);
+	match.applyWorldSnapshot(*world);
 	ASSERT_EQ(match.getScene().size(), 1u);
 
 	const botf::app::IViewObject* view = match.getScene().find(7);
@@ -50,7 +50,7 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 	EXPECT_FLOAT_EQ(view->getAngle(), 1.25f);
 
 	// Upsert keeps the same object and updates pose.
-	botf::common::WorldSnapshot next = world->snapshot;
+	botf::common::WorldSnapshot next = *world;
 	next.players[0].position = botf::common::Point{110.f, 310.f};
 	match.applyWorldSnapshot(next);
 	ASSERT_EQ(match.getScene().size(), 1u);
@@ -63,6 +63,6 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 	localPlayer.setId(1);
 	EXPECT_EQ(localPlayer.getId(), 1u);
 
-	EXPECT_EQ(world->snapshot.tick, 42u);
+	EXPECT_EQ(world->tick, 42u);
 	EXPECT_FALSE(framed.empty());
 }

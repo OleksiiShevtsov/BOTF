@@ -88,7 +88,7 @@ inline std::string encodeWorldSnapshot(const common::WorldSnapshot& snapshot,
 	return envelope.SerializeAsString();
 }
 
-inline std::optional<DecodedMessage> decode(const std::string& envelopeBytes) {
+inline std::optional<DecodedEnvelope> decode(const std::string& envelopeBytes) {
 	botf::Envelope envelope;
 	if (!envelope.ParseFromString(envelopeBytes)) {
 		return std::nullopt;
@@ -100,28 +100,28 @@ inline std::optional<DecodedMessage> decode(const std::string& envelopeBytes) {
 			if (!hello.ParseFromString(envelope.payload())) {
 				return std::nullopt;
 			}
-			return DecodedMessage{DecodedHello{fromProto(hello), envelope.sequence()}};
+			return DecodedEnvelope{fromProto(hello), envelope.sequence()};
 		}
 		case botf::MESSAGE_TYPE_MOVE: {
 			botf::Move move;
 			if (!move.ParseFromString(envelope.payload())) {
 				return std::nullopt;
 			}
-			return DecodedMessage{DecodedMove{normalizeMove(fromProto(move)), envelope.sequence()}};
+			return DecodedEnvelope{normalizeMove(fromProto(move)), envelope.sequence()};
 		}
 		case botf::MESSAGE_TYPE_AIM: {
 			botf::Aim aim;
 			if (!aim.ParseFromString(envelope.payload())) {
 				return std::nullopt;
 			}
-			return DecodedMessage{DecodedAim{fromProto(aim), envelope.sequence()}};
+			return DecodedEnvelope{fromProto(aim), envelope.sequence()};
 		}
 		case botf::MESSAGE_TYPE_WORLD_STATE: {
 			botf::WorldState state;
 			if (!state.ParseFromString(envelope.payload())) {
 				return std::nullopt;
 			}
-			return DecodedMessage{DecodedWorldState{fromProto(state), envelope.sequence()}};
+			return DecodedEnvelope{fromProto(state), envelope.sequence()};
 		}
 		default:
 			return std::nullopt;

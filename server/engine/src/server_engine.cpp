@@ -146,18 +146,18 @@ void botf::ServerEngine::applyInbound() {
 			continue;
 		}
 
-		if (const auto* hello = std::get_if<protocol::DecodedHello>(&*decoded)) {
-			handleHello(note->clientId, hello->hello, hello->sequence);
+		if (const auto* hello = std::get_if<common::HelloMessage>(&decoded->body)) {
+			handleHello(note->clientId, *hello, decoded->sequence);
 			continue;
 		}
 
-		if (const auto* move = std::get_if<protocol::DecodedMove>(&*decoded)) {
-			handleMove(note->clientId, move->command, move->sequence);
+		if (const auto* move = std::get_if<common::MoveCommand>(&decoded->body)) {
+			handleMove(note->clientId, *move, decoded->sequence);
 			continue;
 		}
 
-		if (const auto* aim = std::get_if<protocol::DecodedAim>(&*decoded)) {
-			handleAim(note->clientId, aim->command, aim->sequence);
+		if (const auto* aim = std::get_if<common::AimCommand>(&decoded->body)) {
+			handleAim(note->clientId, *aim, decoded->sequence);
 			continue;
 		}
 	}

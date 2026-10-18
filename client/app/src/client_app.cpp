@@ -14,8 +14,7 @@
 namespace {
 
 [[nodiscard]] std::optional<botf::common::Point> selfPosition(
-	const std::optional<botf::common::WorldSnapshot>& world,
-	botf::common::ObjectID selfId) {
+	const std::optional<botf::common::WorldSnapshot>& world, botf::common::ObjectID selfId) {
 	if (!world) {
 		return std::nullopt;
 	}
@@ -70,19 +69,19 @@ void botf::app::ClientApp::applyInbound() {
 			continue;
 		}
 
-		if (const auto* hello = std::get_if<protocol::DecodedHello>(&*decoded)) {
-			if (hello->hello.objectId == 0) {
+		if (const auto* hello = std::get_if<common::HelloMessage>(&decoded->body)) {
+			if (hello->objectId == 0) {
 				botf::log::warn("[client] Hello ack without object_id");
 				continue;
 			}
-			m_selfId = hello->hello.objectId;
+			m_selfId = hello->objectId;
 			m_rendering.getPlayer().setId(*m_selfId);
 			botf::log::info("[client] bound to entity {}", *m_selfId);
 			continue;
 		}
 
-		if (const auto* world = std::get_if<protocol::DecodedWorldState>(&*decoded)) {
-			m_latestWorld = world->snapshot;
+		if (const auto* world = std::get_if<common::WorldSnapshot>(&decoded->body)) {
+			m_latestWorld = *world;
 		}
 	}
 }

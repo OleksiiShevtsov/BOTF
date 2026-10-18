@@ -7,27 +7,15 @@
 
 namespace botf::protocol {
 
-struct DecodedMove {
-	common::MoveCommand command{};
+// Wire body after Envelope parse. Add new DTO types here when adding messages.
+// (ClientInput / bullets stay as proto+DTO stubs until wired.)
+using MessageBody = std::
+	variant<common::MoveCommand, common::WorldSnapshot, common::HelloMessage, common::AimCommand>;
+
+// decode() result: DTO + envelope sequence (no per-message Decoded* wrappers).
+struct DecodedEnvelope {
+	MessageBody body{};
 	std::uint64_t sequence{};
 };
-
-struct DecodedWorldState {
-	common::WorldSnapshot snapshot{};
-	std::uint64_t sequence{};
-};
-
-struct DecodedHello {
-	common::HelloMessage hello{};
-	std::uint64_t sequence{};
-};
-
-struct DecodedAim {
-	common::AimCommand command{};
-	std::uint64_t sequence{};
-};
-
-// Extensible: add Input here without touching net framing.
-using DecodedMessage = std::variant<DecodedMove, DecodedWorldState, DecodedHello, DecodedAim>;
 
 }  // namespace botf::protocol
