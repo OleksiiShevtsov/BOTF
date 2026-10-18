@@ -70,13 +70,13 @@ std::optional<botf::common::ObjectID> helloBind(botf::ServerEngine& engine,
 		if (!decoded) {
 			continue;
 		}
-		const auto* hello = std::get_if<botf::protocol::DecodedHello>(&*decoded);
-		if (!hello || hello->hello.objectId == 0) {
+		const auto* hello = std::get_if<botf::common::HelloMessage>(&decoded->body);
+		if (!hello || hello->objectId == 0) {
 			continue;
 		}
 
-		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->hello.objectId);
-		return hello->hello.objectId;
+		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->objectId);
+		return hello->objectId;
 	}
 	return std::nullopt;
 }
@@ -175,11 +175,11 @@ TEST(ServerSmoke, HelloBindThenMoveWorldState) {
 		if (!decoded) {
 			continue;
 		}
-		const auto* world = std::get_if<botf::protocol::DecodedWorldState>(&*decoded);
-		if (!world || world->snapshot.players.empty()) {
+		const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
+		if (!world || world->players.empty()) {
 			continue;
 		}
-		lastSnapshot = world->snapshot;
+		lastSnapshot = *world;
 		gotWorld = true;
 	}
 
@@ -356,11 +356,11 @@ TEST(ServerSmoke, HelloAimPointUpdatesEntityAngleInWorldState) {
 		if (!decoded) {
 			continue;
 		}
-		const auto* world = std::get_if<botf::protocol::DecodedWorldState>(&*decoded);
+		const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
 		if (!world) {
 			continue;
 		}
-		const auto* pose = findPlayer(world->snapshot, *selfId);
+		const auto* pose = findPlayer(*world, *selfId);
 		if (!pose) {
 			continue;
 		}
