@@ -138,9 +138,9 @@ BOTF/
 `main` тонкий: только runtime (`ServerEngine` / `ClientApp`). Smoke живёт в `tests/`.
 
 ```
-Hello → spawn/bind entity → Hello ack (object_id)
-ClientInput(dx,dy,aim,fire) → net → GameLogic (move + store aim point)
-  → tick (move, then atan2(aim−pos) → angle) → WorldSnapshot → Scene (triangle)
+Hello → spawn/bind figure → Hello ack (object_id)
+ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet spawn)
+  → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 
 ### Новая нотификация (checklist)

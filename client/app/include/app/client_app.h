@@ -24,7 +24,7 @@ public:
 private:
 	void sendHello();
 	void applyInbound();
-	void maybeSendInput(const MoveInput& move, std::uint32_t tick);
+	void maybeSendInput(const MoveInput& move, bool fire, std::uint32_t tick);
 
 	net::ClientInboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
@@ -34,6 +34,7 @@ private:
 	std::uint64_t m_sequence = 1;
 	bool m_helloSent = false;
 	bool m_forceInputSend = true;
+	bool m_prevLmbDown = false;
 	std::optional<common::ClientInput> m_lastInputSent;
 	std::optional<common::ObjectID> m_selfId;
 	std::optional<common::WorldSnapshot> m_latestWorld;

@@ -9,7 +9,9 @@
 #include <optional>
 #include <type_traits>
 
+#include <SFML/Config.hpp>
 #include <SFML/Network.hpp>
+#include <SFML/Window/Mouse.hpp>
 
 namespace {
 
@@ -101,13 +103,13 @@ void botf::app::ClientApp::applyInbound() {
 	}
 }
 
-void botf::app::ClientApp::maybeSendInput(const MoveInput& move, std::uint32_t tick) {
+void botf::app::ClientApp::maybeSendInput(const MoveInput& move, bool fire, std::uint32_t tick) {
 	if (!m_net.isConnected() || !m_selfId.has_value()) {
 		return;
 	}
 
 	const common::Point mouse = m_rendering.mouseWorldPosition();
-	if (!m_forceInputSend && m_lastInputSent) {
+	if (!m_forceInputSend && !fire && m_lastInputSent) {
 		const bool moveDue =
 			move.dx != m_lastInputSent->dx || move.dy != m_lastInputSent->dy || (tick % 3u) == 0u;
 		const bool aimChanged =
@@ -117,7 +119,7 @@ void botf::app::ClientApp::maybeSendInput(const MoveInput& move, std::uint32_t t
 		}
 	}
 
-	const common::ClientInput input{move.dx, move.dy, mouse, false, tick};
+	const common::ClientInput input{move.dx, move.dy, mouse, fire, tick};
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
 		protocol::encodeClientInput(input, m_sequence),
@@ -144,7 +146,14 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 	std::uint32_t tick = 1;
 	while (m_rendering.isWindowOpen()) {
 		const MoveInput move = m_rendering.getInputHandler().readMoveInput();
-		maybeSendInput(move, tick);
+#if SFML_VERSION_MAJOR >= 3
+		const bool lmbDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+#else
+		const bool lmbDown = sf::Mouse::isButtonPressed(sf::Mouse::Left);
+#endif
+		const bool fireEdge = lmbDown && !m_prevLmbDown;
+		m_prevLmbDown = lmbDown;
+		maybeSendInput(move, fireEdge, tick);
 		++tick;
 
 		if (m_net.isConnected()) {
@@ -155,6 +164,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 				m_selfId.reset();
 				m_forceInputSend = true;
 				m_lastInputSent.reset();
+				m_prevLmbDown = false;
 			}
 		}
 
