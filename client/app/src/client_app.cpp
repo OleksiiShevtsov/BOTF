@@ -7,7 +7,7 @@
 #include <cmath>
 #include <numbers>
 #include <optional>
-#include <variant>
+#include <type_traits>
 
 #include <SFML/Network.hpp>
 
@@ -43,6 +43,20 @@ namespace {
 	return std::fabs(d);
 }
 
+[[nodiscard]] bool aimDue(const botf::common::Point& mouse,
+						  const botf::common::Point& lastAim,
+						  const std::optional<botf::common::Point>& selfPos) {
+	if (selfPos) {
+		const float now = angleFromTo(*selfPos, mouse);
+		const float prev = angleFromTo(*selfPos, lastAim);
+		return absAngleDelta(now, prev) >= botf::common::GlobalSettings::aimSendAngleEpsilon;
+	}
+	const float dx = mouse.x - lastAim.x;
+	const float dy = mouse.y - lastAim.y;
+	const float thr = botf::common::GlobalSettings::aimSendPointDelta;
+	return dx * dx + dy * dy > thr * thr;
+}
+
 }  // namespace
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
@@ -69,73 +83,47 @@ void botf::app::ClientApp::applyInbound() {
 			continue;
 		}
 
-		if (const auto* hello = std::get_if<common::HelloMessage>(&decoded->body)) {
-			if (hello->objectId == 0) {
-				botf::log::warn("[client] Hello ack without object_id");
-				continue;
+		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
+			using Body = std::decay_t<decltype(body)>;
+			if constexpr (std::is_same_v<Body, common::HelloMessage>) {
+				if (body.objectId == 0) {
+					botf::log::warn("[client] Hello ack without object_id");
+					return;
+				}
+				m_selfId = body.objectId;
+				m_rendering.getPlayer().setId(*m_selfId);
+				botf::log::info("[client] bound to entity {}", *m_selfId);
+			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
+				m_latestWorld = body;
 			}
-			m_selfId = hello->objectId;
-			m_rendering.getPlayer().setId(*m_selfId);
-			botf::log::info("[client] bound to entity {}", *m_selfId);
-			continue;
-		}
-
-		if (const auto* world = std::get_if<common::WorldSnapshot>(&decoded->body)) {
-			m_latestWorld = *world;
-		}
+			// ClientInput from server is ignored.
+		});
 	}
 }
 
-void botf::app::ClientApp::maybeSendMove(const MoveInput& input, std::uint32_t tick) {
-	if (!m_net.isConnected() || !m_selfId.has_value()) {
-		return;
-	}
-	if (!(m_forceSend || input.dx != m_lastSent.dx || input.dy != m_lastSent.dy ||
-		  (tick % 3u) == 0u)) {
-		return;
-	}
-
-	const common::MoveCommand command{input.dx, input.dy, tick};
-	m_outbound.push(net::OutboundNotification{
-		std::nullopt,
-		protocol::encodeMove(command, m_sequence),
-	});
-	m_lastSent = input;
-	m_forceSend = false;
-	++m_sequence;
-}
-
-void botf::app::ClientApp::maybeSendAim(std::uint32_t tick) {
+void botf::app::ClientApp::maybeSendInput(const MoveInput& move, std::uint32_t tick) {
 	if (!m_net.isConnected() || !m_selfId.has_value()) {
 		return;
 	}
 
 	const common::Point mouse = m_rendering.mouseWorldPosition();
-	// Every frame when aim meaningfully changes (no tick%3 throttle).
-	// Prefer angular delta vs self pose; fall back to a low point delta.
-	if (!m_forceAimSend && m_lastAimSent) {
-		bool shouldSend = false;
-		if (const auto selfPos = selfPosition(m_latestWorld, *m_selfId)) {
-			const float now = angleFromTo(*selfPos, mouse);
-			const float prev = angleFromTo(*selfPos, *m_lastAimSent);
-			shouldSend = absAngleDelta(now, prev) >= common::GlobalSettings::aimSendAngleEpsilon;
-		} else {
-			const float dx = mouse.x - m_lastAimSent->x;
-			const float dy = mouse.y - m_lastAimSent->y;
-			const float thr = common::GlobalSettings::aimSendPointDelta;
-			shouldSend = dx * dx + dy * dy > thr * thr;
-		}
-		if (!shouldSend) {
+	if (!m_forceInputSend && m_lastInputSent) {
+		const bool moveDue =
+			move.dx != m_lastInputSent->dx || move.dy != m_lastInputSent->dy || (tick % 3u) == 0u;
+		const bool aimChanged =
+			aimDue(mouse, m_lastInputSent->aim, selfPosition(m_latestWorld, *m_selfId));
+		if (!moveDue && !aimChanged) {
 			return;
 		}
 	}
 
+	const common::ClientInput input{move.dx, move.dy, mouse, false, tick};
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
-		protocol::encodeAim(common::AimCommand{mouse, tick}, m_sequence),
+		protocol::encodeClientInput(input, m_sequence),
 	});
-	m_lastAimSent = mouse;
-	m_forceAimSend = false;
+	m_lastInputSent = input;
+	m_forceInputSend = false;
 	++m_sequence;
 }
 
@@ -146,7 +134,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 	m_rendering.getMatch().start();
 
 	if (!m_net.connect(sf::IpAddress::LocalHost, port, sf::seconds(1))) {
-		botf::log::warn("[client] server not available on {} — UI only (Move/WorldState offline)",
+		botf::log::warn("[client] server not available on {} — UI only (input/WorldState offline)",
 						port);
 	} else {
 		botf::log::info("[client] connected to server");
@@ -155,9 +143,8 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 
 	std::uint32_t tick = 1;
 	while (m_rendering.isWindowOpen()) {
-		const MoveInput input = m_rendering.getInputHandler().readMoveInput();
-		maybeSendMove(input, tick);
-		maybeSendAim(tick);
+		const MoveInput move = m_rendering.getInputHandler().readMoveInput();
+		maybeSendInput(move, tick);
 		++tick;
 
 		if (m_net.isConnected()) {
@@ -166,8 +153,8 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 				botf::log::warn("[client] disconnected from server");
 				m_helloSent = false;
 				m_selfId.reset();
-				m_forceAimSend = true;
-				m_lastAimSent.reset();
+				m_forceInputSend = true;
+				m_lastInputSent.reset();
 			}
 		}
 

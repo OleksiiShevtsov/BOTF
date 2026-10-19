@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <optional>
 #include <string>
-#include <variant>
 
 namespace botf::protocol {
 namespace detail {
@@ -18,18 +17,18 @@ inline int clampAxis(int value) {
 
 }  // namespace detail
 
-inline common::MoveCommand normalizeMove(common::MoveCommand command) {
-	command.dx = detail::clampAxis(command.dx);
-	command.dy = detail::clampAxis(command.dy);
-	return command;
+inline common::ClientInput normalizeInput(common::ClientInput input) {
+	input.dx = detail::clampAxis(input.dx);
+	input.dy = detail::clampAxis(input.dy);
+	return input;
 }
 
-inline bool isIdle(const common::MoveCommand& command) {
-	return command.dx == 0 && command.dy == 0;
+inline bool isIdle(const common::ClientInput& input) {
+	return input.dx == 0 && input.dy == 0;
 }
 
-inline std::string toString(const common::MoveCommand& command) {
-	const common::MoveCommand n = normalizeMove(command);
+inline std::string toString(const common::ClientInput& input) {
+	const common::ClientInput n = normalizeInput(input);
 	if (isIdle(n)) {
 		return "IDLE";
 	}
@@ -56,35 +55,23 @@ inline std::string toString(const common::MoveCommand& command) {
 
 inline std::string encodeHello(const common::HelloMessage& hello, std::uint64_t sequence) {
 	botf::Envelope envelope;
-	envelope.set_type(botf::MESSAGE_TYPE_HELLO);
 	envelope.set_sequence(sequence);
-	envelope.set_payload(toProto(hello).SerializeAsString());
+	*envelope.mutable_hello() = toProto(hello);
 	return envelope.SerializeAsString();
 }
 
-inline std::string encodeMove(const common::MoveCommand& command, std::uint64_t sequence) {
-	const common::MoveCommand normalized = normalizeMove(command);
+inline std::string encodeClientInput(const common::ClientInput& input, std::uint64_t sequence) {
 	botf::Envelope envelope;
-	envelope.set_type(botf::MESSAGE_TYPE_MOVE);
 	envelope.set_sequence(sequence);
-	envelope.set_payload(toProto(normalized).SerializeAsString());
-	return envelope.SerializeAsString();
-}
-
-inline std::string encodeAim(const common::AimCommand& command, std::uint64_t sequence) {
-	botf::Envelope envelope;
-	envelope.set_type(botf::MESSAGE_TYPE_AIM);
-	envelope.set_sequence(sequence);
-	envelope.set_payload(toProto(command).SerializeAsString());
+	*envelope.mutable_client_input() = toProto(normalizeInput(input));
 	return envelope.SerializeAsString();
 }
 
 inline std::string encodeWorldSnapshot(const common::WorldSnapshot& snapshot,
 									   std::uint64_t sequence) {
 	botf::Envelope envelope;
-	envelope.set_type(botf::MESSAGE_TYPE_WORLD_STATE);
 	envelope.set_sequence(sequence);
-	envelope.set_payload(toProto(snapshot).SerializeAsString());
+	*envelope.mutable_world_state() = toProto(snapshot);
 	return envelope.SerializeAsString();
 }
 
@@ -94,35 +81,15 @@ inline std::optional<DecodedEnvelope> decode(const std::string& envelopeBytes) {
 		return std::nullopt;
 	}
 
-	switch (envelope.type()) {
-		case botf::MESSAGE_TYPE_HELLO: {
-			botf::Hello hello;
-			if (!hello.ParseFromString(envelope.payload())) {
-				return std::nullopt;
-			}
-			return DecodedEnvelope{fromProto(hello), envelope.sequence()};
-		}
-		case botf::MESSAGE_TYPE_MOVE: {
-			botf::Move move;
-			if (!move.ParseFromString(envelope.payload())) {
-				return std::nullopt;
-			}
-			return DecodedEnvelope{normalizeMove(fromProto(move)), envelope.sequence()};
-		}
-		case botf::MESSAGE_TYPE_AIM: {
-			botf::Aim aim;
-			if (!aim.ParseFromString(envelope.payload())) {
-				return std::nullopt;
-			}
-			return DecodedEnvelope{fromProto(aim), envelope.sequence()};
-		}
-		case botf::MESSAGE_TYPE_WORLD_STATE: {
-			botf::WorldState state;
-			if (!state.ParseFromString(envelope.payload())) {
-				return std::nullopt;
-			}
-			return DecodedEnvelope{fromProto(state), envelope.sequence()};
-		}
+	switch (envelope.body_case()) {
+		case botf::Envelope::kHello:
+			return DecodedEnvelope{fromProto(envelope.hello()), envelope.sequence()};
+		case botf::Envelope::kClientInput:
+			return DecodedEnvelope{normalizeInput(fromProto(envelope.client_input())),
+								   envelope.sequence()};
+		case botf::Envelope::kWorldState:
+			return DecodedEnvelope{fromProto(envelope.world_state()), envelope.sequence()};
+		case botf::Envelope::BODY_NOT_SET:
 		default:
 			return std::nullopt;
 	}

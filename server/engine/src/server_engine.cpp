@@ -8,7 +8,7 @@
 #include <chrono>
 #include <csignal>
 #include <thread>
-#include <variant>
+#include <type_traits>
 
 namespace {
 
@@ -78,19 +78,10 @@ std::uint32_t botf::ServerEngine::simTick() const {
 	return m_simTick;
 }
 
-std::optional<botf::common::MoveCommand> botf::ServerEngine::lastMove(
+std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	common::ClientID clientId) const {
 	const auto it = m_inputStates.find(clientId);
 	if (it == m_inputStates.end()) {
-		return std::nullopt;
-	}
-	return it->second.command;
-}
-
-std::optional<botf::common::AimCommand> botf::ServerEngine::lastAim(
-	common::ClientID clientId) const {
-	const auto it = m_aimStates.find(clientId);
-	if (it == m_aimStates.end()) {
 		return std::nullopt;
 	}
 	return it->second.command;
@@ -120,22 +111,16 @@ void botf::ServerEngine::handleHello(common::ClientID clientId,
 	});
 }
 
-void botf::ServerEngine::handleMove(common::ClientID clientId,
-									const common::MoveCommand& command,
-									std::uint64_t sequence) {
-	m_inputStates[clientId] = ClientInputState{command, sequence};
+void botf::ServerEngine::handleClientInput(common::ClientID clientId,
+										   const common::ClientInput& input,
+										   std::uint64_t sequence) {
+	m_inputStates[clientId] = ClientInputState{input, sequence};
 
-	// Move applies only to the entity bound via Hello. Unbound → no-op.
-	m_game.setClientInput(clientId, command.dx, command.dy);
-}
-
-void botf::ServerEngine::handleAim(common::ClientID clientId,
-								   const common::AimCommand& command,
-								   std::uint64_t sequence) {
-	m_aimStates[clientId] = ClientAimState{command, sequence};
-
-	// Aim applies only to the entity bound via Hello. Unbound → no-op.
-	m_game.setClientAim(clientId, command.aim);
+	// Input applies only to the entity bound via Hello. Unbound → no-op in GameLogic.
+	m_game.setClientInput(clientId, input.dx, input.dy);
+	m_game.setClientAim(clientId, input.aim);
+	// fire reserved for card 20.
+	(void)input.fire;
 }
 
 void botf::ServerEngine::applyInbound() {
@@ -146,20 +131,16 @@ void botf::ServerEngine::applyInbound() {
 			continue;
 		}
 
-		if (const auto* hello = std::get_if<common::HelloMessage>(&decoded->body)) {
-			handleHello(note->clientId, *hello, decoded->sequence);
-			continue;
-		}
-
-		if (const auto* move = std::get_if<common::MoveCommand>(&decoded->body)) {
-			handleMove(note->clientId, *move, decoded->sequence);
-			continue;
-		}
-
-		if (const auto* aim = std::get_if<common::AimCommand>(&decoded->body)) {
-			handleAim(note->clientId, *aim, decoded->sequence);
-			continue;
-		}
+		const common::ClientID clientId = note->clientId;
+		protocol::dispatch(*decoded, [this, clientId](const auto& body, std::uint64_t sequence) {
+			using Body = std::decay_t<decltype(body)>;
+			if constexpr (std::is_same_v<Body, common::HelloMessage>) {
+				handleHello(clientId, body, sequence);
+			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
+				handleClientInput(clientId, body, sequence);
+			}
+			// WorldSnapshot from a client is ignored.
+		});
 	}
 }
 

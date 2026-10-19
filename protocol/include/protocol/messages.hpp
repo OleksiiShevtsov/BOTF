@@ -7,12 +7,10 @@
 
 namespace botf::protocol {
 
-// Wire body after Envelope parse. Add new DTO types here when adding messages.
-// (ClientInput / bullets stay as proto+DTO stubs until wired.)
-using MessageBody = std::
-	variant<common::MoveCommand, common::WorldSnapshot, common::HelloMessage, common::AimCommand>;
+// Wire body after Envelope oneof parse. Add DTO types here when adding messages.
+using MessageBody = std::variant<common::HelloMessage, common::ClientInput, common::WorldSnapshot>;
 
-// decode() result: DTO + envelope sequence (no per-message Decoded* wrappers).
+// decode() result: DTO + envelope sequence.
 struct DecodedEnvelope {
 	MessageBody body{};
 	std::uint64_t sequence{};

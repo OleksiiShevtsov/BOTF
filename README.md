@@ -125,7 +125,7 @@ BOTF/
 ├── common/
 │   ├── sources/                  # types, DTO, botf::log (spdlog)
 │   └── protobuf/messages/        # .proto codegen
-├── protocol/            # Envelope codec, MessageType factory, proto ↔ DTO
+├── protocol/            # Envelope oneof codec, dispatch registry, proto ↔ DTO
 ├── net/                 # TcpServer, TcpClient, framing, queues (no protobuf)
 ├── server/
 │   ├── engine/          # ServerEngine (tick loop)
@@ -139,9 +139,18 @@ BOTF/
 
 ```
 Hello → spawn/bind entity → Hello ack (object_id)
-MoveCommand / Aim(aim_x,aim_y) → net → GameLogic stores aim point (own entity)
+ClientInput(dx,dy,aim,fire) → net → GameLogic (move + store aim point)
   → tick (move, then atan2(aim−pos) → angle) → WorldSnapshot → Scene (triangle)
 ```
+
+### Новая нотификация (checklist)
+
+1. Proto message (+ поле в `Envelope.body` oneof).
+2. DTO в `common/dto.hpp` + `toProto`/`fromProto`.
+3. DTO в `MessageBody` variant.
+4. `encodeX` в `codec.hpp` (decode читает oneof автоматически).
+5. Handler + ветка в `protocol::dispatch` visitor (server и/или client).
+6. Net не трогать.
 
 ## Tests
 
