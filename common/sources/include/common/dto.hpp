@@ -8,16 +8,12 @@
 
 namespace botf::common {
 
-// Client → server movement intent for one tick.
-struct MoveCommand {
+// Client → server combined input for one tick (wire: ClientInput).
+struct ClientInput {
 	int dx{};
 	int dy{};
-	std::uint32_t tick{};
-};
-
-// Client → server aim point (world space). Server derives angle.
-struct AimCommand {
 	Point aim{};
+	bool fire{};
 	std::uint32_t tick{};
 };
 

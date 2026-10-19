@@ -13,9 +13,11 @@
 TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 	botf::app::InputHandler input;
 	const auto sample = input.readMoveInput();
-	const auto movePacket = botf::net::framePayload(
-		botf::protocol::encodeMove(botf::common::MoveCommand{sample.dx, sample.dy, 1}, 1));
-	EXPECT_FALSE(movePacket.empty());
+	const auto inputPacket = botf::net::framePayload(botf::protocol::encodeClientInput(
+		botf::common::ClientInput{sample.dx, sample.dy, botf::common::Point{200.f, 100.f}, false,
+								  1},
+		1));
+	EXPECT_FALSE(inputPacket.empty());
 
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = 42;

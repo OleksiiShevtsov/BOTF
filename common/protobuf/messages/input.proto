@@ -3,10 +3,19 @@ syntax = "proto3";
 package botf;
 
 // Client → server input for one simulation tick / frame.
+// Replaces separate Move + Aim messages (card 40).
+//
+// Movement axes clamped to {-1, 0, 1} on the server (same semantics as old Move):
+//   dx: -1 = left,  0 = none, +1 = right
+//   dy: -1 = down,  0 = none, +1 = up
+// Aim is a world-space point; server stores it and retargets angle each tick.
+// `fire` is wired for card 20 (no-op until then).
+//
+// Field numbers kept from the float move_x/move_y stub; types are now int32.
 message ClientInput {
   uint32 tick = 1;
-  float move_x = 2;
-  float move_y = 3;
+  int32 dx = 2;
+  int32 dy = 3;
   float aim_x = 4;
   float aim_y = 5;
   bool fire = 6;

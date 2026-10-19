@@ -91,9 +91,16 @@ const botf::common::PlayerPose* findPlayer(const botf::common::WorldSnapshot& sn
 	return nullptr;
 }
 
+botf::common::ClientInput makeInput(int dx,
+									int dy,
+									std::uint32_t tick,
+									botf::common::Point aim = {200.f, 100.f}) {
+	return botf::common::ClientInput{dx, dy, aim, false, tick};
+}
+
 }  // namespace
 
-TEST(ServerSmoke, HelloBindThenMoveWorldState) {
+TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -130,21 +137,21 @@ TEST(ServerSmoke, HelloBindThenMoveWorldState) {
 
 	client.setBlocking(true);
 	for (const auto& sample : samples) {
-		ASSERT_TRUE(sendFramed(
-			client, botf::protocol::encodeMove(
-						botf::common::MoveCommand{sample.dx, sample.dy, sample.tick}, sample.seq)));
+		ASSERT_TRUE(
+			sendFramed(client, botf::protocol::encodeClientInput(
+								   makeInput(sample.dx, sample.dy, sample.tick), sample.seq)));
 
 		bool got = false;
 		for (int i = 0; i < 100 && !got; ++i) {
 			engine.pollNetwork();
 			engine.applyInbound();
-			const auto move = engine.lastMove(1);
-			if (move && move->tick == sample.tick) {
+			const auto input = engine.lastClientInput(1);
+			if (input && input->tick == sample.tick) {
 				got = true;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 		}
-		ASSERT_TRUE(got) << "waiting for Move tick=" << sample.tick;
+		ASSERT_TRUE(got) << "waiting for ClientInput tick=" << sample.tick;
 
 		for (int j = 0; j < 15; ++j) {
 			engine.advanceSim(kDt);
@@ -185,7 +192,7 @@ TEST(ServerSmoke, HelloBindThenMoveWorldState) {
 
 	client.disconnect();
 
-	const auto last = engine.lastMove(1);
+	const auto last = engine.lastClientInput(1);
 	ASSERT_TRUE(last.has_value());
 	EXPECT_EQ(last->tick, 4u);
 	EXPECT_TRUE(botf::protocol::isIdle(*last));
@@ -203,7 +210,7 @@ TEST(ServerSmoke, HelloBindThenMoveWorldState) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
+TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -243,20 +250,19 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
 	}
 
 	clientA.setBlocking(true);
-	ASSERT_TRUE(
-		sendFramed(clientA, botf::protocol::encodeMove(botf::common::MoveCommand{1, 0, 10}, 2)));
+	ASSERT_TRUE(sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(1, 0, 10), 2)));
 
-	bool gotMove = false;
-	for (int i = 0; i < 100 && !gotMove; ++i) {
+	bool gotInput = false;
+	for (int i = 0; i < 100 && !gotInput; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
-		const auto move = engine.lastMove(1);
-		if (move && move->tick == 10) {
-			gotMove = true;
+		const auto input = engine.lastClientInput(1);
+		if (input && input->tick == 10) {
+			gotInput = true;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	ASSERT_TRUE(gotMove);
+	ASSERT_TRUE(gotInput);
 
 	for (int j = 0; j < 20; ++j) {
 		engine.advanceSim(kDt);
@@ -278,13 +284,12 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
 	EXPECT_FLOAT_EQ(endB.x, startB.x);
 	EXPECT_FLOAT_EQ(endB.y, startB.y);
 
-	// Unbound Move (no Hello) must not spawn a third entity.
+	// Unbound ClientInput (no Hello) must not spawn a third entity.
 	sf::TcpSocket clientC;
 	clientC.setBlocking(true);
 	ASSERT_EQ(clientC.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
 			  sf::Socket::Status::Done);
-	ASSERT_TRUE(
-		sendFramed(clientC, botf::protocol::encodeMove(botf::common::MoveCommand{0, 1, 1}, 1)));
+	ASSERT_TRUE(sendFramed(clientC, botf::protocol::encodeClientInput(makeInput(0, 1, 1), 1)));
 	for (int i = 0; i < 50; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
@@ -299,7 +304,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndMoveIsolation) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, HelloAimPointUpdatesEntityAngleInWorldState) {
+TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -321,21 +326,21 @@ TEST(ServerSmoke, HelloAimPointUpdatesEntityAngleInWorldState) {
 	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
 	client.setBlocking(true);
 	ASSERT_TRUE(
-		sendFramed(client, botf::protocol::encodeAim(botf::common::AimCommand{aimPoint, 7}, 2)));
+		sendFramed(client, botf::protocol::encodeClientInput(makeInput(0, 0, 7, aimPoint), 2)));
 
-	bool gotAim = false;
-	for (int i = 0; i < 100 && !gotAim; ++i) {
+	bool gotInput = false;
+	for (int i = 0; i < 100 && !gotInput; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
-		const auto aim = engine.lastAim(1);
-		if (aim && aim->tick == 7) {
-			gotAim = true;
-			EXPECT_FLOAT_EQ(aim->aim.x, aimPoint.x);
-			EXPECT_FLOAT_EQ(aim->aim.y, aimPoint.y);
+		const auto input = engine.lastClientInput(1);
+		if (input && input->tick == 7) {
+			gotInput = true;
+			EXPECT_FLOAT_EQ(input->aim.x, aimPoint.x);
+			EXPECT_FLOAT_EQ(input->aim.y, aimPoint.y);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	ASSERT_TRUE(gotAim);
+	ASSERT_TRUE(gotInput);
 
 	EXPECT_NEAR(engine.game().objects().front().angle(), 0.f, 1e-4f);
 

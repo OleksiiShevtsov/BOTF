@@ -1,9 +1,8 @@
 #pragma once
 
-#include "aim.pb.h"
 #include "common/dto.hpp"
 #include "envelope.pb.h"
-#include "move.pb.h"
+#include "input.pb.h"
 #include "world_state.pb.h"
 
 namespace botf::protocol {
@@ -19,28 +18,22 @@ namespace botf::protocol {
 	return common::HelloMessage{hello.player_name(), hello.object_id()};
 }
 
-[[nodiscard]] inline botf::Move toProto(const common::MoveCommand& command) {
-	botf::Move move;
-	move.set_dx(command.dx);
-	move.set_dy(command.dy);
-	move.set_tick(command.tick);
-	return move;
+[[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {
+	botf::ClientInput message;
+	message.set_tick(input.tick);
+	message.set_dx(input.dx);
+	message.set_dy(input.dy);
+	message.set_aim_x(input.aim.x);
+	message.set_aim_y(input.aim.y);
+	message.set_fire(input.fire);
+	return message;
 }
 
-[[nodiscard]] inline common::MoveCommand fromProto(const botf::Move& move) {
-	return common::MoveCommand{move.dx(), move.dy(), move.tick()};
-}
-
-[[nodiscard]] inline botf::Aim toProto(const common::AimCommand& command) {
-	botf::Aim aim;
-	aim.set_aim_x(command.aim.x);
-	aim.set_aim_y(command.aim.y);
-	aim.set_tick(command.tick);
-	return aim;
-}
-
-[[nodiscard]] inline common::AimCommand fromProto(const botf::Aim& aim) {
-	return common::AimCommand{common::Point{aim.aim_x(), aim.aim_y()}, aim.tick()};
+[[nodiscard]] inline common::ClientInput fromProto(const botf::ClientInput& input) {
+	return common::ClientInput{
+		input.dx(),	  input.dy(),	common::Point{input.aim_x(), input.aim_y()},
+		input.fire(), input.tick(),
+	};
 }
 
 [[nodiscard]] inline botf::WorldState toProto(const common::WorldSnapshot& snapshot) {
