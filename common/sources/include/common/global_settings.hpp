@@ -16,7 +16,14 @@ constexpr float defaultSpawnY{300.0f};
 // Ignore aim updates when the cursor is this close to the entity (world units).
 constexpr float aimEpsilon{1.0f};
 // Client Aim send: fire every frame when angle or point moves past these.
-constexpr float aimSendAngleEpsilon{0.03f};  // ~1.7°
+constexpr float aimSendAngleEpsilon{0.03f};	 // ~1.7°
 constexpr float aimSendPointDelta{0.25f};
+
+// Combat / bullets — TODO: load from DB later.
+constexpr float fireCooldownSeconds{0.5f};
+constexpr float bulletSpeed{400.0f};		// world units / second
+constexpr float bulletMaxRange{100.0f};		// destroy after this travel distance
+constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
+constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
 
 }  // namespace botf::common::GlobalSettings

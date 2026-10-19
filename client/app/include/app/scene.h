@@ -15,7 +15,7 @@ namespace botf::app {
 class Scene {
 public:
 	void clear();
-	// Upsert players by id; remove views absent from the snapshot.
+	// Upsert players + bullets by id; remove views absent from the snapshot.
 	void upsertFromSnapshot(const common::WorldSnapshot& snapshot);
 
 	[[nodiscard]] std::size_t size() const;

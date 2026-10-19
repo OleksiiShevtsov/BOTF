@@ -2,13 +2,14 @@
 
 #include "common/global_settings.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 botf::GameLogic::GameLogic() = default;
 
 botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
 	const common::ObjectID id = m_nextEntityId++;
-	m_objects.emplace_back(id, at, speedLimit);
+	m_figures.emplace_back(id, at, speedLimit);
 	return id;
 }
 
@@ -19,6 +20,7 @@ void botf::GameLogic::bindClient(common::ClientID clientId, common::ObjectID ent
 void botf::GameLogic::unbindClient(common::ClientID clientId) {
 	m_clientToEntity.erase(clientId);
 	m_clientAimWorld.erase(clientId);
+	m_lastFireTime.erase(clientId);
 }
 
 void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) {
@@ -37,21 +39,55 @@ void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimW
 	applyAimForClient(clientId);
 }
 
+bool botf::GameLogic::tryFire(common::ClientID clientId) {
+	const auto bindIt = m_clientToEntity.find(clientId);
+	if (bindIt == m_clientToEntity.end()) {
+		return false;
+	}
+
+	const auto lastIt = m_lastFireTime.find(clientId);
+	if (lastIt != m_lastFireTime.end() &&
+		m_worldTime - lastIt->second < common::GlobalSettings::fireCooldownSeconds) {
+		return false;
+	}
+
+	FigureObject* figure = findFigureMutable(bindIt->second);
+	if (!figure) {
+		return false;
+	}
+
+	const common::ObjectID bulletId = m_nextEntityId++;
+	m_bullets.emplace_back(bulletId, figure->id(), figure->position(), figure->angle(),
+						   common::GlobalSettings::bulletSpeed,
+						   common::GlobalSettings::bulletMaxRange);
+	m_lastFireTime[clientId] = m_worldTime;
+	return true;
+}
+
 void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) {
-	if (DynamicObject* obj = findMutable(entityId)) {
+	if (FigureObject* obj = findFigureMutable(entityId)) {
 		obj->setInput(dx, dy);
 	}
 }
 
 void botf::GameLogic::tick(float dt) {
-	for (auto& obj : m_objects) {
-		obj.update(dt);
+	m_worldTime += dt;
+	for (auto& figure : m_figures) {
+		figure.update(dt);
 	}
 	applyStoredAims();
+	for (auto& bullet : m_bullets) {
+		bullet.update(dt);
+	}
+	pruneDeadBullets();
 }
 
-const std::vector<botf::DynamicObject>& botf::GameLogic::objects() const {
-	return m_objects;
+const std::vector<botf::FigureObject>& botf::GameLogic::figures() const {
+	return m_figures;
+}
+
+const std::vector<botf::BulletObject>& botf::GameLogic::bullets() const {
+	return m_bullets;
 }
 
 std::optional<botf::common::ObjectID> botf::GameLogic::entityForClient(
@@ -63,8 +99,8 @@ std::optional<botf::common::ObjectID> botf::GameLogic::entityForClient(
 	return it->second;
 }
 
-botf::DynamicObject* botf::GameLogic::findMutable(common::ObjectID entityId) {
-	for (auto& obj : m_objects) {
+botf::FigureObject* botf::GameLogic::findFigureMutable(common::ObjectID entityId) {
+	for (auto& obj : m_figures) {
 		if (obj.id() == entityId) {
 			return &obj;
 		}
@@ -81,7 +117,7 @@ void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
 	if (bindIt == m_clientToEntity.end()) {
 		return;
 	}
-	DynamicObject* obj = findMutable(bindIt->second);
+	FigureObject* obj = findFigureMutable(bindIt->second);
 	if (!obj) {
 		return;
 	}
@@ -100,4 +136,10 @@ void botf::GameLogic::applyStoredAims() {
 	for (const auto& [clientId, _] : m_clientAimWorld) {
 		applyAimForClient(clientId);
 	}
+}
+
+void botf::GameLogic::pruneDeadBullets() {
+	m_bullets.erase(std::remove_if(m_bullets.begin(), m_bullets.end(),
+								   [](const BulletObject& b) { return !b.isAlive(); }),
+					m_bullets.end());
 }

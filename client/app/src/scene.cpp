@@ -1,8 +1,10 @@
 #include "app/scene.h"
 
+#include "app/bullet_view.h"
 #include "app/figure_view.h"
 
 #include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 void botf::app::Scene::clear() {
@@ -11,7 +13,7 @@ void botf::app::Scene::clear() {
 
 void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot) {
 	std::unordered_set<common::ObjectID> seen;
-	seen.reserve(snapshot.players.size());
+	seen.reserve(snapshot.players.size() + snapshot.bullets.size());
 
 	for (const auto& pose : snapshot.players) {
 		seen.insert(pose.id);
@@ -23,6 +25,20 @@ void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot)
 
 		auto view = std::make_unique<FigureView>(pose.id);
 		view->setPose(pose.position, pose.angle);
+		m_objects.push_back(std::move(view));
+	}
+
+	for (const auto& pose : snapshot.bullets) {
+		seen.insert(pose.id);
+		const float angle = std::atan2(pose.velocity.y, pose.velocity.x);
+
+		if (IViewObject* existing = find(pose.id)) {
+			existing->setPose(pose.position, angle);
+			continue;
+		}
+
+		auto view = std::make_unique<BulletView>(pose.id);
+		view->setPose(pose.position, angle);
 		m_objects.push_back(std::move(view));
 	}
 

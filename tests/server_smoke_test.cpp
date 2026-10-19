@@ -106,7 +106,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
-	EXPECT_TRUE(engine.game().objects().empty());
+	EXPECT_TRUE(engine.game().figures().empty());
 
 	sf::TcpSocket client;
 	client.setBlocking(true);
@@ -117,10 +117,10 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	client.setBlocking(false);
 	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
-	ASSERT_EQ(engine.game().objects().size(), 1u);
-	ASSERT_EQ(engine.game().objects().front().id(), *selfId);
+	ASSERT_EQ(engine.game().figures().size(), 1u);
+	ASSERT_EQ(engine.game().figures().front().id(), *selfId);
 
-	const auto start = engine.game().objects().front().position();
+	const auto start = engine.game().figures().front().position();
 
 	struct Sample {
 		int dx;
@@ -197,8 +197,8 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	EXPECT_EQ(last->tick, 4u);
 	EXPECT_TRUE(botf::protocol::isIdle(*last));
 
-	const auto end = engine.game().objects().front().position();
-	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "DynamicObject did not move";
+	const auto end = engine.game().figures().front().position();
+	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
 	const auto* pose = findPlayer(lastSnapshot, *selfId);
@@ -236,11 +236,11 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	ASSERT_TRUE(idA.has_value());
 	ASSERT_TRUE(idB.has_value());
 	EXPECT_NE(*idA, *idB);
-	ASSERT_EQ(engine.game().objects().size(), 2u);
+	ASSERT_EQ(engine.game().figures().size(), 2u);
 
 	botf::common::Point startA{};
 	botf::common::Point startB{};
-	for (const auto& obj : engine.game().objects()) {
+	for (const auto& obj : engine.game().figures()) {
 		if (obj.id() == *idA) {
 			startA = obj.position();
 		}
@@ -271,7 +271,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 
 	botf::common::Point endA{};
 	botf::common::Point endB{};
-	for (const auto& obj : engine.game().objects()) {
+	for (const auto& obj : engine.game().figures()) {
 		if (obj.id() == *idA) {
 			endA = obj.position();
 		}
@@ -295,7 +295,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 		engine.applyInbound();
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	EXPECT_EQ(engine.game().objects().size(), 2u);
+	EXPECT_EQ(engine.game().figures().size(), 2u);
 	EXPECT_FALSE(engine.game().entityForClient(3).has_value());
 
 	clientA.disconnect();
@@ -321,7 +321,7 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 
-	const auto pos = engine.game().objects().front().position();
+	const auto pos = engine.game().figures().front().position();
 	// Aim due +X from entity → expected angle 0.
 	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
 	client.setBlocking(true);
@@ -342,7 +342,7 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 	}
 	ASSERT_TRUE(gotInput);
 
-	EXPECT_NEAR(engine.game().objects().front().angle(), 0.f, 1e-4f);
+	EXPECT_NEAR(engine.game().figures().front().angle(), 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();

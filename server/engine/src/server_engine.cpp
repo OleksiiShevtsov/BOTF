@@ -27,9 +27,18 @@ void onSignal(int) {
 botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std::uint32_t tick) {
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
-	snapshot.players.reserve(game.objects().size());
-	for (const auto& obj : game.objects()) {
+	snapshot.players.reserve(game.figures().size());
+	for (const auto& obj : game.figures()) {
 		snapshot.players.push_back(botf::common::PlayerPose{obj.id(), obj.position(), obj.angle()});
+	}
+	snapshot.bullets.reserve(game.bullets().size());
+	for (const auto& bullet : game.bullets()) {
+		snapshot.bullets.push_back(botf::common::BulletPose{
+			bullet.id(),
+			bullet.ownerId(),
+			bullet.position(),
+			bullet.velocity(),
+		});
 	}
 	return snapshot;
 }
@@ -119,8 +128,9 @@ void botf::ServerEngine::handleClientInput(common::ClientID clientId,
 	// Input applies only to the entity bound via Hello. Unbound → no-op in GameLogic.
 	m_game.setClientInput(clientId, input.dx, input.dy);
 	m_game.setClientAim(clientId, input.aim);
-	// fire reserved for card 20.
-	(void)input.fire;
+	if (input.fire) {
+		m_game.tryFire(clientId);
+	}
 }
 
 void botf::ServerEngine::applyInbound() {

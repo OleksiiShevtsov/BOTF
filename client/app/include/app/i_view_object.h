@@ -6,7 +6,7 @@
 
 namespace botf::app {
 
-// Base for moving client-side view objects (figures, later bullets).
+// Base for moving client-side view objects (FigureView, BulletView, …).
 // draw() is one capability — state lives on the object.
 class IViewObject {
 public:
