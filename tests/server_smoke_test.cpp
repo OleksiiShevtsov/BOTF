@@ -342,7 +342,7 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 	}
 	ASSERT_TRUE(gotInput);
 
-	EXPECT_NEAR(engine.game().figures().front().angle(), 0.f, 1e-4f);
+	EXPECT_NEAR(engine.game().figures().front().getAngle(), 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();

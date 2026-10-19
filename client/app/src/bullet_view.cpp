@@ -24,6 +24,7 @@ void botf::app::BulletView::setPose(common::Point position, common::Angle angle)
 }
 
 void botf::app::BulletView::draw(sf::RenderTarget& target) const {
+	// TODO: replace procedural segment with sprite/texture when assets/DB exist.
 	const float length = common::GlobalSettings::bulletVisualLength;
 	const float width = common::GlobalSettings::bulletVisualWidth;
 

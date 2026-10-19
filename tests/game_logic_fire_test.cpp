@@ -18,11 +18,11 @@ TEST(GameLogicFire, SpawnBulletFliesAndDiesAtMaxRange) {
 										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entityId);
 	game.setClientAim(clientId, botf::common::Point{200.f, 100.f});
-	EXPECT_NEAR(game.figures().front().angle(), 0.f, 1e-4f);
+	EXPECT_NEAR(game.figures().front().getAngle(), 0.f, 1e-4f);
 
 	ASSERT_TRUE(game.tryFire(clientId));
 	ASSERT_EQ(game.bullets().size(), 1u);
-	EXPECT_EQ(game.bullets().front().ownerId(), entityId);
+	EXPECT_EQ(game.bullets().front().getOwnerId(), entityId);
 
 	const float maxRange = botf::common::GlobalSettings::bulletMaxRange;
 	const float speed = botf::common::GlobalSettings::bulletSpeed;

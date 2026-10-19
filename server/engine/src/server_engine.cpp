@@ -29,15 +29,16 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std:
 	snapshot.tick = tick;
 	snapshot.players.reserve(game.figures().size());
 	for (const auto& obj : game.figures()) {
-		snapshot.players.push_back(botf::common::PlayerPose{obj.id(), obj.position(), obj.angle()});
+		snapshot.players.push_back(
+			botf::common::PlayerPose{obj.id(), obj.position(), obj.getAngle()});
 	}
 	snapshot.bullets.reserve(game.bullets().size());
 	for (const auto& bullet : game.bullets()) {
 		snapshot.bullets.push_back(botf::common::BulletPose{
 			bullet.id(),
-			bullet.ownerId(),
+			bullet.getOwnerId(),
 			bullet.position(),
-			bullet.velocity(),
+			bullet.getVelocity(),
 		});
 	}
 	return snapshot;

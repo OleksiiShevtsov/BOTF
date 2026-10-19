@@ -9,7 +9,7 @@ class FigureObject : public DynamicObject {
 public:
 	FigureObject(common::ObjectID id, common::Point dot, float speedLimit);
 
-	[[nodiscard]] common::Angle angle() const override;
+	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
 	[[nodiscard]] int inputDy() const;
 

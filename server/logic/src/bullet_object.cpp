@@ -14,15 +14,15 @@ botf::BulletObject::BulletObject(common::ObjectID id,
 	, m_velocity{std::cos(direction) * speed, std::sin(direction) * speed}
 	, m_maxRange{maxRange} {}
 
-botf::common::Angle botf::BulletObject::angle() const {
+botf::common::Angle botf::BulletObject::getAngle() const {
 	return m_angle;
 }
 
-botf::common::ObjectID botf::BulletObject::ownerId() const {
+botf::common::ObjectID botf::BulletObject::getOwnerId() const {
 	return m_ownerId;
 }
 
-botf::common::Point botf::BulletObject::velocity() const {
+botf::common::Point botf::BulletObject::getVelocity() const {
 	return m_velocity;
 }
 

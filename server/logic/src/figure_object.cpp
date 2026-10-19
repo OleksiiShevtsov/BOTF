@@ -17,7 +17,7 @@ botf::FigureObject::FigureObject(common::ObjectID id, common::Point dot, float s
 	m_movement.initialY = m_position.y;
 }
 
-botf::common::Angle botf::FigureObject::angle() const {
+botf::common::Angle botf::FigureObject::getAngle() const {
 	return m_angle;
 }
 

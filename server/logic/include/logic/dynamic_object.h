@@ -11,7 +11,7 @@ public:
 
 	[[nodiscard]] common::ObjectID id() const;
 	[[nodiscard]] common::Point position() const;
-	[[nodiscard]] virtual common::Angle angle() const = 0;
+	[[nodiscard]] virtual common::Angle getAngle() const = 0;
 
 	void setPosition(common::Point dot);
 

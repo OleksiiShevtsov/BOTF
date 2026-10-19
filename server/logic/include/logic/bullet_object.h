@@ -15,9 +15,9 @@ public:
 				 float speed,
 				 float maxRange);
 
-	[[nodiscard]] common::Angle angle() const override;
-	[[nodiscard]] common::ObjectID ownerId() const;
-	[[nodiscard]] common::Point velocity() const;
+	[[nodiscard]] common::Angle getAngle() const override;
+	[[nodiscard]] common::ObjectID getOwnerId() const;
+	[[nodiscard]] common::Point getVelocity() const;
 	[[nodiscard]] bool isAlive() const override;
 
 	void update(float dt) override;

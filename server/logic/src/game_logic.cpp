@@ -57,7 +57,7 @@ bool botf::GameLogic::tryFire(common::ClientID clientId) {
 	}
 
 	const common::ObjectID bulletId = m_nextEntityId++;
-	m_bullets.emplace_back(bulletId, figure->id(), figure->position(), figure->angle(),
+	m_bullets.emplace_back(bulletId, figure->id(), figure->position(), figure->getAngle(),
 						   common::GlobalSettings::bulletSpeed,
 						   common::GlobalSettings::bulletMaxRange);
 	m_lastFireTime[clientId] = m_worldTime;
