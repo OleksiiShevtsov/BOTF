@@ -145,12 +145,14 @@ ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet 
 
 ### Новая нотификация (checklist)
 
-1. Proto message (+ поле в `Envelope.body` oneof).
-2. DTO в `common/dto.hpp` + `toProto`/`fromProto`.
-3. DTO в `MessageBody` variant.
-4. `encodeX` в `codec.hpp` (decode читает oneof автоматически).
-5. Handler + ветка в `protocol::dispatch` visitor (server и/или client).
-6. Net не трогать.
+Кратко:
+
+1. Proto + поле в `Envelope.body` oneof.
+2. DTO + mappers + `MessageBody` + `encodeX` / decode case.
+3. Отправитель → `OutboundNotification`; получатель → ветка в `protocol::dispatch`.
+4. Net не трогать.
+
+Полный гайд (поток, направления, когда не плодить msg, константы, пример): [`docs/ADD_NOTIFICATION.md`](docs/ADD_NOTIFICATION.md).
 
 ## Tests
 
