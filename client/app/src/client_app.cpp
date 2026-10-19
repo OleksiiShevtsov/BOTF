@@ -53,8 +53,8 @@ namespace {
 	}
 	const float dx = mouse.x - lastAim.x;
 	const float dy = mouse.y - lastAim.y;
-	const float thr = botf::common::GlobalSettings::aimSendPointDelta;
-	return dx * dx + dy * dy > thr * thr;
+	return dx * dx + dy * dy > botf::common::GlobalSettings::aimSendPointDelta *
+								   botf::common::GlobalSettings::aimSendPointDelta;
 }
 
 }  // namespace
