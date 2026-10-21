@@ -40,11 +40,10 @@ public:
 	// Apply input directly by entity id. No-op if missing or dead.
 	void setPlayerInput(common::ObjectID entityId, int dx, int dy);
 
-	// Server damage API (card 32). Owner/self-hit filtering is card 41.
-	// Returns false if entity missing.
+	// Server damage API (card 32). Returns false if entity missing.
 	bool applyDamage(common::ObjectID entityId, int damage);
 
-	// Advance the world by dt seconds, retarget aims, prune dead bullets.
+	// Advance the world by dt seconds, retarget aims, resolve hits, prune bullets.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
@@ -56,6 +55,8 @@ private:
 	void destroyFigure(common::ObjectID entityId);
 	void applyAimForClient(common::ClientID clientId);
 	void applyStoredAims();
+	// Point ∩ AABB vs living non-owner figures; one hit → damage + destroy bullet.
+	void resolveBulletHits();
 	void pruneDeadBullets();
 
 	std::vector<FigureObject> m_figures;
