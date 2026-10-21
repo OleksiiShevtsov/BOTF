@@ -143,6 +143,10 @@ ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet 
   → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 
+Player hitbox (server): axis-aligned square `hitboxSize`×`hitboxSize` (40×40), center = entity pos;
+does not rotate with `angle`. Hit-test helpers in `logic/hitbox.h` (point / segment ∩ AABB).
+Damage apply — card 41.
+
 ### Новая нотификация (checklist)
 
 Кратко:

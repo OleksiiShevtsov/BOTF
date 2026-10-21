@@ -25,5 +25,7 @@ constexpr float bulletSpeed{400.0f};		// world units / second
 constexpr float bulletMaxRange{100.0f};		// destroy after this travel distance
 constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
+// Player AABB hitbox (axis-aligned square, center = entity pos). Card 34.
+constexpr float hitboxSize{40.0f};
 
 }  // namespace botf::common::GlobalSettings
