@@ -13,6 +13,14 @@ constexpr float kBaseLeftY = -20.f;
 constexpr float kBaseRightX = 20.f;
 constexpr float kBaseRightY = -20.f;
 
+sf::Color colorForStatus(botf::common::LifeStatus status) {
+	if (status == botf::common::LifeStatus::Dead) {
+		return sf::Color(40, 40, 40);
+	}
+	// Alive / Waiting — same fill until Waiting has its own look.
+	return sf::Color(120, 20, 20);
+}
+
 }  // namespace
 
 botf::app::FigureView::FigureView(common::ObjectID id) : m_id(id) {}
@@ -34,6 +42,10 @@ void botf::app::FigureView::setPose(common::Point position, common::Angle angle)
 	m_angle = angle;
 }
 
+void botf::app::FigureView::setLifeStatus(common::LifeStatus status) {
+	m_lifeStatus = status;
+}
+
 void botf::app::FigureView::draw(sf::RenderTarget& target) const {
 	sf::ConvexShape triangle;
 	triangle.setPointCount(3);
@@ -46,7 +58,7 @@ void botf::app::FigureView::draw(sf::RenderTarget& target) const {
 	triangle.setPoint(1, sf::Vector2f(kBaseLeftX, kBaseLeftY));
 	triangle.setPoint(2, sf::Vector2f(kBaseRightX, kBaseRightY));
 #endif
-	triangle.setFillColor(sf::Color(120, 20, 20));
+	triangle.setFillColor(colorForStatus(m_lifeStatus));
 #if SFML_VERSION_MAJOR >= 3
 	triangle.setOrigin({0.f, 0.f});
 	triangle.setPosition({m_position.x, m_position.y});

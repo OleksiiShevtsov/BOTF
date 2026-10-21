@@ -145,7 +145,10 @@ ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet 
 
 Player hitbox (server): axis-aligned square `hitboxSize`×`hitboxSize` (40×40), center = entity pos;
 does not rotate with `angle`. Hit-test helpers in `logic/hitbox.h` (point / segment ∩ AABB).
-Damage apply — card 41.
+
+HP + LifeStatus (`Alive` / `Dead` / `Waiting`): server authority; synced in WorldSnapshot.
+Dead → no Move/Fire; figure stays until client disconnect; client draws RGB(40,40,40).
+Local HP bar — draft `InformationPanel` (bottom-right). Bullet hit apply — card 41; hit flash — 42.
 
 ### Новая нотификация (checklist)
 

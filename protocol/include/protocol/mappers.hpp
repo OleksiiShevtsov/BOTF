@@ -6,6 +6,33 @@
 #include "world_state.pb.h"
 
 namespace botf::protocol {
+namespace {
+
+[[nodiscard]] inline botf::LifeStatus toProto(common::LifeStatus status) {
+	switch (status) {
+	case common::LifeStatus::Dead:
+		return botf::LIFE_STATUS_DEAD;
+	case common::LifeStatus::Waiting:
+		return botf::LIFE_STATUS_WAITING;
+	case common::LifeStatus::Alive:
+	default:
+		return botf::LIFE_STATUS_ALIVE;
+	}
+}
+
+[[nodiscard]] inline common::LifeStatus fromProto(botf::LifeStatus status) {
+	switch (status) {
+	case botf::LIFE_STATUS_DEAD:
+		return common::LifeStatus::Dead;
+	case botf::LIFE_STATUS_WAITING:
+		return common::LifeStatus::Waiting;
+	case botf::LIFE_STATUS_ALIVE:
+	default:
+		return common::LifeStatus::Alive;
+	}
+}
+
+}  // namespace
 
 [[nodiscard]] inline botf::Hello toProto(const common::HelloMessage& hello) {
 	botf::Hello message;
@@ -46,6 +73,8 @@ namespace botf::protocol {
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
 		player->set_aim_angle(pose.angle);
+		player->set_hp(pose.hp);
+		player->set_life_status(toProto(pose.lifeStatus));
 	}
 	for (const auto& pose : snapshot.bullets) {
 		BulletState* bullet = state.add_bullets();
@@ -70,6 +99,8 @@ namespace botf::protocol {
 			player.id(),
 			common::Point{player.position().x(), player.position().y()},
 			player.aim_angle(),
+			player.hp(),
+			fromProto(player.life_status()),
 		});
 	}
 	snapshot.bullets.reserve(static_cast<std::size_t>(state.bullets_size()));

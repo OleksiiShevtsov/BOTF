@@ -1,5 +1,7 @@
 #include "logic/figure_object.h"
 
+#include "common/global_settings.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -12,7 +14,11 @@ int clampAxis(int value) {
 }  // namespace
 
 botf::FigureObject::FigureObject(common::ObjectID id, common::Point dot, float speedLimit)
-	: DynamicObject{id, dot}, m_angle{0.0f}, m_speedLimit{speedLimit} {
+	: DynamicObject{id, dot},
+	  m_angle{0.0f},
+	  m_speedLimit{speedLimit},
+	  m_hp{common::GlobalSettings::maxHp},
+	  m_lifeStatus{common::LifeStatus::Alive} {
 	m_movement.initialX = m_position.x;
 	m_movement.initialY = m_position.y;
 }
@@ -29,13 +35,47 @@ int botf::FigureObject::inputDy() const {
 	return m_inputDy;
 }
 
+int botf::FigureObject::getHp() const {
+	return m_hp;
+}
+
+botf::common::LifeStatus botf::FigureObject::getLifeStatus() const {
+	return m_lifeStatus;
+}
+
+bool botf::FigureObject::isDead() const {
+	return m_lifeStatus == common::LifeStatus::Dead || m_hp <= 0;
+}
+
 void botf::FigureObject::setAngle(common::Angle alpha) {
+	if (isDead()) {
+		return;
+	}
 	m_angle = alpha;
 }
 
 void botf::FigureObject::setInput(int dx, int dy) {
+	if (isDead()) {
+		return;
+	}
 	m_inputDx = clampAxis(dx);
 	m_inputDy = clampAxis(dy);
+}
+
+bool botf::FigureObject::applyDamage(int damage) {
+	if (isDead() || damage <= 0) {
+		return false;
+	}
+	m_hp = std::max(0, m_hp - damage);
+	if (m_hp == 0) {
+		m_lifeStatus = common::LifeStatus::Dead;
+		m_inputDx = 0;
+		m_inputDy = 0;
+		m_prevInputDx = 0;
+		m_prevInputDy = 0;
+		return true;
+	}
+	return false;
 }
 
 float botf::FigureObject::speedRecalculation(float acceleration, float initialSpeed) const {
@@ -79,7 +119,7 @@ void botf::FigureObject::resetEndpoints() {
 }
 
 void botf::FigureObject::update(float dt) {
-	if (dt <= 0.0f) {
+	if (isDead() || dt <= 0.0f) {
 		return;
 	}
 

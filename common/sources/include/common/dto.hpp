@@ -28,6 +28,8 @@ struct PlayerPose {
 	ObjectID id{};
 	Point position{};
 	Angle angle{};
+	int hp{};
+	LifeStatus lifeStatus{LifeStatus::Alive};
 };
 
 // Reserved for future bullets (mapped from proto when present).

@@ -32,6 +32,9 @@ public:
 	[[nodiscard]] std::size_t clientCount() const { return m_clients.size(); }
 	[[nodiscard]] std::uint16_t port() const { return m_port; }
 
+	// Client ids dropped since the last call (clears the buffer).
+	[[nodiscard]] std::vector<botf::common::ClientID> takeDisconnected();
+
 private:
 	struct Client {
 		botf::common::ClientID id{};
@@ -56,6 +59,7 @@ private:
 	botf::common::ClientID m_nextClientId = 1;
 	std::uint16_t m_port = 0;
 	bool m_listening = false;
+	std::vector<botf::common::ClientID> m_disconnected;
 };
 
 }  // namespace botf::net

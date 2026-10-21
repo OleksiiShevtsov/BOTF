@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/i_view_object.h"
+#include "common/types.hpp"
 
 namespace botf::app {
 
@@ -15,12 +16,14 @@ public:
 	[[nodiscard]] common::Angle getAngle() const override;
 
 	void setPose(common::Point position, common::Angle angle) override;
+	void setLifeStatus(common::LifeStatus status);
 	void draw(sf::RenderTarget& target) const override;
 
 private:
 	common::ObjectID m_id{};
 	common::Point m_position{};
 	common::Angle m_angle{};
+	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};
 };
 
 }  // namespace botf::app

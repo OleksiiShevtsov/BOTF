@@ -12,10 +12,15 @@ public:
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
 	[[nodiscard]] int inputDy() const;
+	[[nodiscard]] int getHp() const;
+	[[nodiscard]] common::LifeStatus getLifeStatus() const;
+	[[nodiscard]] bool isDead() const;
 
 	void setAngle(common::Angle alpha);
-	// Movement intent for this tick: each axis in {-1, 0, 1}.
+	// Movement intent for this tick: each axis in {-1, 0, 1}. No-op if dead.
 	void setInput(int dx, int dy);
+	// Subtract damage, clamp hp >= 0. Returns true if this call reached Dead.
+	bool applyDamage(int damage);
 
 	void update(float dt) override;
 
@@ -44,6 +49,8 @@ private:
 
 	common::Angle m_angle{0.0f};
 	float m_speedLimit{};
+	int m_hp{};
+	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};
 
 	int m_inputDx{0};
 	int m_inputDy{0};

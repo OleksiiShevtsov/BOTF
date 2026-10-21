@@ -178,6 +178,12 @@ void botf::net::TcpServer::flushSendBuffers() {
 	}
 }
 
+std::vector<botf::common::ClientID> botf::net::TcpServer::takeDisconnected() {
+	std::vector<botf::common::ClientID> out;
+	out.swap(m_disconnected);
+	return out;
+}
+
 void botf::net::TcpServer::dropClient(botf::common::ClientID id) {
 	const auto it = m_clients.find(id);
 	if (it == m_clients.end()) {
@@ -187,5 +193,6 @@ void botf::net::TcpServer::dropClient(botf::common::ClientID id) {
 	m_selector.remove(*it->second.socket);
 	it->second.socket->disconnect();
 	m_clients.erase(it);
+	m_disconnected.push_back(id);
 	botf::log::info("[net] client disconnected id={} (total {})", id, m_clients.size());
 }

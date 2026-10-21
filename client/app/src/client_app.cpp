@@ -171,7 +171,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 		applyInbound();
 
 		if (m_latestWorld) {
-			m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld);
+			m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld, m_selfId);
 		}
 		m_rendering.getMatch().update();
 		m_rendering.draw();

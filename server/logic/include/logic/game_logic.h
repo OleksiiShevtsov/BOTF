@@ -24,20 +24,25 @@ public:
 	// Bind a network client to a logic entity (one entity per client).
 	void bindClient(common::ClientID clientId, common::ObjectID entityId);
 
-	// Drop session → entity mapping (entity stays until destroy path exists).
-	void unbindClient(common::ClientID clientId);
+	// Drop session mapping and destroy the bound figure (and its bullets).
+	void removeClient(common::ClientID clientId);
 
-	// Apply move input for a network client (no-op if unbound).
+	// Apply move input for a network client (no-op if unbound or dead).
 	void setClientInput(common::ClientID clientId, int dx, int dy);
 
 	// Store aim world point for the bound entity; angle applied now and each tick.
 	void setClientAim(common::ClientID clientId, common::Point aimWorld);
 
 	// Rising-edge fire from ClientInput; enforces cooldown. Returns true if spawned.
+	// No-op (false) if unbound or figure is dead.
 	bool tryFire(common::ClientID clientId);
 
-	// Apply input directly by entity id.
+	// Apply input directly by entity id. No-op if missing or dead.
 	void setPlayerInput(common::ObjectID entityId, int dx, int dy);
+
+	// Server damage API (card 32). Owner/self-hit filtering is card 41.
+	// Returns false if entity missing.
+	bool applyDamage(common::ObjectID entityId, int damage);
 
 	// Advance the world by dt seconds, retarget aims, prune dead bullets.
 	void tick(float dt);
@@ -48,6 +53,7 @@ public:
 
 private:
 	FigureObject* findFigureMutable(common::ObjectID entityId);
+	void destroyFigure(common::ObjectID entityId);
 	void applyAimForClient(common::ClientID clientId);
 	void applyStoredAims();
 	void pruneDeadBullets();
