@@ -20,9 +20,9 @@ constexpr float aimSendAngleEpsilon{0.03f};	 // ~1.7°
 constexpr float aimSendPointDelta{0.25f};
 
 // Combat — TODO: нет БД, load from DB later.
-constexpr float fireCooldownSeconds{0.5f};
+constexpr float fireCooldownSeconds{0.1f};
 constexpr float bulletSpeed{400.0f};		// world units / second
-constexpr float bulletMaxRange{100.0f};		// destroy after this travel distance
+constexpr float bulletMaxRange{500.0f};		// destroy after this travel distance
 constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
 constexpr float hitboxSize{40.0f};			// AABB square, center = entity pos
