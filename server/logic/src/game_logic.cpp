@@ -1,6 +1,7 @@
 #include "logic/game_logic.h"
 
 #include "common/global_settings.hpp"
+#include "logic/hitbox.h"
 
 #include <algorithm>
 #include <cmath>
@@ -93,6 +94,7 @@ void botf::GameLogic::tick(float dt) {
 	for (auto& bullet : m_bullets) {
 		bullet.update(dt);
 	}
+	resolveBulletHits();
 	pruneDeadBullets();
 }
 
@@ -168,6 +170,29 @@ void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
 void botf::GameLogic::applyStoredAims() {
 	for (const auto& [clientId, _] : m_clientAimWorld) {
 		applyAimForClient(clientId);
+	}
+}
+
+void botf::GameLogic::resolveBulletHits() {
+	const int damage = common::GlobalSettings::bulletDamage;
+	for (auto& bullet : m_bullets) {
+		if (!bullet.isAlive()) {
+			continue;
+		}
+		const common::Point pointHit = bullet.position();
+		const common::ObjectID ownerId = bullet.getOwnerId();
+
+		for (auto& figure : m_figures) {
+			if (figure.id() == ownerId || figure.isDead()) {
+				continue;
+			}
+			if (!pointHitsAabb(figure.position(), pointHit)) {
+				continue;
+			}
+			figure.applyDamage(damage);
+			bullet.destroy();
+			break;
+		}
 	}
 }
 

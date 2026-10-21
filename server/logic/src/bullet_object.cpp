@@ -30,6 +30,10 @@ bool botf::BulletObject::isAlive() const {
 	return m_alive;
 }
 
+void botf::BulletObject::destroy() {
+	m_alive = false;
+}
+
 void botf::BulletObject::update(float dt) {
 	if (!m_alive || dt <= 0.f) {
 		return;
