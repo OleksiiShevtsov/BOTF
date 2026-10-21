@@ -1,6 +1,6 @@
 #include "common/dto.hpp"
 #include "common/global_settings.hpp"
-#include "common/life_status.hpp"
+#include "common/types.hpp"
 #include "protocol/protocol.hpp"
 
 #include <gtest/gtest.h>

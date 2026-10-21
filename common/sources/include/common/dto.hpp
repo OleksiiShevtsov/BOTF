@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common/life_status.hpp"
 #include "common/types.hpp"
 
 #include <cstdint>

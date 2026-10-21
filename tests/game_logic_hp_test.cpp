@@ -1,5 +1,5 @@
 #include "common/global_settings.hpp"
-#include "common/life_status.hpp"
+#include "common/types.hpp"
 #include "logic/game_logic.h"
 
 #include <gtest/gtest.h>

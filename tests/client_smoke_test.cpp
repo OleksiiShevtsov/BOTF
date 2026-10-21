@@ -2,7 +2,7 @@
 #include "app/match.h"
 #include "app/player.h"
 #include "common/dto.hpp"
-#include "common/life_status.hpp"
+#include "common/types.hpp"
 #include "net/packet_framing.hpp"
 #include "protocol/protocol.hpp"
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "app/i_view_object.h"
-#include "common/life_status.hpp"
+#include "common/types.hpp"
 
 namespace botf::app {
 

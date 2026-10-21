@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common/life_status.hpp"
 #include "logic/dynamic_object.h"
 
 namespace botf {

@@ -19,15 +19,13 @@ constexpr float aimEpsilon{1.0f};
 constexpr float aimSendAngleEpsilon{0.03f};	 // ~1.7°
 constexpr float aimSendPointDelta{0.25f};
 
-// Combat / bullets — TODO: load from DB later.
+// Combat — TODO: нет БД, load from DB later.
 constexpr float fireCooldownSeconds{0.5f};
 constexpr float bulletSpeed{400.0f};		// world units / second
 constexpr float bulletMaxRange{100.0f};		// destroy after this travel distance
 constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
-// Player AABB hitbox (axis-aligned square, center = entity pos). Card 34.
-constexpr float hitboxSize{40.0f};
-// Player HP / combat (cards 32–33). TODO: load from DB later.
+constexpr float hitboxSize{40.0f};			// AABB square, center = entity pos
 constexpr int maxHp{100};
 constexpr int bulletDamage{20};
 
