@@ -1,4 +1,5 @@
 #include "common/global_settings.hpp"
+#include "logic/game_logic.h"
 #include "logic/hitbox.h"
 
 #include <gtest/gtest.h>
@@ -62,4 +63,18 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 	const botf::common::Point outside{10.f + kHalf + 1.f, 10.f};
 	EXPECT_TRUE(botf::segmentHitsAabb(center, inside, inside));
 	EXPECT_FALSE(botf::segmentHitsAabb(center, outside, outside));
+}
+
+// Acceptance smoke (card 34): bullet point vs figure center AABB — no damage yet (41).
+TEST(Hitbox, BulletPointVsFigureCenter) {
+	botf::GameLogic game;
+	const auto id = game.spawnPlayer(botf::common::Point{100.f, 100.f},
+									 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	ASSERT_EQ(game.figures().size(), 1u);
+	EXPECT_EQ(game.figures().front().id(), id);
+	const botf::common::Point center = game.figures().front().position();
+
+	EXPECT_TRUE(botf::pointHitsAabb(center, {100.f, 100.f}));
+	EXPECT_TRUE(botf::pointHitsAabb(center, {100.f + kHalf, 100.f}));
+	EXPECT_FALSE(botf::pointHitsAabb(center, {100.f + kHalf + 0.01f, 100.f}));
 }
