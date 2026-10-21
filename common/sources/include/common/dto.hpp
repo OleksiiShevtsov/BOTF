@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/life_status.hpp"
 #include "common/types.hpp"
 
 #include <cstdint>
@@ -28,6 +29,8 @@ struct PlayerPose {
 	ObjectID id{};
 	Point position{};
 	Angle angle{};
+	int hp{};
+	LifeStatus lifeStatus{LifeStatus::Alive};
 };
 
 // Reserved for future bullets (mapped from proto when present).

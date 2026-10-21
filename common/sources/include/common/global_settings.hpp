@@ -27,5 +27,9 @@ constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
 // Player AABB hitbox (axis-aligned square, center = entity pos). Card 34.
 constexpr float hitboxSize{40.0f};
+// Player HP / combat (cards 32–33). TODO: load from DB later.
+constexpr int maxHp{100};
+constexpr int bulletDamage{20};
 
 }  // namespace botf::common::GlobalSettings
+

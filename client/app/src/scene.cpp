@@ -20,11 +20,15 @@ void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot)
 
 		if (IViewObject* existing = find(pose.id)) {
 			existing->setPose(pose.position, pose.angle);
+			if (auto* figure = dynamic_cast<FigureView*>(existing)) {
+				figure->setLifeStatus(pose.lifeStatus);
+			}
 			continue;
 		}
 
 		auto view = std::make_unique<FigureView>(pose.id);
 		view->setPose(pose.position, pose.angle);
+		view->setLifeStatus(pose.lifeStatus);
 		m_objects.push_back(std::move(view));
 	}
 

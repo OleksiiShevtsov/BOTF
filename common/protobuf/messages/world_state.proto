@@ -7,12 +7,19 @@ message Vec2 {
   float y = 2;
 }
 
+enum LifeStatus {
+  LIFE_STATUS_ALIVE = 0;
+  LIFE_STATUS_DEAD = 1;
+  LIFE_STATUS_WAITING = 2;
+}
+
 message PlayerState {
   uint32 id = 1;
   Vec2 position = 2;
   Vec2 velocity = 3;
   float aim_angle = 4;
   int32 hp = 5;
+  LifeStatus life_status = 6;
 }
 
 message BulletState {

@@ -29,8 +29,13 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std:
 	snapshot.tick = tick;
 	snapshot.players.reserve(game.figures().size());
 	for (const auto& obj : game.figures()) {
-		snapshot.players.push_back(
-			botf::common::PlayerPose{obj.id(), obj.position(), obj.getAngle()});
+		snapshot.players.push_back(botf::common::PlayerPose{
+			obj.id(),
+			obj.position(),
+			obj.getAngle(),
+			obj.getHp(),
+			obj.getLifeStatus(),
+		});
 	}
 	snapshot.bullets.reserve(game.bullets().size());
 	for (const auto& bullet : game.bullets()) {
@@ -70,6 +75,11 @@ void botf::ServerEngine::shutdown() {
 
 void botf::ServerEngine::pollNetwork() {
 	m_server.poll();
+	for (const common::ClientID clientId : m_server.takeDisconnected()) {
+		m_game.removeClient(clientId);
+		m_inputStates.erase(clientId);
+		botf::log::info("[server] removed entity for disconnected client {}", clientId);
+	}
 }
 
 std::uint16_t botf::ServerEngine::port() const {

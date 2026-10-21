@@ -2,6 +2,7 @@
 #include "app/match.h"
 #include "app/player.h"
 #include "common/dto.hpp"
+#include "common/life_status.hpp"
 #include "net/packet_framing.hpp"
 #include "protocol/protocol.hpp"
 
@@ -25,6 +26,8 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 		7,
 		botf::common::Point{100.f, 300.f},
 		1.25f,
+		100,
+		botf::common::LifeStatus::Alive,
 	});
 
 	const auto framed =

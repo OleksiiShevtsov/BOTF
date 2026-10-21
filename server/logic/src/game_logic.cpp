@@ -17,8 +17,13 @@ void botf::GameLogic::bindClient(common::ClientID clientId, common::ObjectID ent
 	m_clientToEntity[clientId] = entityId;
 }
 
-void botf::GameLogic::unbindClient(common::ClientID clientId) {
-	m_clientToEntity.erase(clientId);
+void botf::GameLogic::removeClient(common::ClientID clientId) {
+	const auto it = m_clientToEntity.find(clientId);
+	if (it != m_clientToEntity.end()) {
+		const common::ObjectID entityId = it->second;
+		m_clientToEntity.erase(it);
+		destroyFigure(entityId);
+	}
 	m_clientAimWorld.erase(clientId);
 	m_lastFireTime.erase(clientId);
 }
@@ -52,7 +57,7 @@ bool botf::GameLogic::tryFire(common::ClientID clientId) {
 	}
 
 	FigureObject* figure = findFigureMutable(bindIt->second);
-	if (!figure) {
+	if (!figure || figure->isDead()) {
 		return false;
 	}
 
@@ -68,6 +73,15 @@ void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) 
 	if (FigureObject* obj = findFigureMutable(entityId)) {
 		obj->setInput(dx, dy);
 	}
+}
+
+bool botf::GameLogic::applyDamage(common::ObjectID entityId, int damage) {
+	FigureObject* figure = findFigureMutable(entityId);
+	if (!figure) {
+		return false;
+	}
+	figure->applyDamage(damage);
+	return true;
 }
 
 void botf::GameLogic::tick(float dt) {
@@ -108,6 +122,25 @@ botf::FigureObject* botf::GameLogic::findFigureMutable(common::ObjectID entityId
 	return nullptr;
 }
 
+void botf::GameLogic::destroyFigure(common::ObjectID entityId) {
+	m_bullets.erase(std::remove_if(m_bullets.begin(), m_bullets.end(),
+								   [entityId](const BulletObject& b) {
+									   return b.getOwnerId() == entityId;
+								   }),
+					m_bullets.end());
+	m_figures.erase(std::remove_if(m_figures.begin(), m_figures.end(),
+								   [entityId](const FigureObject& f) { return f.id() == entityId; }),
+					m_figures.end());
+
+	for (auto it = m_clientToEntity.begin(); it != m_clientToEntity.end();) {
+		if (it->second == entityId) {
+			it = m_clientToEntity.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
 void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
 	const auto aimIt = m_clientAimWorld.find(clientId);
 	if (aimIt == m_clientAimWorld.end()) {
@@ -118,7 +151,7 @@ void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
 		return;
 	}
 	FigureObject* obj = findFigureMutable(bindIt->second);
-	if (!obj) {
+	if (!obj || obj->isDead()) {
 		return;
 	}
 
