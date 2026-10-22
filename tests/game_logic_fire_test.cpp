@@ -50,9 +50,10 @@ TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 	for (int i = 0; i < waitTicks; ++i) {
 		game.tick(kDt);
 	}
-	// First bullet likely already past max range after waiting out cooldown.
+	// First bullet may still be in flight (maxRange can outlive cooldown).
+	const auto bulletsBefore = game.bullets().size();
 	ASSERT_TRUE(game.tryFire(clientId));
-	EXPECT_EQ(game.bullets().size(), 1u);
+	EXPECT_EQ(game.bullets().size(), bulletsBefore + 1u);
 }
 
 TEST(GameLogicFire, UnboundClientCannotFire) {

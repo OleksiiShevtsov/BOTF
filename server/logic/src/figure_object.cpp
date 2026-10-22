@@ -11,6 +11,19 @@ int clampAxis(int value) {
 	return std::clamp(value, -1, 1);
 }
 
+// Apply friction along one axis; zero-cross → exactly 0 (no reverse from overshoot).
+void applyAxisFriction(float& speed, float friction, float dt) {
+	if (speed == 0.f) {
+		return;
+	}
+	const float prev = speed;
+	const float delta = (speed > 0.f ? -friction : friction) * dt;
+	speed += delta;
+	if (prev * speed <= 0.f) {
+		speed = 0.f;
+	}
+}
+
 }  // namespace
 
 botf::FigureObject::FigureObject(common::ObjectID id, common::Point dot, float speedLimit)
@@ -18,10 +31,7 @@ botf::FigureObject::FigureObject(common::ObjectID id, common::Point dot, float s
 	  m_angle{0.0f},
 	  m_speedLimit{speedLimit},
 	  m_hp{common::GlobalSettings::maxHp},
-	  m_lifeStatus{common::LifeStatus::Alive} {
-	m_movement.initialX = m_position.x;
-	m_movement.initialY = m_position.y;
-}
+	  m_lifeStatus{common::LifeStatus::Alive} {}
 
 botf::common::Angle botf::FigureObject::getAngle() const {
 	return m_angle;
@@ -45,6 +55,10 @@ botf::common::LifeStatus botf::FigureObject::getLifeStatus() const {
 
 bool botf::FigureObject::isDead() const {
 	return m_lifeStatus == common::LifeStatus::Dead || m_hp <= 0;
+}
+
+botf::common::Point botf::FigureObject::getVelocity() const {
+	return common::Point{m_speedX, m_speedY};
 }
 
 void botf::FigureObject::setAngle(common::Angle alpha) {
@@ -71,51 +85,23 @@ bool botf::FigureObject::applyDamage(int damage) {
 		m_lifeStatus = common::LifeStatus::Dead;
 		m_inputDx = 0;
 		m_inputDy = 0;
-		m_prevInputDx = 0;
-		m_prevInputDy = 0;
+		m_speedX = 0.f;
+		m_speedY = 0.f;
 		return true;
 	}
 	return false;
 }
 
-float botf::FigureObject::speedRecalculation(float acceleration, float initialSpeed) const {
-	float speed = acceleration * m_movement.currentTime + initialSpeed;
-	if (m_speedLimit > 0.0f) {
-		speed = std::clamp(speed, -m_speedLimit, m_speedLimit);
+void botf::FigureObject::clampSpeed() {
+	if (m_speedLimit <= 0.f) {
+		return;
 	}
-	return speed;
-}
-
-botf::common::Coordinate botf::FigureObject::coordinateRecalculation(
-	float acceleration, float initialSpeed, common::Coordinate initialCoordinate) const {
-	return acceleration * m_movement.currentTime * m_movement.currentTime / 2.0f +
-		   initialSpeed * m_movement.currentTime + initialCoordinate;
-}
-
-void botf::FigureObject::resetEndpoints() {
-	const float speedMag =
-		std::sqrt(m_movement.speedX * m_movement.speedX + m_movement.speedY * m_movement.speedY);
-	if (speedMag > kSpeedEpsilon) {
-		m_movement.cosAcceleration = m_movement.speedX / speedMag;
-		m_movement.sinAcceleration = m_movement.speedY / speedMag;
-	} else {
-		if (m_inputDx != 0 || m_inputDy != 0) {
-			const float inputMag =
-				std::sqrt(static_cast<float>(m_inputDx * m_inputDx + m_inputDy * m_inputDy));
-			m_movement.cosAcceleration = static_cast<float>(m_inputDx) / inputMag;
-			m_movement.sinAcceleration =
-				static_cast<float>(-m_inputDy) / inputMag;	// +dy = up => -y
-		} else {
-			m_movement.cosAcceleration = 0.0f;
-			m_movement.sinAcceleration = 0.0f;
-		}
+	const float speed = std::sqrt(m_speedX * m_speedX + m_speedY * m_speedY);
+	if (speed > m_speedLimit) {
+		const float scale = m_speedLimit / speed;
+		m_speedX *= scale;
+		m_speedY *= scale;
 	}
-
-	m_movement.initialSpeedX = m_movement.speedX;
-	m_movement.initialSpeedY = m_movement.speedY;
-	m_movement.initialX = m_position.x;
-	m_movement.initialY = m_position.y;
-	m_movement.currentTime = 0.0f;
 }
 
 void botf::FigureObject::update(float dt) {
@@ -123,51 +109,36 @@ void botf::FigureObject::update(float dt) {
 		return;
 	}
 
-	if (m_inputDx != m_prevInputDx || m_inputDy != m_prevInputDy) {
-		resetEndpoints();
-		m_prevInputDx = m_inputDx;
-		m_prevInputDy = m_inputDy;
-	}
+	const float accel = common::GlobalSettings::playerAcceleration;
+	const float friction = common::GlobalSettings::playerFriction;
+	const bool hasInput = (m_inputDx != 0 || m_inputDy != 0);
 
-	m_movement.currentTime += dt;
+	if (hasInput) {
+		// Normalize so diagonal does not accelerate √2 faster before speed clamp.
+		float ix = static_cast<float>(m_inputDx);
+		float iy = static_cast<float>(-m_inputDy);	// +dy = up => -game-y
+		const float inputMag = std::sqrt(ix * ix + iy * iy);
+		ix /= inputMag;
+		iy /= inputMag;
 
-	const bool idle = (m_inputDx == 0 && m_inputDy == 0);
+		m_speedX += ix * accel * dt;
+		m_speedY += iy * accel * dt;
 
-	if (idle) {
-		if (std::fabs(m_movement.speedX) > kSpeedEpsilon) {
-			m_movement.speedX = speedRecalculation(kFriction * m_movement.cosAcceleration,
-												   m_movement.initialSpeedX);
-			m_position.x = coordinateRecalculation(kFriction * m_movement.cosAcceleration,
-												   m_movement.initialSpeedX, m_movement.initialX);
+		// Released axis still brakes (no reverse via zero-cross).
+		if (m_inputDx == 0) {
+			applyAxisFriction(m_speedX, friction, dt);
 		}
-		if (std::fabs(m_movement.speedY) > kSpeedEpsilon) {
-			m_movement.speedY = speedRecalculation(kFriction * m_movement.sinAcceleration,
-												   m_movement.initialSpeedY);
-			m_position.y = coordinateRecalculation(kFriction * m_movement.sinAcceleration,
-												   m_movement.initialSpeedY, m_movement.initialY);
+		if (m_inputDy == 0) {
+			applyAxisFriction(m_speedY, friction, dt);
 		}
-		return;
+	} else {
+		// Full idle: decelerate along velocity, or per-axis friction — same zero-cross idea.
+		applyAxisFriction(m_speedX, friction, dt);
+		applyAxisFriction(m_speedY, friction, dt);
 	}
 
-	if (m_inputDx != 0) {
-		const float ax = static_cast<float>(m_inputDx) * kAcceleration;
-		m_movement.speedX = speedRecalculation(ax, m_movement.initialSpeedX);
-		m_position.x = coordinateRecalculation(ax, m_movement.initialSpeedX, m_movement.initialX);
-	} else if (std::fabs(m_movement.speedX) > kSpeedEpsilon) {
-		m_movement.speedX =
-			speedRecalculation(kFriction * m_movement.cosAcceleration, m_movement.initialSpeedX);
-		m_position.x = coordinateRecalculation(kFriction * m_movement.cosAcceleration,
-											   m_movement.initialSpeedX, m_movement.initialX);
-	}
+	clampSpeed();
 
-	if (m_inputDy != 0) {
-		const float ay = static_cast<float>(-m_inputDy) * kAcceleration;
-		m_movement.speedY = speedRecalculation(ay, m_movement.initialSpeedY);
-		m_position.y = coordinateRecalculation(ay, m_movement.initialSpeedY, m_movement.initialY);
-	} else if (std::fabs(m_movement.speedY) > kSpeedEpsilon) {
-		m_movement.speedY =
-			speedRecalculation(kFriction * m_movement.sinAcceleration, m_movement.initialSpeedY);
-		m_position.y = coordinateRecalculation(kFriction * m_movement.sinAcceleration,
-											   m_movement.initialSpeedY, m_movement.initialY);
-	}
+	m_position.x += m_speedX * dt;
+	m_position.y += m_speedY * dt;
 }

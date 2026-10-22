@@ -13,6 +13,9 @@ constexpr std::chrono::milliseconds pauseBetweenButtonPresses{50};
 constexpr float defaultPlayerSpeedLimit{200.0f};
 constexpr float defaultSpawnX{100.0f};
 constexpr float defaultSpawnY{300.0f};
+// Movement — TODO: нет БД, load from DB later. (card 36 incremental physics)
+constexpr float playerAcceleration{500.0f};	 // world units / s^2
+constexpr float playerFriction{800.0f};		 // decelerate when no input on axis / idle
 // Ignore aim updates when the cursor is this close to the entity (world units).
 constexpr float aimEpsilon{1.0f};
 // Client Aim send: fire every frame when angle or point moves past these.
