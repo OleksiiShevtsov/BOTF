@@ -37,7 +37,7 @@ namespace {
 [[nodiscard]] inline botf::Hello toProto(const common::HelloMessage& hello) {
 	botf::Hello message;
 	message.set_player_name(hello.playerName);
-	message.set_object_id(hello.objectId);
+	message.set_bound_object_id(hello.boundObjectId);
 	return message;
 }
 
@@ -66,15 +66,15 @@ namespace {
 [[nodiscard]] inline botf::WorldState toProto(const common::WorldSnapshot& snapshot) {
 	botf::WorldState state;
 	state.set_tick(snapshot.tick);
-	for (const auto& pose : snapshot.players) {
-		PlayerState* player = state.add_players();
-		player->set_id(pose.id);
-		auto* position = player->mutable_position();
+	for (const auto& pose : snapshot.figures) {
+		FigureState* figure = state.add_figures();
+		figure->set_object_id(pose.objectId);
+		auto* position = figure->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
-		player->set_aim_angle(pose.angle);
-		player->set_hp(pose.hp);
-		player->set_life_status(toProto(pose.lifeStatus));
+		figure->set_aim_angle(pose.aimAngle);
+		figure->set_hit_points(pose.hitPoints);
+		figure->set_life_status(toProto(pose.lifeStatus));
 	}
 	for (const auto& pose : snapshot.bullets) {
 		BulletState* bullet = state.add_bullets();

@@ -29,7 +29,7 @@ TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
 		game.tick(kDt);
 	}
 
-	const auto pos = game.figures().front().position();
+	const auto pos = game.figures().front().getPosition();
 	ASSERT_LT(pos.y, 100.f - 5.f);
 
 	const float expected = std::atan2(aim.y - pos.y, aim.x - pos.x);

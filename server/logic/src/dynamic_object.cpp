@@ -3,11 +3,11 @@
 botf::DynamicObject::DynamicObject(common::ObjectID id, common::Point position)
 	: m_id{id}, m_position{position} {}
 
-botf::common::ObjectID botf::DynamicObject::id() const {
+botf::common::ObjectID botf::DynamicObject::getObjectId() const {
 	return m_id;
 }
 
-botf::common::Point botf::DynamicObject::position() const {
+botf::common::Point botf::DynamicObject::getPosition() const {
 	return m_position;
 }
 

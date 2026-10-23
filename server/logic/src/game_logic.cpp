@@ -63,7 +63,7 @@ bool botf::GameLogic::tryFire(common::ClientID clientId) {
 	}
 
 	const common::ObjectID bulletId = m_nextEntityId++;
-	m_bullets.emplace_back(bulletId, figure->id(), figure->position(), figure->getAngle(),
+	m_bullets.emplace_back(bulletId, figure->getObjectId(), figure->getPosition(), figure->getAngle(),
 						   common::GlobalSettings::bulletSpeed,
 						   common::GlobalSettings::bulletMaxRange);
 	m_lastFireTime[clientId] = m_worldTime;
@@ -117,7 +117,7 @@ std::optional<botf::common::ObjectID> botf::GameLogic::entityForClient(
 
 botf::FigureObject* botf::GameLogic::findFigureMutable(common::ObjectID entityId) {
 	for (auto& obj : m_figures) {
-		if (obj.id() == entityId) {
+		if (obj.getObjectId() == entityId) {
 			return &obj;
 		}
 	}
@@ -131,7 +131,7 @@ void botf::GameLogic::destroyFigure(common::ObjectID entityId) {
 								   }),
 					m_bullets.end());
 	m_figures.erase(std::remove_if(m_figures.begin(), m_figures.end(),
-								   [entityId](const FigureObject& f) { return f.id() == entityId; }),
+								   [entityId](const FigureObject& f) { return f.getObjectId() == entityId; }),
 					m_figures.end());
 
 	for (auto it = m_clientToEntity.begin(); it != m_clientToEntity.end();) {
@@ -157,7 +157,7 @@ void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
 		return;
 	}
 
-	const common::Point pos = obj->position();
+	const common::Point pos = obj->getPosition();
 	const float dx = aimIt->second.x - pos.x;
 	const float dy = aimIt->second.y - pos.y;
 	if (dx * dx + dy * dy <
@@ -179,14 +179,14 @@ void botf::GameLogic::resolveBulletHits() {
 		if (!bullet.isAlive()) {
 			continue;
 		}
-		const common::Point pointHit = bullet.position();
+		const common::Point pointHit = bullet.getPosition();
 		const common::ObjectID ownerId = bullet.getOwnerId();
 
 		for (auto& figure : m_figures) {
-			if (figure.id() == ownerId || figure.isDead()) {
+			if (figure.getObjectId() == ownerId || figure.isDead()) {
 				continue;
 			}
-			if (!pointHitsAabb(figure.position(), pointHit)) {
+			if (!pointHitsAabb(figure.getPosition(), pointHit)) {
 				continue;
 			}
 			figure.applyDamage(damage);

@@ -12,10 +12,6 @@
 
 namespace {
 
-constexpr int kTickHz = 20;
-constexpr float kDt = 1.0f / static_cast<float>(kTickHz);
-constexpr auto kTickPeriod = std::chrono::milliseconds(1000 / kTickHz);
-
 std::atomic<botf::ServerEngine*> gActiveEngine{nullptr};
 
 void onSignal(int) {
@@ -30,8 +26,8 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std:
 	snapshot.players.reserve(game.figures().size());
 	for (const auto& obj : game.figures()) {
 		snapshot.players.push_back(botf::common::PlayerPose{
-			obj.id(),
-			obj.position(),
+			obj.getObjectId(),
+			obj.getPosition(),
 			obj.getAngle(),
 			obj.getHp(),
 			obj.getLifeStatus(),
@@ -40,9 +36,9 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std:
 	snapshot.bullets.reserve(game.bullets().size());
 	for (const auto& bullet : game.bullets()) {
 		snapshot.bullets.push_back(botf::common::BulletPose{
-			bullet.id(),
+			bullet.getObjectId(),
 			bullet.getOwnerId(),
-			bullet.position(),
+			bullet.getPosition(),
 			bullet.getVelocity(),
 		});
 	}
@@ -179,7 +175,8 @@ void botf::ServerEngine::advanceSim(float dt) {
 }
 
 int botf::ServerEngine::runLoop() {
-	botf::log::info("[server] running on port {} at {} Hz (Ctrl+C to stop)", port(), kTickHz);
+	botf::log::info("[server] running on port {} at {} Hz (Ctrl+C to stop)", port(),
+					common::GlobalSettings::kTickHz);
 
 	m_running = true;
 	auto lastOverrunLog = std::chrono::steady_clock::time_point{};
@@ -189,22 +186,22 @@ int botf::ServerEngine::runLoop() {
 
 		pollNetwork();
 		applyInbound();
-		advanceSim(kDt);
+		advanceSim(common::GlobalSettings::kDt);
 		pollNetwork();
 
 		// tick overrun
 		const auto elapsed = std::chrono::steady_clock::now() - tickStart;
-		if (elapsed > kTickPeriod) {
+		if (elapsed > common::GlobalSettings::kTickPeriod) {
 			constexpr auto kOverrunLogCooldown = std::chrono::seconds(1);
 			if (tickStart - lastOverrunLog >= kOverrunLogCooldown) {
 				const auto ms =
 					std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 				botf::log::warn("[server] tick overrun: {} ms (budget {} ms)", ms,
-								kTickPeriod.count());
+								common::GlobalSettings::kTickPeriod.count());
 				lastOverrunLog = tickStart;
 			}
 		} else {
-			std::this_thread::sleep_for(kTickPeriod - elapsed);
+			std::this_thread::sleep_for(common::GlobalSettings::kTickPeriod - elapsed);
 		}
 	}
 

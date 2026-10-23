@@ -20,7 +20,7 @@ botf::common::ObjectID spawnBound(botf::GameLogic& game,
 
 const botf::FigureObject* findFigure(const botf::GameLogic& game, botf::common::ObjectID id) {
 	for (const auto& f : game.figures()) {
-		if (f.id() == id) {
+		if (f.getObjectId() == id) {
 			return &f;
 		}
 	}

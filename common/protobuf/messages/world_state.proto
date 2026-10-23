@@ -13,18 +13,18 @@ enum LifeStatus {
   LIFE_STATUS_WAITING = 2;
 }
 
-message PlayerState {
-  uint32 id = 1;
+message FigureState {
+  uint32 object_id = 1;
   Vec2 position = 2;
   Vec2 velocity = 3;
   float aim_angle = 4;
-  int32 hp = 5;
+  int32 hit_points = 5;
   LifeStatus life_status = 6;
 }
 
 message BulletState {
-  uint32 id = 1;
-  uint32 owner_id = 2;
+  uint32 object_id = 1;
+  uint32 owner_object_id = 2;
   Vec2 position = 3;
   Vec2 velocity = 4;
 }
@@ -32,6 +32,6 @@ message BulletState {
 // Server → client authoritative snapshot.
 message WorldState {
   uint32 tick = 1;
-  repeated PlayerState players = 2;
+  repeated PlayerState figures = 2;
   repeated BulletState bullets = 3;
 }

@@ -118,9 +118,9 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 	ASSERT_EQ(engine.game().figures().size(), 1u);
-	ASSERT_EQ(engine.game().figures().front().id(), *selfId);
+	ASSERT_EQ(engine.game().figures().front().getObjectId(), *selfId);
 
-	const auto start = engine.game().figures().front().position();
+	const auto start = engine.game().figures().front().getPosition();
 
 	struct Sample {
 		int dx;
@@ -197,7 +197,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	EXPECT_EQ(last->tick, 4u);
 	EXPECT_TRUE(botf::protocol::isIdle(*last));
 
-	const auto end = engine.game().figures().front().position();
+	const auto end = engine.game().figures().front().getPosition();
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
@@ -241,11 +241,11 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	botf::common::Point startA{};
 	botf::common::Point startB{};
 	for (const auto& obj : engine.game().figures()) {
-		if (obj.id() == *idA) {
-			startA = obj.position();
+		if (obj.getObjectId() == *idA) {
+			startA = obj.getPosition();
 		}
-		if (obj.id() == *idB) {
-			startB = obj.position();
+		if (obj.getObjectId() == *idB) {
+			startB = obj.getPosition();
 		}
 	}
 
@@ -272,11 +272,11 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	botf::common::Point endA{};
 	botf::common::Point endB{};
 	for (const auto& obj : engine.game().figures()) {
-		if (obj.id() == *idA) {
-			endA = obj.position();
+		if (obj.getObjectId() == *idA) {
+			endA = obj.getPosition();
 		}
-		if (obj.id() == *idB) {
-			endB = obj.position();
+		if (obj.getObjectId() == *idB) {
+			endB = obj.getPosition();
 		}
 	}
 
@@ -321,7 +321,7 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 
-	const auto pos = engine.game().figures().front().position();
+	const auto pos = engine.game().figures().front().getPosition();
 	// Aim due +X from entity → expected angle 0.
 	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
 	client.setBlocking(true);

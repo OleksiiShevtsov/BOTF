@@ -72,8 +72,8 @@ TEST(Hitbox, BulletPointVsFigureCenter) {
 	const auto id = game.spawnPlayer(botf::common::Point{100.f, 100.f},
 									 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	ASSERT_EQ(game.figures().size(), 1u);
-	EXPECT_EQ(game.figures().front().id(), id);
-	const botf::common::Point centerHitbox = game.figures().front().position();
+	EXPECT_EQ(game.figures().front().getObjectId(), id);
+	const botf::common::Point centerHitbox = game.figures().front().getPosition();
 
 	EXPECT_TRUE(botf::pointHitsAabb(centerHitbox, {100.f, 100.f}));
 	EXPECT_TRUE(botf::pointHitsAabb(centerHitbox, {100.f + kHalf, 100.f}));

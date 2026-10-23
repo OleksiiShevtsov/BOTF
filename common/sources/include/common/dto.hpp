@@ -20,22 +20,22 @@ struct ClientInput {
 // Hello / Hello-ack (login-role). objectId == 0 on client request.
 struct HelloMessage {
 	std::string playerName;
-	ObjectID objectId{};
+	ObjectID boundObjectId{};
 };
 
 // Pose of a controllable actor in a world snapshot.
-struct PlayerPose {
-	ObjectID id{};
+struct FigurePose {
+	ObjectID objectId{};
 	Point position{};
-	Angle angle{};
-	int hp{};
+	Angle aimAngle{};
+	int hitPoints{};
 	LifeStatus lifeStatus{LifeStatus::Alive};
 };
 
 // Reserved for future bullets (mapped from proto when present).
 struct BulletPose {
-	ObjectID id{};
-	ObjectID ownerId{};
+	ObjectID objectId{};
+	ObjectID ownerObjectId{};
 	Point position{};
 	Point velocity{};
 };
@@ -43,7 +43,7 @@ struct BulletPose {
 // Authoritative world frame shared across logic ↔ protocol ↔ app.
 struct WorldSnapshot {
 	std::uint32_t tick{};
-	std::vector<PlayerPose> players;
+	std::vector<FigurePose> figures;
 	std::vector<BulletPose> bullets;
 };
 

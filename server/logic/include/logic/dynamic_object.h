@@ -9,8 +9,8 @@ class DynamicObject {
 public:
 	virtual ~DynamicObject() = default;
 
-	[[nodiscard]] common::ObjectID id() const;
-	[[nodiscard]] common::Point position() const;
+	[[nodiscard]] common::ObjectID getObjectId() const;
+	[[nodiscard]] common::Point getPosition() const;
 	[[nodiscard]] virtual common::Angle getAngle() const = 0;
 
 	void setPosition(common::Point dot);

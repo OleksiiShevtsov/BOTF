@@ -56,7 +56,7 @@ TEST(GameLogicMovement, ReleaseStopsWithoutReverse) {
 		game.tick(kDt);
 	}
 
-	const float xAtRelease = game.figures().front().position().x;
+	const float xAtRelease = game.figures().front().getPosition().x;
 	ASSERT_GT(xAtRelease, 1.f);
 	ASSERT_GT(game.figures().front().getVelocity().x, 0.f);
 
@@ -64,7 +64,7 @@ TEST(GameLogicMovement, ReleaseStopsWithoutReverse) {
 	float prevX = xAtRelease;
 	for (int i = 0; i < 80; ++i) {
 		game.tick(kDt);
-		const float x = game.figures().front().position().x;
+		const float x = game.figures().front().getPosition().x;
 		// May coast forward while braking, but must not reverse past release point meaningfully.
 		EXPECT_GE(x, xAtRelease - 1e-3f);
 		prevX = x;
@@ -87,9 +87,9 @@ TEST(GameLogicMovement, DirectionChangeHasBoundedStep) {
 	const float limit = botf::common::GlobalSettings::defaultPlayerSpeedLimit;
 	const float maxStep = limit * kDt + 1.f;	 // one tick of max speed + slack
 	for (int i = 0; i < 10; ++i) {
-		const auto before = game.figures().front().position();
+		const auto before = game.figures().front().getPosition();
 		game.tick(kDt);
-		const auto after = game.figures().front().position();
+		const auto after = game.figures().front().getPosition();
 		const float step =
 			std::sqrt((after.x - before.x) * (after.x - before.x) +
 					  (after.y - before.y) * (after.y - before.y));
@@ -106,5 +106,5 @@ TEST(GameLogicMovement, UpInputMovesNegativeGameY) {
 	for (int i = 0; i < 20; ++i) {
 		game.tick(kDt);
 	}
-	EXPECT_LT(game.figures().front().position().y, 100.f - 1.f);
+	EXPECT_LT(game.figures().front().getPosition().y, 100.f - 1.f);
 }

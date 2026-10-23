@@ -20,7 +20,7 @@ TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 	const auto id = game.spawnPlayer(botf::common::Point{10.f, 20.f},
 									 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	ASSERT_EQ(game.figures().size(), 1u);
-	EXPECT_EQ(game.figures().front().id(), id);
+	EXPECT_EQ(game.figures().front().getObjectId(), id);
 	EXPECT_EQ(game.figures().front().getHp(), botf::common::GlobalSettings::maxHp);
 	EXPECT_EQ(game.figures().front().getLifeStatus(), botf::common::LifeStatus::Alive);
 	EXPECT_FALSE(game.figures().front().isDead());
