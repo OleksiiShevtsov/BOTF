@@ -13,35 +13,35 @@ void botf::app::Scene::clear() {
 
 void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot) {
 	std::unordered_set<common::ObjectID> seen;
-	seen.reserve(snapshot.players.size() + snapshot.bullets.size());
+	seen.reserve(snapshot.figures.size() + snapshot.bullets.size());
 
-	for (const auto& pose : snapshot.players) {
-		seen.insert(pose.id);
+	for (const auto& pose : snapshot.figures) {
+		seen.insert(pose.objectId);
 
-		if (IViewObject* existing = find(pose.id)) {
-			existing->setPose(pose.position, pose.angle);
+		if (IViewObject* existing = find(pose.objectId)) {
+			existing->setPose(pose.position, pose.aimAngle);
 			if (auto* figure = dynamic_cast<FigureView*>(existing)) {
 				figure->setLifeStatus(pose.lifeStatus);
 			}
 			continue;
 		}
 
-		auto view = std::make_unique<FigureView>(pose.id);
-		view->setPose(pose.position, pose.angle);
+		auto view = std::make_unique<FigureView>(pose.objectId);
+		view->setPose(pose.position, pose.aimAngle);
 		view->setLifeStatus(pose.lifeStatus);
 		m_objects.push_back(std::move(view));
 	}
 
 	for (const auto& pose : snapshot.bullets) {
-		seen.insert(pose.id);
+		seen.insert(pose.objectId);
 		const float angle = std::atan2(pose.velocity.y, pose.velocity.x);
 
-		if (IViewObject* existing = find(pose.id)) {
+		if (IViewObject* existing = find(pose.objectId)) {
 			existing->setPose(pose.position, angle);
 			continue;
 		}
 
-		auto view = std::make_unique<BulletView>(pose.id);
+		auto view = std::make_unique<BulletView>(pose.objectId);
 		view->setPose(pose.position, angle);
 		m_objects.push_back(std::move(view));
 	}

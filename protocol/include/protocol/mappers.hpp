@@ -37,7 +37,8 @@ namespace {
 [[nodiscard]] inline botf::Hello toProto(const common::HelloMessage& hello) {
 	botf::Hello message;
 	message.set_player_name(hello.playerName);
-	message.set_bound_object_id(hello.boundObjectId);
+	// Wire field stays object_id; DTO name is boundObjectId.
+	message.set_object_id(hello.boundObjectId);
 	return message;
 }
 
@@ -78,8 +79,8 @@ namespace {
 	}
 	for (const auto& pose : snapshot.bullets) {
 		BulletState* bullet = state.add_bullets();
-		bullet->set_id(pose.id);
-		bullet->set_owner_id(pose.ownerId);
+		bullet->set_object_id(pose.objectId);
+		bullet->set_owner_object_id(pose.ownerObjectId);
 		auto* position = bullet->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
@@ -93,21 +94,21 @@ namespace {
 [[nodiscard]] inline common::WorldSnapshot fromProto(const botf::WorldState& state) {
 	common::WorldSnapshot snapshot;
 	snapshot.tick = state.tick();
-	snapshot.players.reserve(static_cast<std::size_t>(state.players_size()));
-	for (const auto& player : state.players()) {
-		snapshot.players.push_back(common::PlayerPose{
-			player.id(),
-			common::Point{player.position().x(), player.position().y()},
-			player.aim_angle(),
-			player.hp(),
-			fromProto(player.life_status()),
+	snapshot.figures.reserve(static_cast<std::size_t>(state.figures_size()));
+	for (const auto& figure : state.figures()) {
+		snapshot.figures.push_back(common::FigurePose{
+			figure.object_id(),
+			common::Point{figure.position().x(), figure.position().y()},
+			figure.aim_angle(),
+			figure.hit_points(),
+			fromProto(figure.life_status()),
 		});
 	}
 	snapshot.bullets.reserve(static_cast<std::size_t>(state.bullets_size()));
 	for (const auto& bullet : state.bullets()) {
 		snapshot.bullets.push_back(common::BulletPose{
-			bullet.id(),
-			bullet.owner_id(),
+			bullet.object_id(),
+			bullet.owner_object_id(),
 			common::Point{bullet.position().x(), bullet.position().y()},
 			common::Point{bullet.velocity().x(), bullet.velocity().y()},
 		});

@@ -71,21 +71,21 @@ std::optional<botf::common::ObjectID> helloBind(botf::ServerEngine& engine,
 			continue;
 		}
 		const auto* hello = std::get_if<botf::common::HelloMessage>(&decoded->body);
-		if (!hello || hello->objectId == 0) {
+		if (!hello || hello->boundObjectId == 0) {
 			continue;
 		}
 
-		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->objectId);
-		return hello->objectId;
+		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->boundObjectId);
+		return hello->boundObjectId;
 	}
 	return std::nullopt;
 }
 
-const botf::common::PlayerPose* findPlayer(const botf::common::WorldSnapshot& snapshot,
+const botf::common::FigurePose* findFigure(const botf::common::WorldSnapshot& snapshot,
 										   botf::common::ObjectID id) {
-	for (const auto& player : snapshot.players) {
-		if (player.id == id) {
-			return &player;
+	for (const auto& figure : snapshot.figures) {
+		if (figure.objectId == id) {
+			return &figure;
 		}
 	}
 	return nullptr;
@@ -183,7 +183,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 			continue;
 		}
 		const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
-		if (!world || world->players.empty()) {
+		if (!world || world->figures.empty()) {
 			continue;
 		}
 		lastSnapshot = *world;
@@ -201,7 +201,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
-	const auto* pose = findPlayer(lastSnapshot, *selfId);
+	const auto* pose = findFigure(lastSnapshot, *selfId);
 	ASSERT_NE(pose, nullptr);
 	const float dx = pose->position.x - end.x;
 	const float dy = pose->position.y - end.y;
@@ -365,11 +365,11 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 		if (!world) {
 			continue;
 		}
-		const auto* pose = findPlayer(*world, *selfId);
+		const auto* pose = findFigure(*world, *selfId);
 		if (!pose) {
 			continue;
 		}
-		worldAngle = pose->angle;
+		worldAngle = pose->aimAngle;
 		gotWorld = true;
 	}
 

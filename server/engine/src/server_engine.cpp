@@ -23,9 +23,9 @@ void onSignal(int) {
 botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std::uint32_t tick) {
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
-	snapshot.players.reserve(game.figures().size());
+	snapshot.figures.reserve(game.figures().size());
 	for (const auto& obj : game.figures()) {
-		snapshot.players.push_back(botf::common::PlayerPose{
+		snapshot.figures.push_back(botf::common::FigurePose{
 			obj.getObjectId(),
 			obj.getPosition(),
 			obj.getAngle(),

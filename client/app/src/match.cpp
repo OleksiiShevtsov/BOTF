@@ -25,9 +25,9 @@ void botf::app::Match::applyWorldSnapshot(const common::WorldSnapshot& snapshot,
 	if (!selfId) {
 		return;
 	}
-	for (const auto& pose : snapshot.players) {
-		if (pose.id == *selfId) {
-			m_infoPanel.setHp(pose.hp, common::GlobalSettings::maxHp);
+	for (const auto& pose : snapshot.figures) {
+		if (pose.objectId == *selfId) {
+			m_infoPanel.setHp(pose.hitPoints, common::GlobalSettings::maxHp);
 			return;
 		}
 	}

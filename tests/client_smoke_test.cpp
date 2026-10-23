@@ -22,7 +22,7 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = 42;
-	snapshot.players.push_back(botf::common::PlayerPose{
+	snapshot.figures.push_back(botf::common::FigurePose{
 		7,
 		botf::common::Point{100.f, 300.f},
 		1.25f,
@@ -41,7 +41,7 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 	ASSERT_TRUE(decoded.has_value());
 	const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
 	ASSERT_NE(world, nullptr);
-	ASSERT_EQ(world->players.size(), 1u);
+	ASSERT_EQ(world->figures.size(), 1u);
 
 	botf::app::Match match;
 	match.applyWorldSnapshot(*world);
@@ -56,7 +56,7 @@ TEST(ClientSmoke, WorldSnapshotAppliesToMatch) {
 
 	// Upsert keeps the same object and updates pose.
 	botf::common::WorldSnapshot next = *world;
-	next.players[0].position = botf::common::Point{110.f, 310.f};
+	next.figures[0].position = botf::common::Point{110.f, 310.f};
 	match.applyWorldSnapshot(next);
 	ASSERT_EQ(match.getScene().size(), 1u);
 	view = match.getScene().find(7);

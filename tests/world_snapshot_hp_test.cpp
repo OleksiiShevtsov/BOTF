@@ -8,14 +8,14 @@
 TEST(WorldSnapshotHp, RoundTripHpAndLifeStatus) {
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = 7;
-	snapshot.players.push_back(botf::common::PlayerPose{
+	snapshot.figures.push_back(botf::common::FigurePose{
 		3,
 		botf::common::Point{11.f, 22.f},
 		0.5f,
 		botf::common::GlobalSettings::maxHp - botf::common::GlobalSettings::bulletDamage,
 		botf::common::LifeStatus::Alive,
 	});
-	snapshot.players.push_back(botf::common::PlayerPose{
+	snapshot.figures.push_back(botf::common::FigurePose{
 		4,
 		botf::common::Point{0.f, 0.f},
 		1.0f,
@@ -28,11 +28,11 @@ TEST(WorldSnapshotHp, RoundTripHpAndLifeStatus) {
 	ASSERT_TRUE(decoded.has_value());
 	const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
 	ASSERT_NE(world, nullptr);
-	ASSERT_EQ(world->players.size(), 2u);
+	ASSERT_EQ(world->figures.size(), 2u);
 
-	EXPECT_EQ(world->players[0].hp,
+	EXPECT_EQ(world->figures[0].hitPoints,
 			  botf::common::GlobalSettings::maxHp - botf::common::GlobalSettings::bulletDamage);
-	EXPECT_EQ(world->players[0].lifeStatus, botf::common::LifeStatus::Alive);
-	EXPECT_EQ(world->players[1].hp, 0);
-	EXPECT_EQ(world->players[1].lifeStatus, botf::common::LifeStatus::Dead);
+	EXPECT_EQ(world->figures[0].lifeStatus, botf::common::LifeStatus::Alive);
+	EXPECT_EQ(world->figures[1].hitPoints, 0);
+	EXPECT_EQ(world->figures[1].lifeStatus, botf::common::LifeStatus::Dead);
 }
