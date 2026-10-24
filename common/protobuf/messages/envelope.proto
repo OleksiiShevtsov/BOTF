@@ -8,7 +8,7 @@ import "world_state.proto";
 // Client → server: player_name optional, object_id unset (0).
 // Server → client ack: object_id = bound entity id for this TCP session.
 // map_id is NOT here — ClientConnect = login to server, not join GameSession.
-// Session map goes on WorldState (now) / future JoinSession notification (45/47).
+// Session map_id → future JoinSession notification (45/47).
 message ClientConnect {
   string player_name = 1;
   uint32 object_id = 2;
