@@ -1,27 +1,27 @@
 #include "logic/hitbox.h"
 
-#include "common/global_settings.hpp"
-
 #include <cmath>
 
 namespace {
 
 bool pointInAabb(const botf::common::Point& centerHitbox,
-				 const float half,
+				 const float halfW,
+				 const float halfH,
 				 const botf::common::Point& pointHit) {
-	return std::abs(pointHit.x - centerHitbox.x) <= half &&
-		   std::abs(pointHit.y - centerHitbox.y) <= half;
+	return std::abs(pointHit.x - centerHitbox.x) <= halfW &&
+		   std::abs(pointHit.y - centerHitbox.y) <= halfH;
 }
 
 // Liang–Barsky clip of segment against axis-aligned box. Inclusive on boundaries.
 bool segmentIntersectsAabb(const botf::common::Point& centerHitbox,
-						   const float half,
+						   const float halfW,
+						   const float halfH,
 						   const botf::common::Point& a,
 						   const botf::common::Point& b) {
-	const float minX = centerHitbox.x - half;
-	const float maxX = centerHitbox.x + half;
-	const float minY = centerHitbox.y - half;
-	const float maxY = centerHitbox.y + half;
+	const float minX = centerHitbox.x - halfW;
+	const float maxX = centerHitbox.x + halfW;
+	const float minY = centerHitbox.y - halfH;
+	const float maxY = centerHitbox.y + halfH;
 
 	float t0 = 0.f;
 	float t1 = 1.f;
@@ -57,20 +57,20 @@ bool segmentIntersectsAabb(const botf::common::Point& centerHitbox,
 
 }  // namespace
 
-float botf::hitboxHalfExtent() {
-	return common::GlobalSettings::hitboxSize * 0.5f;
-}
-
-bool botf::pointHitsAabb(const common::Point& centerHitbox, const common::Point& pointHit) {
-	return pointInAabb(centerHitbox, hitboxHalfExtent(), pointHit);
+bool botf::pointHitsAabb(const common::Point& centerHitbox,
+						 const ObjectHitbox& hitbox,
+						 const common::Point& pointHit) {
+	return pointInAabb(centerHitbox, hitbox.getHalfWidth(), hitbox.getHalfHeight(), pointHit);
 }
 
 bool botf::segmentHitsAabb(const common::Point& centerHitbox,
+						   const ObjectHitbox& hitbox,
 						   const common::Point& a,
 						   const common::Point& b) {
-	const float half = hitboxHalfExtent();
+	const float halfW = hitbox.getHalfWidth();
+	const float halfH = hitbox.getHalfHeight();
 	if (a.x == b.x && a.y == b.y) {
-		return pointInAabb(centerHitbox, half, a);
+		return pointInAabb(centerHitbox, halfW, halfH, a);
 	}
-	return segmentIntersectsAabb(centerHitbox, half, a, b);
+	return segmentIntersectsAabb(centerHitbox, halfW, halfH, a, b);
 }

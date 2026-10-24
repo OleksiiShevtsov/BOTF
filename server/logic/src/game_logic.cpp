@@ -186,7 +186,7 @@ void botf::GameLogic::resolveBulletHits() {
 			if (figure.getObjectId() == ownerId || figure.isDead()) {
 				continue;
 			}
-			if (!pointHitsAabb(figure.getPosition(), pointHit)) {
+			if (!pointHitsAabb(figure.getPosition(), figure.getHitbox(), pointHit)) {
 				continue;
 			}
 			figure.applyDamage(damage);

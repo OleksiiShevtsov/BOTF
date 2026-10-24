@@ -26,15 +26,23 @@ void applyAxisFriction(float& speed, float friction, float dt) {
 
 }  // namespace
 
-botf::FigureObject::FigureObject(common::ObjectID id, common::Point dot, float speedLimit)
+botf::FigureObject::FigureObject(common::ObjectID id,
+								 common::Point dot,
+								 float speedLimit,
+								 ObjectHitbox hitbox)
 	: DynamicObject{id, dot},
 	  m_angle{0.0f},
 	  m_speedLimit{speedLimit},
 	  m_hp{common::GlobalSettings::maxHp},
-	  m_lifeStatus{common::LifeStatus::Alive} {}
+	  m_lifeStatus{common::LifeStatus::Alive},
+	  m_hitbox{hitbox} {}
 
 botf::common::Angle botf::FigureObject::getAngle() const {
 	return m_angle;
+}
+
+const botf::ObjectHitbox& botf::FigureObject::getHitbox() const {
+	return m_hitbox;
 }
 
 int botf::FigureObject::inputDx() const {

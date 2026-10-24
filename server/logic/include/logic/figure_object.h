@@ -1,13 +1,18 @@
 #pragma once
 
 #include "logic/dynamic_object.h"
+#include "logic/hitbox.h"
 
 namespace botf {
 
 // Controllable figure with incremental accel / friction (card 36).
 class FigureObject : public DynamicObject {
 public:
-	FigureObject(common::ObjectID id, common::Point dot, float speedLimit);
+	// hitbox: stub default from GlobalSettings until character catalog / DB (card 50).
+	FigureObject(common::ObjectID id,
+				 common::Point dot,
+				 float speedLimit,
+				 ObjectHitbox hitbox = installObjectHitbox());
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
@@ -16,6 +21,7 @@ public:
 	[[nodiscard]] common::LifeStatus getLifeStatus() const;
 	[[nodiscard]] bool isDead() const;
 	[[nodiscard]] common::Point getVelocity() const;
+	[[nodiscard]] const ObjectHitbox& getHitbox() const;
 
 	void setAngle(common::Angle alpha);
 	// Movement intent for this tick: each axis in {-1, 0, 1}. No-op if dead.
@@ -32,6 +38,7 @@ private:
 	float m_speedLimit{};
 	int m_hp{};
 	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};
+	ObjectHitbox m_hitbox{};
 
 	int m_inputDx{0};
 	int m_inputDy{0};
