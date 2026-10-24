@@ -1,7 +1,7 @@
 #include "engine/game_sessions_pool.h"
 
 botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ClientID clientId) {
-	if (GameSession* existing = findByClient(clientId)) {
+	if (GameSession* existing = findGameSessionByClient(clientId)) {
 		return *existing;
 	}
 
@@ -17,7 +17,7 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ClientID cli
 	return *session;
 }
 
-botf::GameSession* botf::GameSessionsPool::findByClient(common::ClientID clientId) {
+botf::GameSession* botf::GameSessionsPool::findGameSessionByClient(common::ClientID clientId) {
 	const auto it = m_clientToSession.find(clientId);
 	if (it == m_clientToSession.end()) {
 		return nullptr;
@@ -25,7 +25,8 @@ botf::GameSession* botf::GameSessionsPool::findByClient(common::ClientID clientI
 	return it->second;
 }
 
-const botf::GameSession* botf::GameSessionsPool::findByClient(common::ClientID clientId) const {
+const botf::GameSession* botf::GameSessionsPool::findGameSessionByClient(
+	common::ClientID clientId) const {
 	const auto it = m_clientToSession.find(clientId);
 	if (it == m_clientToSession.end()) {
 		return nullptr;

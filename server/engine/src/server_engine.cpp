@@ -96,11 +96,6 @@ const botf::GameSessionsPool& botf::ServerEngine::sessions() const {
 	return m_gameSessionsPool;
 }
 
-const botf::GameLogic& botf::ServerEngine::getGameLogic(common::ClientID clientId) const {
-	const GameSession* session = m_gameSessionsPool.findByClient(clientId);
-	return session->getGameLogic();
-}
-
 std::uint32_t botf::ServerEngine::simTick() const {
 	return m_simTick;
 }
@@ -149,7 +144,7 @@ void botf::ServerEngine::handleClientInput(common::ClientID clientId,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{input, sequence};
 
-	GameSession* session = m_gameSessionsPool.findByClient(clientId);
+	GameSession* session = m_gameSessionsPool.findGameSessionByClient(clientId);
 	if (!session) {
 		// Unbound ClientInput (no ClientConnect) — no-op.
 		return;

@@ -39,8 +39,6 @@ public:
 	[[nodiscard]] std::size_t clientCount() const;
 	[[nodiscard]] GameSessionsPool& sessions();
 	[[nodiscard]] const GameSessionsPool& sessions() const;
-	// GameLogic of the session that owns this client. Precondition: client is in a session.
-	[[nodiscard]] const GameLogic& getGameLogic(common::ClientID clientId) const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
 		common::ClientID clientId) const;

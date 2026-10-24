@@ -22,8 +22,8 @@ public:
 	// Client → session. If unbound: join the existing default session, or create one.
 	GameSession& ensureDefaultFor(common::ClientID clientId);
 
-	[[nodiscard]] GameSession* findByClient(common::ClientID clientId);
-	[[nodiscard]] const GameSession* findByClient(common::ClientID clientId) const;
+	[[nodiscard]] GameSession* findGameSessionByClient(common::ClientID clientId);
+	[[nodiscard]] const GameSession* findGameSessionByClient(common::ClientID clientId) const;
 
 	// Drop client→session membership and destroy bound figure in that session's GameLogic.
 	void removeClient(common::ClientID clientId);

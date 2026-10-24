@@ -9,12 +9,12 @@ TEST(GameSessionsPool, EnsureDefaultForCreatesSharedSession) {
 	botf::GameSession& a = pool.ensureDefaultFor(1);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(a.getMapId(), 1u);
-	EXPECT_EQ(pool.findByClient(1), &a);
+	EXPECT_EQ(pool.findGameSessionByClient(1), &a);
 
 	botf::GameSession& b = pool.ensureDefaultFor(2);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(&a, &b);
-	EXPECT_EQ(pool.findByClient(1), pool.findByClient(2));
+	EXPECT_EQ(pool.findGameSessionByClient(1), pool.findGameSessionByClient(2));
 }
 
 TEST(GameSessionsPool, EnsureDefaultForIsIdempotentPerClient) {
@@ -31,10 +31,10 @@ TEST(GameSessionsPool, RemoveClientDropsMembership) {
 	pool.ensureDefaultFor(2);
 	pool.removeClient(1);
 
-	EXPECT_EQ(pool.findByClient(1), nullptr);
-	ASSERT_NE(pool.findByClient(2), nullptr);
+	EXPECT_EQ(pool.findGameSessionByClient(1), nullptr);
+	ASSERT_NE(pool.findGameSessionByClient(2), nullptr);
 
-	const auto clients = pool.clientsOf(*pool.findByClient(2));
+	const auto clients = pool.clientsOf(*pool.findGameSessionByClient(2));
 	ASSERT_EQ(clients.size(), 1u);
 	EXPECT_EQ(clients.front(), 2u);
 }
