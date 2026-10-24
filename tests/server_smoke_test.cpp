@@ -202,7 +202,6 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
-	EXPECT_EQ(lastSnapshot.mapId, 1u);
 	const auto* pose = findFigure(lastSnapshot, *selfId);
 	ASSERT_NE(pose, nullptr);
 	const float dx = pose->position.x - end.x;

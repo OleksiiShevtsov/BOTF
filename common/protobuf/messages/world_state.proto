@@ -34,7 +34,4 @@ message WorldState {
   uint32 tick = 1;
   repeated FigureState figures = 2;
   repeated BulletState bullets = 3;
-  // Map of the GameSession this world belongs to (card 46).
-  // ClientConnect does not carry map_id — join-session notification later (45/47).
-  uint32 map_id = 4;  // 0 = unset
 }

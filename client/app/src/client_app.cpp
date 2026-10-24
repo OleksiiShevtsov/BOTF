@@ -97,10 +97,6 @@ void botf::app::ClientApp::applyInbound() {
 				botf::log::info("[client] bound to entity {}", *m_selfId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
 				m_latestWorld = body;
-				// map_id is session-world context (not ClientConnect). JoinSession msg later.
-				if (body.mapId != 0) {
-					m_rendering.getMatch().getMap().setMapId(body.mapId);
-				}
 			}
 			// ClientInput from server is ignored.
 		});

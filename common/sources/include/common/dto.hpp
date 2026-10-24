@@ -18,7 +18,7 @@ struct ClientInput {
 };
 
 // ClientConnect / ack (login to server). boundObjectId == 0 on client request.
-// Not a GameSession join — mapId lives on WorldSnapshot / future JoinSession msg.
+// Not a GameSession join — mapId comes with future JoinSession notification (45/47).
 struct ClientConnectMessage {
 	std::string playerName;
 	ObjectID boundObjectId{};
@@ -44,7 +44,6 @@ struct BulletPose {
 // Authoritative world frame shared across logic ↔ protocol ↔ app.
 struct WorldSnapshot {
 	std::uint32_t tick{};
-	MapID mapId{};
 	std::vector<FigurePose> figures;
 	std::vector<BulletPose> bullets;
 };

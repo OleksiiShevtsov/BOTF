@@ -67,7 +67,6 @@ namespace {
 [[nodiscard]] inline botf::WorldState toProto(const common::WorldSnapshot& snapshot) {
 	botf::WorldState state;
 	state.set_tick(snapshot.tick);
-	state.set_map_id(snapshot.mapId);
 	for (const auto& pose : snapshot.figures) {
 		FigureState* figure = state.add_figures();
 		figure->set_object_id(pose.objectId);
@@ -95,7 +94,6 @@ namespace {
 [[nodiscard]] inline common::WorldSnapshot fromProto(const botf::WorldState& state) {
 	common::WorldSnapshot snapshot;
 	snapshot.tick = state.tick();
-	snapshot.mapId = state.map_id();
 	snapshot.figures.reserve(static_cast<std::size_t>(state.figures_size()));
 	for (const auto& figure : state.figures()) {
 		snapshot.figures.push_back(common::FigurePose{

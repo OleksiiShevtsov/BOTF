@@ -25,7 +25,6 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameSession& session,
 	const botf::GameLogic& game = session.logic();
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
-	snapshot.mapId = session.mapId();
 	snapshot.figures.reserve(game.figures().size());
 	for (const auto& obj : game.figures()) {
 		snapshot.figures.push_back(botf::common::FigurePose{

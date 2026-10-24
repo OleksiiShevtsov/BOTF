@@ -140,7 +140,7 @@ BOTF/
 ```
 ClientConnect → (card 46 scaffold) ensureDefaultFor → spawn/bind → ack (object_id)
   // later: ClientConnect = server login only; JoinSession carries map_id (45/47)
-ClientInput → session GameLogic; WorldState includes map_id of the GameSession
+ClientInput → session GameLogic → WorldState
   → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 
