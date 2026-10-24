@@ -9,14 +9,14 @@ TEST(GameSessionsPool, EnsureDefaultForCreatesSharedSession) {
 	botf::GameSession& a = pool.ensureDefaultFor(1);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(a.getId(), 1u);
-	EXPECT_EQ(pool.findGameSessionByClient(1), &a);
-	EXPECT_EQ(pool.findGameSessionById(a.getId()), &a);
+	EXPECT_EQ(pool.findGameSessionByClientId(1), &a);
+	EXPECT_EQ(pool.findGameSessionBySessionId(a.getId()), &a);
 
 	botf::GameSession& b = pool.ensureDefaultFor(2);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(&a, &b);
 	EXPECT_EQ(a.getId(), b.getId());
-	EXPECT_EQ(pool.findGameSessionByClient(1), pool.findGameSessionByClient(2));
+	EXPECT_EQ(pool.findGameSessionByClientId(1), pool.findGameSessionByClientId(2));
 }
 
 TEST(GameSessionsPool, EnsureDefaultForIsIdempotentPerClient) {
@@ -34,10 +34,10 @@ TEST(GameSessionsPool, RemoveClientDropsMembership) {
 	pool.ensureDefaultFor(2);
 	pool.removeClient(1);
 
-	EXPECT_EQ(pool.findGameSessionByClient(1), nullptr);
-	ASSERT_NE(pool.findGameSessionByClient(2), nullptr);
+	EXPECT_EQ(pool.findGameSessionByClientId(1), nullptr);
+	ASSERT_NE(pool.findGameSessionByClientId(2), nullptr);
 
-	const auto clients = pool.clientsOf(*pool.findGameSessionByClient(2));
+	const auto clients = pool.getSessionClients(pool.findGameSessionByClientId(2)->getId());
 	ASSERT_EQ(clients.size(), 1u);
 	EXPECT_EQ(clients.front(), 2u);
 }

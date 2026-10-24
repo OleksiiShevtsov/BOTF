@@ -48,7 +48,7 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	common::ID bindOrSpawnForClient(GameSession& session, common::ID clientId);
+	common::ID bindOrSpawnForClient(common::ID clientId);
 	void handleClientConnect(common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);

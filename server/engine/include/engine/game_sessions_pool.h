@@ -22,17 +22,17 @@ public:
 	// Client → session. If unbound: join the existing default session, or create one.
 	GameSession& ensureDefaultFor(common::ID clientId);
 
-	[[nodiscard]] GameSession* findGameSessionByClient(common::ID clientId);
-	[[nodiscard]] const GameSession* findGameSessionByClient(common::ID clientId) const;
+	[[nodiscard]] GameSession* findGameSessionByClientId(common::ID clientId);
+	[[nodiscard]] const GameSession* findGameSessionByClientId(common::ID clientId) const;
 
-	[[nodiscard]] GameSession* findGameSessionById(common::ID sessionId);
-	[[nodiscard]] const GameSession* findGameSessionById(common::ID sessionId) const;
+	[[nodiscard]] GameSession* findGameSessionBySessionId(common::ID sessionId);
+	[[nodiscard]] const GameSession* findGameSessionBySessionId(common::ID sessionId) const;
 
 	// Drop client→session membership and destroy bound figure in that session's GameLogic.
 	void removeClient(common::ID clientId);
 
 	// Clients currently mapped to this session (for WorldState fan-out).
-	[[nodiscard]] std::vector<common::ID> clientsOf(const GameSession& session) const;
+	[[nodiscard]] std::vector<common::ID> getSessionClients(common::ID sessionId) const;
 
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;

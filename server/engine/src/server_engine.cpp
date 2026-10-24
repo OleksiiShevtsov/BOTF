@@ -26,13 +26,13 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameSession& session,
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
 	snapshot.figures.reserve(game.figures().size());
-	for (const auto& obj : game.figures()) {
+	for (const auto& figure : game.figures()) {
 		snapshot.figures.push_back(botf::common::FigurePose{
-			obj.getId(),
-			obj.getPosition(),
-			obj.getAngle(),
-			obj.getHp(),
-			obj.getLifeStatus(),
+			figure.getId(),
+			figure.getPosition(),
+			figure.getAngle(),
+			figure.getHp(),
+			figure.getLifeStatus(),
 		});
 	}
 	snapshot.bullets.reserve(game.bullets().size());
@@ -109,9 +109,14 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	return it->second.command;
 }
 
-botf::common::ID botf::ServerEngine::bindOrSpawnForClient(GameSession& session,
-															   common::ID clientId) {
-	GameLogic& game = session.getGameLogic();
+botf::common::ID botf::ServerEngine::bindOrSpawnForClient(common::ID clientId) {
+	GameSession* session = m_gameSessionsPool.findGameSessionByClientId(clientId);
+	if (!session) {
+		botf::log::error("[server] bindOrSpawn: no session for client {}", clientId);
+		return 0;
+	}
+
+	GameLogic& game = session->getGameLogic();
 	if (const auto existing = game.entityForClient(clientId)) {
 		return *existing;
 	}
@@ -121,7 +126,7 @@ botf::common::ID botf::ServerEngine::bindOrSpawnForClient(GameSession& session,
 		common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entity);
 	botf::log::info("[server] client {} bound to entity {} (sessionId={})", clientId, entity,
-					session.getId());
+					session->getId());
 	return entity;
 }
 
@@ -130,8 +135,8 @@ void botf::ServerEngine::handleClientConnect(common::ID clientId,
 											 std::uint64_t sequence) {
 	// Card 46 scaffold: TCP login still enters the sole GameSession.
 	// Later (45/47): ClientConnect = server login only; JoinSession notification joins match.
-	GameSession& session = m_gameSessionsPool.ensureDefaultFor(clientId);
-	const common::ID entityId = bindOrSpawnForClient(session, clientId);
+	m_gameSessionsPool.ensureDefaultFor(clientId);
+	const common::ID entityId = bindOrSpawnForClient(clientId);
 	const common::ClientConnectMessage ack{connect.playerName, entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
@@ -144,7 +149,7 @@ void botf::ServerEngine::handleClientInput(common::ID clientId,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{input, sequence};
 
-	GameSession* session = m_gameSessionsPool.findGameSessionByClient(clientId);
+	GameSession* session = m_gameSessionsPool.findGameSessionByClientId(clientId);
 	if (!session) {
 		// Unbound ClientInput (no ClientConnect) — no-op.
 		return;
@@ -184,7 +189,7 @@ void botf::ServerEngine::enqueueWorldState(const GameSession& session,
 										   std::uint64_t sequence) {
 	const auto payload = protocol::encodeWorldSnapshot(buildWorldSnapshot(session, tick), sequence);
 	// Fan-out to clients mapped to this session (membership in GameSessionsPool).
-	for (const common::ID clientId : m_gameSessionsPool.clientsOf(session)) {
+	for (const common::ID clientId : m_gameSessionsPool.getSessionClients(session.getId())) {
 		m_outbound.push(net::OutboundNotification{clientId, payload});
 	}
 }

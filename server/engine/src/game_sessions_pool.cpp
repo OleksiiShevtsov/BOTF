@@ -1,7 +1,7 @@
 #include "engine/game_sessions_pool.h"
 
 botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ID clientId) {
-	if (GameSession* existing = findGameSessionByClient(clientId)) {
+	if (GameSession* existing = findGameSessionByClientId(clientId)) {
 		return *existing;
 	}
 
@@ -17,24 +17,24 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ID clientId)
 	return *m_sessions.at(sessionId);
 }
 
-botf::GameSession* botf::GameSessionsPool::findGameSessionByClient(common::ID clientId) {
+botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(common::ID clientId) {
 	const auto it = m_clientToSessionId.find(clientId);
 	if (it == m_clientToSessionId.end()) {
 		return nullptr;
 	}
-	return findGameSessionById(it->second);
+	return findGameSessionBySessionId(it->second);
 }
 
-const botf::GameSession* botf::GameSessionsPool::findGameSessionByClient(
+const botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(
 	common::ID clientId) const {
 	const auto it = m_clientToSessionId.find(clientId);
 	if (it == m_clientToSessionId.end()) {
 		return nullptr;
 	}
-	return findGameSessionById(it->second);
+	return findGameSessionBySessionId(it->second);
 }
 
-botf::GameSession* botf::GameSessionsPool::findGameSessionById(common::ID sessionId) {
+botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(common::ID sessionId) {
 	const auto it = m_sessions.find(sessionId);
 	if (it == m_sessions.end()) {
 		return nullptr;
@@ -42,7 +42,7 @@ botf::GameSession* botf::GameSessionsPool::findGameSessionById(common::ID sessio
 	return it->second.get();
 }
 
-const botf::GameSession* botf::GameSessionsPool::findGameSessionById(
+const botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(
 	common::ID sessionId) const {
 	const auto it = m_sessions.find(sessionId);
 	if (it == m_sessions.end()) {
@@ -58,15 +58,14 @@ void botf::GameSessionsPool::removeClient(common::ID clientId) {
 	}
 	const common::ID sessionId = it->second;
 	m_clientToSessionId.erase(it);
-	if (GameSession* session = findGameSessionById(sessionId)) {
+	if (GameSession* session = findGameSessionBySessionId(sessionId)) {
 		session->getGameLogic().removeClient(clientId);
 	}
 }
 
-std::vector<botf::common::ID> botf::GameSessionsPool::clientsOf(
-	const GameSession& session) const {
+std::vector<botf::common::ID> botf::GameSessionsPool::getSessionClients(
+	common::ID sessionId) const {
 	std::vector<common::ID> clients;
-	const common::ID sessionId = session.getId();
 	for (const auto& [clientId, mappedId] : m_clientToSessionId) {
 		if (mappedId == sessionId) {
 			clients.push_back(clientId);
