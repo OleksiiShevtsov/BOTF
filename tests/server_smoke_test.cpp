@@ -47,10 +47,10 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-std::optional<botf::common::ObjectID> clientConnectBind(botf::ServerEngine& engine,
+std::optional<botf::common::ID> clientConnectBind(botf::ServerEngine& engine,
 														sf::TcpSocket& client,
 														std::vector<std::uint8_t>& recvBuffer,
-														botf::common::ClientID expectedClientId,
+														botf::common::ID expectedClientId,
 														std::uint64_t sequence) {
 	EXPECT_TRUE(sendFramed(
 		client, botf::protocol::encodeClientConnect(botf::common::ClientConnectMessage{}, sequence)));
@@ -71,20 +71,20 @@ std::optional<botf::common::ObjectID> clientConnectBind(botf::ServerEngine& engi
 			continue;
 		}
 		const auto* connect = std::get_if<botf::common::ClientConnectMessage>(&decoded->body);
-		if (!connect || connect->boundObjectId == 0) {
+		if (!connect || connect->boundId == 0) {
 			continue;
 		}
 
-		EXPECT_EQ(engine.sessions().findGameSessionByClient(expectedClientId)->getGameLogic().entityForClient(expectedClientId), connect->boundObjectId);
-		return connect->boundObjectId;
+		EXPECT_EQ(engine.sessions().findGameSessionByClient(expectedClientId)->getGameLogic().entityForClient(expectedClientId), connect->boundId);
+		return connect->boundId;
 	}
 	return std::nullopt;
 }
 
 const botf::common::FigurePose* findFigure(const botf::common::WorldSnapshot& snapshot,
-										   botf::common::ObjectID id) {
+										   botf::common::ID id) {
 	for (const auto& figure : snapshot.figures) {
-		if (figure.objectId == id) {
+		if (figure.id == id) {
 			return &figure;
 		}
 	}
@@ -119,7 +119,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	ASSERT_TRUE(selfId.has_value());
 	ASSERT_EQ(engine.sessions().size(), 1u);
 	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().size(), 1u);
-	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getObjectId(), *selfId);
+	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getId(), *selfId);
 
 	const auto start = engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
 
@@ -244,10 +244,10 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	botf::common::Point startA{};
 	botf::common::Point startB{};
 	for (const auto& obj : engine.sessions().findGameSessionByClient(1)->getGameLogic().figures()) {
-		if (obj.getObjectId() == *idA) {
+		if (obj.getId() == *idA) {
 			startA = obj.getPosition();
 		}
-		if (obj.getObjectId() == *idB) {
+		if (obj.getId() == *idB) {
 			startB = obj.getPosition();
 		}
 	}
@@ -275,10 +275,10 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	botf::common::Point endA{};
 	botf::common::Point endB{};
 	for (const auto& obj : engine.sessions().findGameSessionByClient(1)->getGameLogic().figures()) {
-		if (obj.getObjectId() == *idA) {
+		if (obj.getId() == *idA) {
 			endA = obj.getPosition();
 		}
-		if (obj.getObjectId() == *idB) {
+		if (obj.getId() == *idB) {
 			endB = obj.getPosition();
 		}
 	}

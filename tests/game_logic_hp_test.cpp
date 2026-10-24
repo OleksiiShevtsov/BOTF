@@ -6,7 +6,7 @@
 
 namespace {
 
-botf::common::ObjectID spawnBound(botf::GameLogic& game, botf::common::ClientID clientId) {
+botf::common::ID spawnBound(botf::GameLogic& game, botf::common::ID clientId) {
 	const auto entityId = game.spawnPlayer(botf::common::Point{0.f, 0.f},
 										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entityId);
@@ -20,7 +20,7 @@ TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 	const auto id = game.spawnPlayer(botf::common::Point{10.f, 20.f},
 									 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	ASSERT_EQ(game.figures().size(), 1u);
-	EXPECT_EQ(game.figures().front().getObjectId(), id);
+	EXPECT_EQ(game.figures().front().getId(), id);
 	EXPECT_EQ(game.figures().front().getHp(), botf::common::GlobalSettings::maxHp);
 	EXPECT_EQ(game.figures().front().getLifeStatus(), botf::common::LifeStatus::Alive);
 	EXPECT_FALSE(game.figures().front().isDead());
@@ -51,7 +51,7 @@ TEST(GameLogicHp, DamageToZeroMarksDeadAndClamps) {
 
 TEST(GameLogicHp, DeadIgnoresMoveAndFire) {
 	botf::GameLogic game;
-	const botf::common::ClientID clientId = 1;
+	const botf::common::ID clientId = 1;
 	const auto id = spawnBound(game, clientId);
 	game.setClientAim(clientId, botf::common::Point{50.f, 0.f});
 
@@ -69,7 +69,7 @@ TEST(GameLogicHp, DeadIgnoresMoveAndFire) {
 
 TEST(GameLogicHp, RemoveClientDestroysFigure) {
 	botf::GameLogic game;
-	const botf::common::ClientID clientId = 2;
+	const botf::common::ID clientId = 2;
 	const auto id = spawnBound(game, clientId);
 	EXPECT_EQ(game.entityForClient(clientId), id);
 	game.removeClient(clientId);

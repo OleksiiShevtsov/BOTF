@@ -10,14 +10,14 @@ namespace botf::net {
 // Client → server (after length-prefix is stripped).
 // `payload` is typically a serialized botf.Envelope.
 struct InboundNotification {
-	botf::common::ClientID clientId{};
+	botf::common::ID clientId{};
 	std::string payload;
 };
 
 // Server → client(s).
 // `clientId == nullopt` means broadcast to every connected client.
 struct OutboundNotification {
-	std::optional<botf::common::ClientID> clientId;
+	std::optional<botf::common::ID> clientId;
 	std::string payload;
 };
 

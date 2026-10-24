@@ -9,9 +9,9 @@ namespace botf::app {
 // Not the local input Player (app/player.h).
 class FigureView : public IViewObject {
 public:
-	explicit FigureView(common::ObjectID id);
+	explicit FigureView(common::ID id);
 
-	[[nodiscard]] common::ObjectID getId() const override;
+	[[nodiscard]] common::ID getId() const override;
 	[[nodiscard]] common::Point getPosition() const override;
 	[[nodiscard]] common::Angle getAngle() const override;
 
@@ -20,7 +20,7 @@ public:
 	void draw(sf::RenderTarget& target) const override;
 
 private:
-	common::ObjectID m_id{};
+	common::ID m_id{};
 	common::Point m_position{};
 	common::Angle m_angle{};
 	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};

@@ -11,21 +11,21 @@ namespace botf {
 class GameSession {
 public:
 	// Pool assigns id. Stub mapId=1 until MapPool (card 51).
-	explicit GameSession(common::SessionID id);
+	explicit GameSession(common::ID id);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
-	[[nodiscard]] common::SessionID getId() const;
-	[[nodiscard]] common::MapID getMapId() const;
+	[[nodiscard]] common::ID getId() const;
+	[[nodiscard]] common::ID getMapId() const;
 	[[nodiscard]] GameLogic& getGameLogic();
 	[[nodiscard]] const GameLogic& getGameLogic() const;
 
 private:
-	static constexpr common::MapID kDefaultMapId{1};
+	static constexpr common::ID kDefaultMapId{1};
 
-	common::SessionID m_id{};
-	common::MapID m_mapId{kDefaultMapId};
+	common::ID m_id{};
+	common::ID m_mapId{kDefaultMapId};
 	GameLogic m_gameLogic;
 };
 

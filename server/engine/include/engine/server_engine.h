@@ -40,7 +40,7 @@ public:
 	[[nodiscard]] const GameSessionsPool& sessions() const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
-		common::ClientID clientId) const;
+		common::ID clientId) const;
 
 private:
 	struct ClientInputState {
@@ -48,11 +48,11 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	common::ObjectID bindOrSpawnForClient(GameSession& session, common::ClientID clientId);
-	void handleClientConnect(common::ClientID clientId,
+	common::ID bindOrSpawnForClient(GameSession& session, common::ID clientId);
+	void handleClientConnect(common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
-	void handleClientInput(common::ClientID clientId,
+	void handleClientInput(common::ID clientId,
 						   const common::ClientInput& input,
 						   std::uint64_t sequence);
 	void enqueueWorldState(const GameSession& session, std::uint32_t tick, std::uint64_t sequence);
@@ -62,7 +62,7 @@ private:
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
 	GameSessionsPool m_gameSessionsPool;
-	std::unordered_map<common::ClientID, ClientInputState> m_inputStates;
+	std::unordered_map<common::ID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };

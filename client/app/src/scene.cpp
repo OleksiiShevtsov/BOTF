@@ -12,13 +12,13 @@ void botf::app::Scene::clear() {
 }
 
 void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot) {
-	std::unordered_set<common::ObjectID> seen;
+	std::unordered_set<common::ID> seen;
 	seen.reserve(snapshot.figures.size() + snapshot.bullets.size());
 
 	for (const auto& pose : snapshot.figures) {
-		seen.insert(pose.objectId);
+		seen.insert(pose.id);
 
-		if (IViewObject* existing = find(pose.objectId)) {
+		if (IViewObject* existing = find(pose.id)) {
 			existing->setPose(pose.position, pose.aimAngle);
 			if (auto* figure = dynamic_cast<FigureView*>(existing)) {
 				figure->setLifeStatus(pose.lifeStatus);
@@ -26,22 +26,22 @@ void botf::app::Scene::upsertFromSnapshot(const common::WorldSnapshot& snapshot)
 			continue;
 		}
 
-		auto view = std::make_unique<FigureView>(pose.objectId);
+		auto view = std::make_unique<FigureView>(pose.id);
 		view->setPose(pose.position, pose.aimAngle);
 		view->setLifeStatus(pose.lifeStatus);
 		m_objects.push_back(std::move(view));
 	}
 
 	for (const auto& pose : snapshot.bullets) {
-		seen.insert(pose.objectId);
+		seen.insert(pose.id);
 		const float angle = std::atan2(pose.velocity.y, pose.velocity.x);
 
-		if (IViewObject* existing = find(pose.objectId)) {
+		if (IViewObject* existing = find(pose.id)) {
 			existing->setPose(pose.position, angle);
 			continue;
 		}
 
-		auto view = std::make_unique<BulletView>(pose.objectId);
+		auto view = std::make_unique<BulletView>(pose.id);
 		view->setPose(pose.position, angle);
 		m_objects.push_back(std::move(view));
 	}
@@ -57,7 +57,7 @@ std::size_t botf::app::Scene::size() const {
 	return m_objects.size();
 }
 
-botf::app::IViewObject* botf::app::Scene::find(common::ObjectID id) {
+botf::app::IViewObject* botf::app::Scene::find(common::ID id) {
 	for (auto& obj : m_objects) {
 		if (obj && obj->getId() == id) {
 			return obj.get();
@@ -66,7 +66,7 @@ botf::app::IViewObject* botf::app::Scene::find(common::ObjectID id) {
 	return nullptr;
 }
 
-const botf::app::IViewObject* botf::app::Scene::find(common::ObjectID id) const {
+const botf::app::IViewObject* botf::app::Scene::find(common::ID id) const {
 	for (const auto& obj : m_objects) {
 		if (obj && obj->getId() == id) {
 			return obj.get();

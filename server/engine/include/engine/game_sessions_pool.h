@@ -11,7 +11,7 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Membership: ClientID → SessionID → GameSession. Card 46: one shared session.
+// Membership: ID → ID → GameSession. Card 46: one shared session.
 class GameSessionsPool {
 public:
 	GameSessionsPool() = default;
@@ -20,33 +20,33 @@ public:
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
 	// Client → session. If unbound: join the existing default session, or create one.
-	GameSession& ensureDefaultFor(common::ClientID clientId);
+	GameSession& ensureDefaultFor(common::ID clientId);
 
-	[[nodiscard]] GameSession* findGameSessionByClient(common::ClientID clientId);
-	[[nodiscard]] const GameSession* findGameSessionByClient(common::ClientID clientId) const;
+	[[nodiscard]] GameSession* findGameSessionByClient(common::ID clientId);
+	[[nodiscard]] const GameSession* findGameSessionByClient(common::ID clientId) const;
 
-	[[nodiscard]] GameSession* findGameSessionById(common::SessionID sessionId);
-	[[nodiscard]] const GameSession* findGameSessionById(common::SessionID sessionId) const;
+	[[nodiscard]] GameSession* findGameSessionById(common::ID sessionId);
+	[[nodiscard]] const GameSession* findGameSessionById(common::ID sessionId) const;
 
 	// Drop client→session membership and destroy bound figure in that session's GameLogic.
-	void removeClient(common::ClientID clientId);
+	void removeClient(common::ID clientId);
 
 	// Clients currently mapped to this session (for WorldState fan-out).
-	[[nodiscard]] std::vector<common::ClientID> clientsOf(const GameSession& session) const;
+	[[nodiscard]] std::vector<common::ID> clientsOf(const GameSession& session) const;
 
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
 
-	[[nodiscard]] const std::unordered_map<common::SessionID, std::unique_ptr<GameSession>>&
+	[[nodiscard]] const std::unordered_map<common::ID, std::unique_ptr<GameSession>>&
 	sessions() const;
-	[[nodiscard]] std::unordered_map<common::SessionID, std::unique_ptr<GameSession>>& sessions();
+	[[nodiscard]] std::unordered_map<common::ID, std::unique_ptr<GameSession>>& sessions();
 
 private:
 	GameSession& createSession();
 
-	std::unordered_map<common::SessionID, std::unique_ptr<GameSession>> m_sessions;
-	std::unordered_map<common::ClientID, common::SessionID> m_clientToSessionId;
-	common::SessionID m_nextSessionId{1};
+	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
+	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
+	common::ID m_nextId{1};
 };
 
 }  // namespace botf

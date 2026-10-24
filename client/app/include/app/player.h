@@ -7,16 +7,16 @@ namespace botf::app {
 class Player {
 public:
 	Player();
-	explicit Player(common::ObjectID id);
+	explicit Player(common::ID id);
 
 	Player(const Player&) = delete;
 	Player& operator=(const Player&) = delete;
 
-	[[nodiscard]] common::ObjectID getId() const;
-	void setId(common::ObjectID id);
+	[[nodiscard]] common::ID getId() const;
+	void setId(common::ID id);
 
 private:
-	common::ObjectID m_id{0};
+	common::ID m_id{0};
 };
 
 }  // namespace botf::app

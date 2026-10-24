@@ -13,7 +13,7 @@ constexpr float kDt = 1.0f / 20.0f;
 
 TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
 	botf::GameLogic game;
-	const botf::common::ClientID clientId = 1;
+	const botf::common::ID clientId = 1;
 	const auto entityId = game.spawnPlayer(botf::common::Point{100.f, 100.f},
 										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entityId);

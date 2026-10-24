@@ -8,20 +8,20 @@
 
 botf::GameLogic::GameLogic() = default;
 
-botf::common::ObjectID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
-	const common::ObjectID id = m_nextEntityId++;
+botf::common::ID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
+	const common::ID id = m_nextId++;
 	m_figures.emplace_back(id, at, speedLimit);
 	return id;
 }
 
-void botf::GameLogic::bindClient(common::ClientID clientId, common::ObjectID entityId) {
+void botf::GameLogic::bindClient(common::ID clientId, common::ID entityId) {
 	m_clientToEntity[clientId] = entityId;
 }
 
-void botf::GameLogic::removeClient(common::ClientID clientId) {
+void botf::GameLogic::removeClient(common::ID clientId) {
 	const auto it = m_clientToEntity.find(clientId);
 	if (it != m_clientToEntity.end()) {
-		const common::ObjectID entityId = it->second;
+		const common::ID entityId = it->second;
 		m_clientToEntity.erase(it);
 		destroyFigure(entityId);
 	}
@@ -29,7 +29,7 @@ void botf::GameLogic::removeClient(common::ClientID clientId) {
 	m_lastFireTime.erase(clientId);
 }
 
-void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) {
+void botf::GameLogic::setClientInput(common::ID clientId, int dx, int dy) {
 	const auto it = m_clientToEntity.find(clientId);
 	if (it == m_clientToEntity.end()) {
 		return;
@@ -37,7 +37,7 @@ void botf::GameLogic::setClientInput(common::ClientID clientId, int dx, int dy) 
 	setPlayerInput(it->second, dx, dy);
 }
 
-void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimWorld) {
+void botf::GameLogic::setClientAim(common::ID clientId, common::Point aimWorld) {
 	if (!m_clientToEntity.contains(clientId)) {
 		return;
 	}
@@ -45,7 +45,7 @@ void botf::GameLogic::setClientAim(common::ClientID clientId, common::Point aimW
 	applyAimForClient(clientId);
 }
 
-bool botf::GameLogic::tryFire(common::ClientID clientId) {
+bool botf::GameLogic::tryFire(common::ID clientId) {
 	const auto bindIt = m_clientToEntity.find(clientId);
 	if (bindIt == m_clientToEntity.end()) {
 		return false;
@@ -62,21 +62,21 @@ bool botf::GameLogic::tryFire(common::ClientID clientId) {
 		return false;
 	}
 
-	const common::ObjectID bulletId = m_nextEntityId++;
-	m_bullets.emplace_back(bulletId, figure->getObjectId(), figure->getPosition(), figure->getAngle(),
+	const common::ID bulletId = m_nextId++;
+	m_bullets.emplace_back(bulletId, figure->getId(), figure->getPosition(), figure->getAngle(),
 						   common::GlobalSettings::bulletSpeed,
 						   common::GlobalSettings::bulletMaxRange);
 	m_lastFireTime[clientId] = m_worldTime;
 	return true;
 }
 
-void botf::GameLogic::setPlayerInput(common::ObjectID entityId, int dx, int dy) {
+void botf::GameLogic::setPlayerInput(common::ID entityId, int dx, int dy) {
 	if (FigureObject* obj = findFigureMutable(entityId)) {
 		obj->setInput(dx, dy);
 	}
 }
 
-bool botf::GameLogic::applyDamage(common::ObjectID entityId, int damage) {
+bool botf::GameLogic::applyDamage(common::ID entityId, int damage) {
 	FigureObject* figure = findFigureMutable(entityId);
 	if (!figure) {
 		return false;
@@ -106,8 +106,8 @@ const std::vector<botf::BulletObject>& botf::GameLogic::bullets() const {
 	return m_bullets;
 }
 
-std::optional<botf::common::ObjectID> botf::GameLogic::entityForClient(
-	common::ClientID clientId) const {
+std::optional<botf::common::ID> botf::GameLogic::entityForClient(
+	common::ID clientId) const {
 	const auto it = m_clientToEntity.find(clientId);
 	if (it == m_clientToEntity.end()) {
 		return std::nullopt;
@@ -115,23 +115,23 @@ std::optional<botf::common::ObjectID> botf::GameLogic::entityForClient(
 	return it->second;
 }
 
-botf::FigureObject* botf::GameLogic::findFigureMutable(common::ObjectID entityId) {
+botf::FigureObject* botf::GameLogic::findFigureMutable(common::ID entityId) {
 	for (auto& obj : m_figures) {
-		if (obj.getObjectId() == entityId) {
+		if (obj.getId() == entityId) {
 			return &obj;
 		}
 	}
 	return nullptr;
 }
 
-void botf::GameLogic::destroyFigure(common::ObjectID entityId) {
+void botf::GameLogic::destroyFigure(common::ID entityId) {
 	m_bullets.erase(std::remove_if(m_bullets.begin(), m_bullets.end(),
 								   [entityId](const BulletObject& b) {
 									   return b.getOwnerId() == entityId;
 								   }),
 					m_bullets.end());
 	m_figures.erase(std::remove_if(m_figures.begin(), m_figures.end(),
-								   [entityId](const FigureObject& f) { return f.getObjectId() == entityId; }),
+								   [entityId](const FigureObject& f) { return f.getId() == entityId; }),
 					m_figures.end());
 
 	for (auto it = m_clientToEntity.begin(); it != m_clientToEntity.end();) {
@@ -143,7 +143,7 @@ void botf::GameLogic::destroyFigure(common::ObjectID entityId) {
 	}
 }
 
-void botf::GameLogic::applyAimForClient(common::ClientID clientId) {
+void botf::GameLogic::applyAimForClient(common::ID clientId) {
 	const auto aimIt = m_clientAimWorld.find(clientId);
 	if (aimIt == m_clientAimWorld.end()) {
 		return;
@@ -180,10 +180,10 @@ void botf::GameLogic::resolveBulletHits() {
 			continue;
 		}
 		const common::Point pointHit = bullet.getPosition();
-		const common::ObjectID ownerId = bullet.getOwnerId();
+		const common::ID ownerId = bullet.getOwnerId();
 
 		for (auto& figure : m_figures) {
-			if (figure.getObjectId() == ownerId || figure.isDead()) {
+			if (figure.getId() == ownerId || figure.isDead()) {
 				continue;
 			}
 			if (!pointHitsAabb(figure.getPosition(), figure.getHitbox(), pointHit)) {

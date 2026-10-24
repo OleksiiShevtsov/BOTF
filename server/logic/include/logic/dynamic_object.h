@@ -9,7 +9,7 @@ class DynamicObject {
 public:
 	virtual ~DynamicObject() = default;
 
-	[[nodiscard]] common::ObjectID getObjectId() const;
+	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] common::Point getPosition() const;
 	[[nodiscard]] virtual common::Angle getAngle() const = 0;
 
@@ -22,9 +22,9 @@ public:
 	[[nodiscard]] virtual bool isAlive() const;
 
 protected:
-	DynamicObject(common::ObjectID id, common::Point position);
+	DynamicObject(common::ID id, common::Point position);
 
-	common::ObjectID m_id{};
+	common::ID m_id{};
 	common::Point m_position{};
 };
 

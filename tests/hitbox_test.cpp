@@ -73,7 +73,7 @@ TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 	const auto id = game.spawnPlayer(botf::common::Point{100.f, 100.f},
 									 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	ASSERT_EQ(game.figures().size(), 1u);
-	EXPECT_EQ(game.figures().front().getObjectId(), id);
+	EXPECT_EQ(game.figures().front().getId(), id);
 
 	const auto& figure = game.figures().front();
 	EXPECT_FLOAT_EQ(figure.getHitbox().width, botf::common::GlobalSettings::hitboxSize);

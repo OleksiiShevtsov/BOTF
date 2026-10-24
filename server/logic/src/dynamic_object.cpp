@@ -1,9 +1,9 @@
 #include "logic/dynamic_object.h"
 
-botf::DynamicObject::DynamicObject(common::ObjectID id, common::Point position)
+botf::DynamicObject::DynamicObject(common::ID id, common::Point position)
 	: m_id{id}, m_position{position} {}
 
-botf::common::ObjectID botf::DynamicObject::getObjectId() const {
+botf::common::ID botf::DynamicObject::getId() const {
 	return m_id;
 }
 

@@ -16,12 +16,12 @@
 namespace {
 
 [[nodiscard]] std::optional<botf::common::Point> selfPosition(
-	const std::optional<botf::common::WorldSnapshot>& world, botf::common::ObjectID selfId) {
+	const std::optional<botf::common::WorldSnapshot>& world, botf::common::ID selfId) {
 	if (!world) {
 		return std::nullopt;
 	}
 	for (const auto& pose : world->figures) {
-		if (pose.objectId == selfId) {
+		if (pose.id == selfId) {
 			return pose.position;
 		}
 	}
@@ -88,11 +88,11 @@ void botf::app::ClientApp::applyInbound() {
 		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
-				if (body.boundObjectId == 0) {
+				if (body.boundId == 0) {
 					botf::log::warn("[client] ClientConnect ack without object_id");
 					return;
 				}
-				m_selfId = body.boundObjectId;
+				m_selfId = body.boundId;
 				m_rendering.getPlayer().setId(*m_selfId);
 				botf::log::info("[client] bound to entity {}", *m_selfId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {

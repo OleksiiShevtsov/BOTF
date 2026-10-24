@@ -37,8 +37,8 @@ namespace {
 [[nodiscard]] inline botf::ClientConnect toProto(const common::ClientConnectMessage& connect) {
 	botf::ClientConnect message;
 	message.set_player_name(connect.playerName);
-	// Wire field stays object_id; DTO name is boundObjectId.
-	message.set_object_id(connect.boundObjectId);
+	// Wire field stays object_id; DTO name is boundId.
+	message.set_object_id(connect.boundId);
 	return message;
 }
 
@@ -69,7 +69,7 @@ namespace {
 	state.set_tick(snapshot.tick);
 	for (const auto& pose : snapshot.figures) {
 		FigureState* figure = state.add_figures();
-		figure->set_object_id(pose.objectId);
+		figure->set_object_id(pose.id);
 		auto* position = figure->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
@@ -79,8 +79,8 @@ namespace {
 	}
 	for (const auto& pose : snapshot.bullets) {
 		BulletState* bullet = state.add_bullets();
-		bullet->set_object_id(pose.objectId);
-		bullet->set_owner_object_id(pose.ownerObjectId);
+		bullet->set_object_id(pose.id);
+		bullet->set_owner_object_id(pose.ownerId);
 		auto* position = bullet->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);

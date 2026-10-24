@@ -8,15 +8,15 @@ namespace botf {
 // Client draws a temporary segment; hit-test uses this point only (card 41).
 class BulletObject : public DynamicObject {
 public:
-	BulletObject(common::ObjectID id,
-				 common::ObjectID ownerId,
+	BulletObject(common::ID id,
+				 common::ID ownerId,
 				 common::Point origin,
 				 common::Angle direction,
 				 float speed,
 				 float maxRange);
 
 	[[nodiscard]] common::Angle getAngle() const override;
-	[[nodiscard]] common::ObjectID getOwnerId() const;
+	[[nodiscard]] common::ID getOwnerId() const;
 	[[nodiscard]] common::Point getVelocity() const;
 	[[nodiscard]] bool isAlive() const override;
 
@@ -26,7 +26,7 @@ public:
 	void update(float dt) override;
 
 private:
-	common::ObjectID m_ownerId{};
+	common::ID m_ownerId{};
 	common::Angle m_angle{};
 	common::Point m_velocity{};
 	float m_maxRange{};

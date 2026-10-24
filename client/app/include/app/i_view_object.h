@@ -12,7 +12,7 @@ class IViewObject {
 public:
 	virtual ~IViewObject() = default;
 
-	[[nodiscard]] virtual common::ObjectID getId() const = 0;
+	[[nodiscard]] virtual common::ID getId() const = 0;
 	[[nodiscard]] virtual common::Point getPosition() const = 0;
 	[[nodiscard]] virtual common::Angle getAngle() const = 0;
 
