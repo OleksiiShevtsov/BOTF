@@ -17,10 +17,11 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// ClientConnect / ack (login-role). boundObjectId == 0 on client request.
+// ClientConnect / ack (login-role). boundObjectId == 0 and mapId == 0 on client request.
 struct ClientConnectMessage {
 	std::string playerName;
 	ObjectID boundObjectId{};
+	MapID mapId{};
 };
 
 // Pose of a controllable actor in a world snapshot.
@@ -43,6 +44,7 @@ struct BulletPose {
 // Authoritative world frame shared across logic ↔ protocol ↔ app.
 struct WorldSnapshot {
 	std::uint32_t tick{};
+	MapID mapId{};
 	std::vector<FigurePose> figures;
 	std::vector<BulletPose> bullets;
 };

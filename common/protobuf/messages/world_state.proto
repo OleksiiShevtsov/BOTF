@@ -34,4 +34,5 @@ message WorldState {
   uint32 tick = 1;
   repeated FigureState figures = 2;
   repeated BulletState bullets = 3;
+  uint32 map_id = 4;  // session map (card 46); 0 = unset
 }

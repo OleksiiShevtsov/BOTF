@@ -94,9 +94,15 @@ void botf::app::ClientApp::applyInbound() {
 				}
 				m_selfId = body.boundObjectId;
 				m_rendering.getPlayer().setId(*m_selfId);
-				botf::log::info("[client] bound to entity {}", *m_selfId);
+				if (body.mapId != 0) {
+					m_rendering.getMatch().getMap().setMapId(body.mapId);
+				}
+				botf::log::info("[client] bound to entity {} mapId={}", *m_selfId, body.mapId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
 				m_latestWorld = body;
+				if (body.mapId != 0) {
+					m_rendering.getMatch().getMap().setMapId(body.mapId);
+				}
 			}
 			// ClientInput from server is ignored.
 		});

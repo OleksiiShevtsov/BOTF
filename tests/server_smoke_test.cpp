@@ -75,6 +75,7 @@ std::optional<botf::common::ObjectID> clientConnectBind(botf::ServerEngine& engi
 			continue;
 		}
 
+		EXPECT_EQ(connect->mapId, 1u);
 		EXPECT_EQ(engine.game().entityForClient(expectedClientId), connect->boundObjectId);
 		return connect->boundObjectId;
 	}
@@ -106,7 +107,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
-	EXPECT_TRUE(engine.game().figures().empty());
+	EXPECT_TRUE(engine.sessions().empty());
 
 	sf::TcpSocket client;
 	client.setBlocking(true);
@@ -117,6 +118,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	client.setBlocking(false);
 	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
+	ASSERT_EQ(engine.sessions().size(), 1u);
 	ASSERT_EQ(engine.game().figures().size(), 1u);
 	ASSERT_EQ(engine.game().figures().front().getObjectId(), *selfId);
 
@@ -236,7 +238,9 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	ASSERT_TRUE(idA.has_value());
 	ASSERT_TRUE(idB.has_value());
 	EXPECT_NE(*idA, *idB);
+	ASSERT_EQ(engine.sessions().size(), 1u);
 	ASSERT_EQ(engine.game().figures().size(), 2u);
+	EXPECT_EQ(engine.sessions().findByClient(1), engine.sessions().findByClient(2));
 
 	botf::common::Point startA{};
 	botf::common::Point startB{};

@@ -5,11 +5,12 @@ package botf;
 import "input.proto";
 import "world_state.proto";
 
-// Client → server: player_name optional, object_id unset (0).
-// Server → client ack: object_id = bound entity id for this TCP session.
+// Client → server: player_name optional, object_id unset (0), map_id unset (0).
+// Server → client ack: object_id = bound entity; map_id = session map (card 46).
 message ClientConnect {
   string player_name = 1;
   uint32 object_id = 2;
+  uint32 map_id = 3;
 }
 
 // Wire envelope: SFML TCP sends [uint32 le length][serialized Envelope].

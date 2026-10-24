@@ -1,6 +1,8 @@
 project(server_engine)
 
 add_library(${PROJECT_NAME} STATIC
+    src/game_session.cpp
+    src/game_sessions_pool.cpp
     src/server_engine.cpp
 )
 

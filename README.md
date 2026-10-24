@@ -128,7 +128,7 @@ BOTF/
 ├── protocol/            # Envelope oneof codec, dispatch registry, proto ↔ DTO
 ├── net/                 # TcpServer, TcpClient, framing, queues (no protobuf)
 ├── server/
-│   ├── engine/          # ServerEngine (tick loop)
+│   ├── engine/          # ServerEngine + GameSessionsPool / GameSession
 │   └── logic/           # GameLogic / DynamicObject (no *.pb.h)
 ├── client/
 │   └── app/             # ClientApp, AppRendering, Match (GameMap + Scene/IViewObject) (no *.pb.h)
@@ -138,8 +138,8 @@ BOTF/
 `main` тонкий: только runtime (`ServerEngine` / `ClientApp`). Smoke живёт в `tests/`.
 
 ```
-ClientConnect → spawn/bind figure → ClientConnect ack (object_id)
-ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet spawn)
+ClientConnect → GameSessionsPool.ensureDefaultFor → spawn/bind → ack (object_id, map_id)
+ClientInput(dx,dy,aim,fire) → net → session GameLogic (move + aim + optional bullet spawn)
   → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 

@@ -8,6 +8,7 @@
 TEST(WorldSnapshotHp, RoundTripHpAndLifeStatus) {
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = 7;
+	snapshot.mapId = 1;
 	snapshot.figures.push_back(botf::common::FigurePose{
 		3,
 		botf::common::Point{11.f, 22.f},
@@ -28,6 +29,7 @@ TEST(WorldSnapshotHp, RoundTripHpAndLifeStatus) {
 	ASSERT_TRUE(decoded.has_value());
 	const auto* world = std::get_if<botf::common::WorldSnapshot>(&decoded->body);
 	ASSERT_NE(world, nullptr);
+	EXPECT_EQ(world->mapId, 1u);
 	ASSERT_EQ(world->figures.size(), 2u);
 
 	EXPECT_EQ(world->figures[0].hitPoints,
