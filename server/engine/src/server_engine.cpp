@@ -133,9 +133,11 @@ botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(GameSession& ses
 void botf::ServerEngine::handleClientConnect(common::ClientID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::uint64_t sequence) {
+	// Card 46 scaffold: TCP login still enters the sole GameSession.
+	// Later (45/47): ClientConnect = server login only; JoinSession notification joins match.
 	GameSession& session = m_sessions.ensureDefaultFor(clientId);
 	const common::ObjectID entityId = bindOrSpawnForClient(session, clientId);
-	const common::ClientConnectMessage ack{connect.playerName, entityId, session.mapId()};
+	const common::ClientConnectMessage ack{connect.playerName, entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
 		protocol::encodeClientConnect(ack, sequence),

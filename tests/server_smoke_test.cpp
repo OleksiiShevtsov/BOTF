@@ -75,7 +75,6 @@ std::optional<botf::common::ObjectID> clientConnectBind(botf::ServerEngine& engi
 			continue;
 		}
 
-		EXPECT_EQ(connect->mapId, 1u);
 		EXPECT_EQ(engine.game().entityForClient(expectedClientId), connect->boundObjectId);
 		return connect->boundObjectId;
 	}
@@ -203,6 +202,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
+	EXPECT_EQ(lastSnapshot.mapId, 1u);
 	const auto* pose = findFigure(lastSnapshot, *selfId);
 	ASSERT_NE(pose, nullptr);
 	const float dx = pose->position.x - end.x;

@@ -17,11 +17,11 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// ClientConnect / ack (login-role). boundObjectId == 0 and mapId == 0 on client request.
+// ClientConnect / ack (login to server). boundObjectId == 0 on client request.
+// Not a GameSession join — mapId lives on WorldSnapshot / future JoinSession msg.
 struct ClientConnectMessage {
 	std::string playerName;
 	ObjectID boundObjectId{};
-	MapID mapId{};
 };
 
 // Pose of a controllable actor in a world snapshot.

@@ -39,12 +39,11 @@ namespace {
 	message.set_player_name(connect.playerName);
 	// Wire field stays object_id; DTO name is boundObjectId.
 	message.set_object_id(connect.boundObjectId);
-	message.set_map_id(connect.mapId);
 	return message;
 }
 
 [[nodiscard]] inline common::ClientConnectMessage fromProto(const botf::ClientConnect& connect) {
-	return common::ClientConnectMessage{connect.player_name(), connect.object_id(), connect.map_id()};
+	return common::ClientConnectMessage{connect.player_name(), connect.object_id()};
 }
 
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {

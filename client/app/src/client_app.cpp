@@ -94,12 +94,10 @@ void botf::app::ClientApp::applyInbound() {
 				}
 				m_selfId = body.boundObjectId;
 				m_rendering.getPlayer().setId(*m_selfId);
-				if (body.mapId != 0) {
-					m_rendering.getMatch().getMap().setMapId(body.mapId);
-				}
-				botf::log::info("[client] bound to entity {} mapId={}", *m_selfId, body.mapId);
+				botf::log::info("[client] bound to entity {}", *m_selfId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
 				m_latestWorld = body;
+				// map_id is session-world context (not ClientConnect). JoinSession msg later.
 				if (body.mapId != 0) {
 					m_rendering.getMatch().getMap().setMapId(body.mapId);
 				}
