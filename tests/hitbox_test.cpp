@@ -7,15 +7,15 @@
 namespace {
 
 constexpr float kHalf = 20.f;  // hitboxSize 40 → half-extent 20
-const botf::HitboxDesc kDefaultBox = botf::defaultPlayerHitbox();
+const botf::ObjectHitbox kDefaultBox = botf::installObjectHitbox();
 
 }  // namespace
 
 TEST(Hitbox, DefaultDescMatchesGlobalSettings) {
 	EXPECT_FLOAT_EQ(kDefaultBox.width, botf::common::GlobalSettings::hitboxSize);
 	EXPECT_FLOAT_EQ(kDefaultBox.height, botf::common::GlobalSettings::hitboxSize);
-	EXPECT_FLOAT_EQ(kDefaultBox.halfWidth(), kHalf);
-	EXPECT_FLOAT_EQ(kDefaultBox.halfHeight(), kHalf);
+	EXPECT_FLOAT_EQ(kDefaultBox.getHalfWidth(), kHalf);
+	EXPECT_FLOAT_EQ(kDefaultBox.getHalfHeight(), kHalf);
 }
 
 TEST(Hitbox, PointInsideAndOnBoundaryIsHit) {
@@ -87,7 +87,7 @@ TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 }
 
 TEST(Hitbox, CustomDescUsedInPointTest) {
-	const botf::HitboxDesc wide{80.f, 20.f};
+	const botf::ObjectHitbox wide{80.f, 20.f};
 	const botf::common::Point center{0.f, 0.f};
 	EXPECT_TRUE(botf::pointHitsAabb(center, wide, {39.f, 0.f}));
 	EXPECT_FALSE(botf::pointHitsAabb(center, wide, {41.f, 0.f}));

@@ -88,7 +88,7 @@ TEST(GameLogicBulletHit, OwnBulletDoesNotDamageShooter) {
 
 TEST(GameLogicBulletHit, PointInsideTargetAabbIsHit) {
 	const botf::common::Point center{50.f, 0.f};
-	const botf::HitboxDesc box = botf::defaultPlayerHitbox();
+	const botf::ObjectHitbox box = botf::installObjectHitbox();
 	EXPECT_TRUE(botf::pointHitsAabb(center, box, {50.f, 0.f}));
-	EXPECT_FALSE(botf::pointHitsAabb(center, box, {50.f, box.halfHeight() + 0.01f}));
+	EXPECT_FALSE(botf::pointHitsAabb(center, box, {50.f, box.getHalfHeight() + 0.01f}));
 }

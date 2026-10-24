@@ -12,7 +12,7 @@ public:
 	FigureObject(common::ObjectID id,
 				 common::Point dot,
 				 float speedLimit,
-				 HitboxDesc hitbox = defaultPlayerHitbox());
+				 ObjectHitbox hitbox = installObjectHitbox());
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
@@ -21,7 +21,7 @@ public:
 	[[nodiscard]] common::LifeStatus getLifeStatus() const;
 	[[nodiscard]] bool isDead() const;
 	[[nodiscard]] common::Point getVelocity() const;
-	[[nodiscard]] const HitboxDesc& getHitbox() const;
+	[[nodiscard]] const ObjectHitbox& getHitbox() const;
 
 	void setAngle(common::Angle alpha);
 	// Movement intent for this tick: each axis in {-1, 0, 1}. No-op if dead.
@@ -38,7 +38,7 @@ private:
 	float m_speedLimit{};
 	int m_hp{};
 	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};
-	HitboxDesc m_hitbox{};
+	ObjectHitbox m_hitbox{};
 
 	int m_inputDx{0};
 	int m_inputDy{0};

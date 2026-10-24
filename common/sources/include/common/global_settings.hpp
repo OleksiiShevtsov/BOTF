@@ -28,7 +28,7 @@ constexpr float bulletSpeed{400.0f};		// world units / second
 constexpr float bulletMaxRange{500.0f};		// destroy after this travel distance
 constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
-// Default AABB square for player HitboxDesc stub (card 50) — TODO: нет БД / character catalog.
+// Default AABB square for ObjectHitbox stub (card 50) — TODO: нет БД / character catalog.
 constexpr float hitboxSize{40.0f};			// width=height; center = entity pos
 constexpr int maxHp{100};
 constexpr int bulletDamage{20};
