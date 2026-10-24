@@ -11,7 +11,7 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Owns client→session membership. Card 46: ensureDefaultFor → one shared session.
+// Membership: ClientID → SessionID → GameSession. Card 46: one shared session.
 class GameSessionsPool {
 public:
 	GameSessionsPool() = default;
@@ -25,6 +25,9 @@ public:
 	[[nodiscard]] GameSession* findGameSessionByClient(common::ClientID clientId);
 	[[nodiscard]] const GameSession* findGameSessionByClient(common::ClientID clientId) const;
 
+	[[nodiscard]] GameSession* findGameSessionById(common::SessionID sessionId);
+	[[nodiscard]] const GameSession* findGameSessionById(common::SessionID sessionId) const;
+
 	// Drop client→session membership and destroy bound figure in that session's GameLogic.
 	void removeClient(common::ClientID clientId);
 
@@ -34,15 +37,16 @@ public:
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
 
-	// Iterate sessions (tick / broadcast).
-	[[nodiscard]] const std::vector<std::unique_ptr<GameSession>>& sessions() const;
-	[[nodiscard]] std::vector<std::unique_ptr<GameSession>>& sessions();
+	[[nodiscard]] const std::unordered_map<common::SessionID, std::unique_ptr<GameSession>>&
+	sessions() const;
+	[[nodiscard]] std::unordered_map<common::SessionID, std::unique_ptr<GameSession>>& sessions();
 
 private:
 	GameSession& createSession();
 
-	std::vector<std::unique_ptr<GameSession>> m_sessions;
-	std::unordered_map<common::ClientID, GameSession*> m_clientToSession;
+	std::unordered_map<common::SessionID, std::unique_ptr<GameSession>> m_sessions;
+	std::unordered_map<common::ClientID, common::SessionID> m_clientToSessionId;
+	common::SessionID m_nextSessionId{1};
 };
 
 }  // namespace botf

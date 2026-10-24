@@ -13,6 +13,9 @@ using ObjectID = std::uint32_t;
 // Client arena / map selection id (GameMap). Not an ObjectID.
 using MapID = std::uint32_t;
 
+// Live GameSession id (GameSessionsPool). Collapses into common::ID in card 52.
+using SessionID = std::uint32_t;
+
 using Coordinate = float;
 using Angle = float;
 

@@ -120,8 +120,8 @@ botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(GameSession& ses
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entity);
-	botf::log::info("[server] session {} bound to entity {} (mapId={})", clientId, entity,
-					session.getMapId());
+	botf::log::info("[server] client {} bound to entity {} (sessionId={} mapId={})", clientId,
+					entity, session.getId(), session.getMapId());
 	return entity;
 }
 
@@ -191,7 +191,8 @@ void botf::ServerEngine::enqueueWorldState(const GameSession& session,
 
 void botf::ServerEngine::advanceSim(float dt) {
 	++m_simTick;
-	for (auto& session : m_gameSessionsPool.sessions()) {
+	for (auto& [sessionId, session] : m_gameSessionsPool.sessions()) {
+		(void)sessionId;
 		session->getGameLogic().tick(dt);
 		enqueueWorldState(*session, m_simTick, m_simTick);
 	}

@@ -5,17 +5,18 @@
 
 namespace botf {
 
-// One live match: mapId + authoritative GameLogic.
+// One live match: id + mapId + authoritative GameLogic.
 // Client membership lives in GameSessionsPool (card 46).
 // Phases Waiting/Playing — card 47. MapDesc/spawns — card 51.
 class GameSession {
 public:
-	// Picks stub mapId=1 until MapPool (card 51) supplies real ids.
-	GameSession();
+	// Pool assigns id. Stub mapId=1 until MapPool (card 51).
+	explicit GameSession(common::SessionID id);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
+	[[nodiscard]] common::SessionID getId() const;
 	[[nodiscard]] common::MapID getMapId() const;
 	[[nodiscard]] GameLogic& getGameLogic();
 	[[nodiscard]] const GameLogic& getGameLogic() const;
@@ -23,6 +24,7 @@ public:
 private:
 	static constexpr common::MapID kDefaultMapId{1};
 
+	common::SessionID m_id{};
 	common::MapID m_mapId{kDefaultMapId};
 	GameLogic m_gameLogic;
 };
