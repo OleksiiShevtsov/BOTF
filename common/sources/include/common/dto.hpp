@@ -17,7 +17,8 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// ClientConnect / ack (login-role). boundObjectId == 0 on client request.
+// ClientConnect / ack (login to server). boundObjectId == 0 on client request.
+// Not a GameSession join — mapId comes with future JoinSession notification (45/47).
 struct ClientConnectMessage {
 	std::string playerName;
 	ObjectID boundObjectId{};

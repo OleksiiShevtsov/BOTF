@@ -20,7 +20,9 @@ void onSignal(int) {
 	}
 }
 
-botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameLogic& game, std::uint32_t tick) {
+botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameSession& session,
+											   std::uint32_t tick) {
+	const botf::GameLogic& game = session.logic();
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
 	snapshot.figures.reserve(game.figures().size());
@@ -72,7 +74,7 @@ void botf::ServerEngine::shutdown() {
 void botf::ServerEngine::pollNetwork() {
 	m_server.poll();
 	for (const common::ClientID clientId : m_server.takeDisconnected()) {
-		m_game.removeClient(clientId);
+		m_sessions.removeClient(clientId);
 		m_inputStates.erase(clientId);
 		botf::log::info("[server] removed entity for disconnected client {}", clientId);
 	}
@@ -86,8 +88,16 @@ std::size_t botf::ServerEngine::clientCount() const {
 	return m_server.clientCount();
 }
 
+botf::GameSessionsPool& botf::ServerEngine::sessions() {
+	return m_sessions;
+}
+
+const botf::GameSessionsPool& botf::ServerEngine::sessions() const {
+	return m_sessions;
+}
+
 const botf::GameLogic& botf::ServerEngine::game() const {
-	return m_game;
+	return m_sessions.sessions().front()->logic();
 }
 
 std::uint32_t botf::ServerEngine::simTick() const {
@@ -103,23 +113,29 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	return it->second.command;
 }
 
-botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(common::ClientID clientId) {
-	if (const auto existing = m_game.entityForClient(clientId)) {
+botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(GameSession& session,
+															   common::ClientID clientId) {
+	GameLogic& game = session.logic();
+	if (const auto existing = game.entityForClient(clientId)) {
 		return *existing;
 	}
 
-	const common::ObjectID entity = m_game.spawnPlayer(
+	const common::ObjectID entity = game.spawnPlayer(
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
-	m_game.bindClient(clientId, entity);
-	botf::log::info("[server] session {} bound to entity {}", clientId, entity);
+	game.bindClient(clientId, entity);
+	botf::log::info("[server] session {} bound to entity {} (mapId={})", clientId, entity,
+					session.mapId());
 	return entity;
 }
 
 void botf::ServerEngine::handleClientConnect(common::ClientID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::uint64_t sequence) {
-	const common::ObjectID entityId = bindOrSpawnForClient(clientId);
+	// Card 46 scaffold: TCP login still enters the sole GameSession.
+	// Later (45/47): ClientConnect = server login only; JoinSession notification joins match.
+	GameSession& session = m_sessions.ensureDefaultFor(clientId);
+	const common::ObjectID entityId = bindOrSpawnForClient(session, clientId);
 	const common::ClientConnectMessage ack{connect.playerName, entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
@@ -132,11 +148,17 @@ void botf::ServerEngine::handleClientInput(common::ClientID clientId,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{input, sequence};
 
-	// Input applies only to the entity bound via ClientConnect. Unbound → no-op in GameLogic.
-	m_game.setClientInput(clientId, input.dx, input.dy);
-	m_game.setClientAim(clientId, input.aim);
+	GameSession* session = m_sessions.findByClient(clientId);
+	if (!session) {
+		// Unbound ClientInput (no ClientConnect) — no-op.
+		return;
+	}
+
+	GameLogic& game = session->logic();
+	game.setClientInput(clientId, input.dx, input.dy);
+	game.setClientAim(clientId, input.aim);
 	if (input.fire) {
-		m_game.tryFire(clientId);
+		game.tryFire(clientId);
 	}
 }
 
@@ -161,17 +183,25 @@ void botf::ServerEngine::applyInbound() {
 	}
 }
 
-void botf::ServerEngine::enqueueWorldState(std::uint32_t tick, std::uint64_t sequence) {
-	m_outbound.push(net::OutboundNotification{
-		std::nullopt,
-		protocol::encodeWorldSnapshot(buildWorldSnapshot(m_game, tick), sequence),
-	});
+void botf::ServerEngine::enqueueWorldState(const GameSession& session,
+										   std::uint32_t tick,
+										   std::uint64_t sequence) {
+	const auto payload = protocol::encodeWorldSnapshot(buildWorldSnapshot(session, tick), sequence);
+	// Card 46: one shared session — broadcast to all. Per-session fan-out ready for 47.
+	if (session.clients().empty()) {
+		return;
+	}
+	for (const common::ClientID clientId : session.clients()) {
+		m_outbound.push(net::OutboundNotification{clientId, payload});
+	}
 }
 
 void botf::ServerEngine::advanceSim(float dt) {
-	m_game.tick(dt);
 	++m_simTick;
-	enqueueWorldState(m_simTick, m_simTick);
+	for (auto& session : m_sessions.sessions()) {
+		session->logic().tick(dt);
+		enqueueWorldState(*session, m_simTick, m_simTick);
+	}
 }
 
 int botf::ServerEngine::runLoop() {
