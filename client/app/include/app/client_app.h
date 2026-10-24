@@ -22,7 +22,7 @@ public:
 	int run(std::uint16_t port = 54545);
 
 private:
-	void sendHello();
+	void sendClientConnect();
 	void applyInbound();
 	void maybeSendInput(const MoveInput& move, bool fire, std::uint32_t tick);
 
@@ -32,7 +32,7 @@ private:
 	AppRendering m_rendering;
 
 	std::uint64_t m_sequence = 1;
-	bool m_helloSent = false;
+	bool m_clientConnectSent = false;
 	bool m_forceInputSend = true;
 	bool m_prevLmbDown = false;
 	std::optional<common::ClientInput> m_lastInputSent;

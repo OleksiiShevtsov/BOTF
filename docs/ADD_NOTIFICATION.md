@@ -40,8 +40,8 @@ app / engine
 
 | Направление | Примеры сейчас | encode | handle |
 |-------------|----------------|--------|--------|
-| Client → server | `Hello`, `ClientInput` | `ClientApp` | `ServerEngine` → `GameLogic` |
-| Server → client | `Hello` ack, `WorldState` | `ServerEngine` | `ClientApp` → Match/Scene |
+| Client → server | `ClientConnect`, `ClientInput` | `ClientApp` | `ServerEngine` → `GameLogic` |
+| Server → client | `ClientConnect` ack, `WorldState` | `ServerEngine` | `ClientApp` → Match/Scene |
 
 Новый gameplay-ввод чаще расширяет **`ClientInput`**, а не плодит отдельный msg.  
 Новый кусок мира чаще расширяет **`WorldState`** / DTO снапшота.
@@ -50,7 +50,7 @@ app / engine
 
 - Ещё одна кнопка/флаг ввода на тик → поле в `ClientInput` (как `fire`).
 - Ещё один вид сущности в кадре мира → поле/repeated в `WorldState` + view на клиенте (как `bullets`).
-- Отдельный msg — для редких session/control событий (`Hello`) или если пакет принципиально другой по частоте/адресату.
+- Отдельный msg — для редких session/control событий (`ClientConnect`) или если пакет принципиально другой по частоте/адресату.
 
 ## Константы
 

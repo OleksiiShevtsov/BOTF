@@ -47,13 +47,13 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-std::optional<botf::common::ObjectID> helloBind(botf::ServerEngine& engine,
-												sf::TcpSocket& client,
-												std::vector<std::uint8_t>& recvBuffer,
-												botf::common::ClientID expectedClientId,
-												std::uint64_t sequence) {
-	EXPECT_TRUE(
-		sendFramed(client, botf::protocol::encodeHello(botf::common::HelloMessage{}, sequence)));
+std::optional<botf::common::ObjectID> clientConnectBind(botf::ServerEngine& engine,
+														sf::TcpSocket& client,
+														std::vector<std::uint8_t>& recvBuffer,
+														botf::common::ClientID expectedClientId,
+														std::uint64_t sequence) {
+	EXPECT_TRUE(sendFramed(
+		client, botf::protocol::encodeClientConnect(botf::common::ClientConnectMessage{}, sequence)));
 
 	for (int i = 0; i < 200; ++i) {
 		engine.pollNetwork();
@@ -70,13 +70,13 @@ std::optional<botf::common::ObjectID> helloBind(botf::ServerEngine& engine,
 		if (!decoded) {
 			continue;
 		}
-		const auto* hello = std::get_if<botf::common::HelloMessage>(&decoded->body);
-		if (!hello || hello->boundObjectId == 0) {
+		const auto* connect = std::get_if<botf::common::ClientConnectMessage>(&decoded->body);
+		if (!connect || connect->boundObjectId == 0) {
 			continue;
 		}
 
-		EXPECT_EQ(engine.game().entityForClient(expectedClientId), hello->boundObjectId);
-		return hello->boundObjectId;
+		EXPECT_EQ(engine.game().entityForClient(expectedClientId), connect->boundObjectId);
+		return connect->boundObjectId;
 	}
 	return std::nullopt;
 }
@@ -100,7 +100,7 @@ botf::common::ClientInput makeInput(int dx,
 
 }  // namespace
 
-TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
+TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -115,7 +115,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 
 	std::vector<std::uint8_t> recvBuffer;
 	client.setBlocking(false);
-	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
+	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 	ASSERT_EQ(engine.game().figures().size(), 1u);
 	ASSERT_EQ(engine.game().figures().front().getObjectId(), *selfId);
@@ -210,7 +210,7 @@ TEST(ServerSmoke, HelloBindThenClientInputWorldState) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
+TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -231,8 +231,8 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	clientA.setBlocking(false);
 	clientB.setBlocking(false);
 
-	const auto idA = helloBind(engine, clientA, bufferA, 1, 1);
-	const auto idB = helloBind(engine, clientB, bufferB, 2, 1);
+	const auto idA = clientConnectBind(engine, clientA, bufferA, 1, 1);
+	const auto idB = clientConnectBind(engine, clientB, bufferB, 2, 1);
 	ASSERT_TRUE(idA.has_value());
 	ASSERT_TRUE(idB.has_value());
 	EXPECT_NE(*idA, *idB);
@@ -284,7 +284,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	EXPECT_FLOAT_EQ(endB.x, startB.x);
 	EXPECT_FLOAT_EQ(endB.y, startB.y);
 
-	// Unbound ClientInput (no Hello) must not spawn a third entity.
+	// Unbound ClientInput (no ClientConnect) must not spawn a third entity.
 	sf::TcpSocket clientC;
 	clientC.setBlocking(true);
 	ASSERT_EQ(clientC.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
@@ -304,7 +304,7 @@ TEST(ServerSmoke, TwoClientsHelloOwnEntityAndInputIsolation) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
+TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -318,7 +318,7 @@ TEST(ServerSmoke, HelloClientInputAimUpdatesEntityAngleInWorldState) {
 
 	std::vector<std::uint8_t> recvBuffer;
 	client.setBlocking(false);
-	const auto selfId = helloBind(engine, client, recvBuffer, 1, 1);
+	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 
 	const auto pos = engine.game().figures().front().getPosition();

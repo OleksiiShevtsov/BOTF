@@ -116,14 +116,14 @@ botf::common::ObjectID botf::ServerEngine::bindOrSpawnForClient(common::ClientID
 	return entity;
 }
 
-void botf::ServerEngine::handleHello(common::ClientID clientId,
-									 const common::HelloMessage& hello,
-									 std::uint64_t sequence) {
+void botf::ServerEngine::handleClientConnect(common::ClientID clientId,
+											 const common::ClientConnectMessage& connect,
+											 std::uint64_t sequence) {
 	const common::ObjectID entityId = bindOrSpawnForClient(clientId);
-	const common::HelloMessage ack{hello.playerName, entityId};
+	const common::ClientConnectMessage ack{connect.playerName, entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
-		protocol::encodeHello(ack, sequence),
+		protocol::encodeClientConnect(ack, sequence),
 	});
 }
 
@@ -132,7 +132,7 @@ void botf::ServerEngine::handleClientInput(common::ClientID clientId,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{input, sequence};
 
-	// Input applies only to the entity bound via Hello. Unbound → no-op in GameLogic.
+	// Input applies only to the entity bound via ClientConnect. Unbound → no-op in GameLogic.
 	m_game.setClientInput(clientId, input.dx, input.dy);
 	m_game.setClientAim(clientId, input.aim);
 	if (input.fire) {
@@ -151,8 +151,8 @@ void botf::ServerEngine::applyInbound() {
 		const common::ClientID clientId = note->clientId;
 		protocol::dispatch(*decoded, [this, clientId](const auto& body, std::uint64_t sequence) {
 			using Body = std::decay_t<decltype(body)>;
-			if constexpr (std::is_same_v<Body, common::HelloMessage>) {
-				handleHello(clientId, body, sequence);
+			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
+				handleClientConnect(clientId, body, sequence);
 			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
 				handleClientInput(clientId, body, sequence);
 			}

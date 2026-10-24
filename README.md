@@ -138,7 +138,7 @@ BOTF/
 `main` тонкий: только runtime (`ServerEngine` / `ClientApp`). Smoke живёт в `tests/`.
 
 ```
-Hello → spawn/bind figure → Hello ack (object_id)
+ClientConnect → spawn/bind figure → ClientConnect ack (object_id)
 ClientInput(dx,dy,aim,fire) → net → GameLogic (move + aim + optional bullet spawn)
   → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
 ```

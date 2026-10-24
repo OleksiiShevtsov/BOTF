@@ -17,8 +17,8 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// Hello / Hello-ack (login-role). boundObjectId == 0 on client request.
-struct HelloMessage {
+// ClientConnect / ack (login-role). boundObjectId == 0 on client request.
+struct ClientConnectMessage {
 	std::string playerName;
 	ObjectID boundObjectId{};
 };

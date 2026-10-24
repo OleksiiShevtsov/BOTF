@@ -63,18 +63,18 @@ namespace {
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
 
-void botf::app::ClientApp::sendHello() {
-	if (!m_net.isConnected() || m_helloSent) {
+void botf::app::ClientApp::sendClientConnect() {
+	if (!m_net.isConnected() || m_clientConnectSent) {
 		return;
 	}
 
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
-		protocol::encodeHello(common::HelloMessage{}, m_sequence),
+		protocol::encodeClientConnect(common::ClientConnectMessage{}, m_sequence),
 	});
 	++m_sequence;
-	m_helloSent = true;
-	botf::log::info("[client] Hello sent");
+	m_clientConnectSent = true;
+	botf::log::info("[client] ClientConnect sent");
 }
 
 void botf::app::ClientApp::applyInbound() {
@@ -87,9 +87,9 @@ void botf::app::ClientApp::applyInbound() {
 
 		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
 			using Body = std::decay_t<decltype(body)>;
-			if constexpr (std::is_same_v<Body, common::HelloMessage>) {
+			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
 				if (body.boundObjectId == 0) {
-					botf::log::warn("[client] Hello ack without object_id");
+					botf::log::warn("[client] ClientConnect ack without object_id");
 					return;
 				}
 				m_selfId = body.boundObjectId;
@@ -140,7 +140,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 						port);
 	} else {
 		botf::log::info("[client] connected to server");
-		sendHello();
+		sendClientConnect();
 	}
 
 	std::uint32_t tick = 1;
@@ -160,7 +160,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 			m_net.poll();
 			if (!m_net.isConnected()) {
 				botf::log::warn("[client] disconnected from server");
-				m_helloSent = false;
+				m_clientConnectSent = false;
 				m_selfId.reset();
 				m_forceInputSend = true;
 				m_lastInputSent.reset();

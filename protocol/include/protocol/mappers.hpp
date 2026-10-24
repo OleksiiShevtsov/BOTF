@@ -34,16 +34,16 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] inline botf::Hello toProto(const common::HelloMessage& hello) {
-	botf::Hello message;
-	message.set_player_name(hello.playerName);
+[[nodiscard]] inline botf::ClientConnect toProto(const common::ClientConnectMessage& connect) {
+	botf::ClientConnect message;
+	message.set_player_name(connect.playerName);
 	// Wire field stays object_id; DTO name is boundObjectId.
-	message.set_object_id(hello.boundObjectId);
+	message.set_object_id(connect.boundObjectId);
 	return message;
 }
 
-[[nodiscard]] inline common::HelloMessage fromProto(const botf::Hello& hello) {
-	return common::HelloMessage{hello.player_name(), hello.object_id()};
+[[nodiscard]] inline common::ClientConnectMessage fromProto(const botf::ClientConnect& connect) {
+	return common::ClientConnectMessage{connect.player_name(), connect.object_id()};
 }
 
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {

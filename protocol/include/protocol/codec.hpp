@@ -53,10 +53,11 @@ inline std::string toString(const common::ClientInput& input) {
 	return out;
 }
 
-inline std::string encodeHello(const common::HelloMessage& hello, std::uint64_t sequence) {
+inline std::string encodeClientConnect(const common::ClientConnectMessage& connect,
+									   std::uint64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
-	*envelope.mutable_hello() = toProto(hello);
+	*envelope.mutable_client_connect() = toProto(connect);
 	return envelope.SerializeAsString();
 }
 
@@ -82,8 +83,8 @@ inline std::optional<DecodedEnvelope> decode(const std::string& envelopeBytes) {
 	}
 
 	switch (envelope.body_case()) {
-		case botf::Envelope::kHello:
-			return DecodedEnvelope{fromProto(envelope.hello()), envelope.sequence()};
+		case botf::Envelope::kClientConnect:
+			return DecodedEnvelope{fromProto(envelope.client_connect()), envelope.sequence()};
 		case botf::Envelope::kClientInput:
 			return DecodedEnvelope{normalizeInput(fromProto(envelope.client_input())),
 								   envelope.sequence()};
