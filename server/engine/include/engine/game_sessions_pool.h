@@ -11,7 +11,7 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Card 46: ensureDefaultFor puts every client into one shared session (scaffold for 47).
+// Owns client→session membership. Card 46: ensureDefaultFor → one shared session.
 class GameSessionsPool {
 public:
 	GameSessionsPool() = default;
@@ -25,8 +25,11 @@ public:
 	[[nodiscard]] GameSession* findByClient(common::ClientID clientId);
 	[[nodiscard]] const GameSession* findByClient(common::ClientID clientId) const;
 
-	// Drop client from its session (and destroy bound figure via GameSession::removeClient).
+	// Drop client→session membership and destroy bound figure in that session's GameLogic.
 	void removeClient(common::ClientID clientId);
+
+	// Clients currently mapped to this session (for WorldState fan-out).
+	[[nodiscard]] std::vector<common::ClientID> clientsOf(const GameSession& session) const;
 
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;

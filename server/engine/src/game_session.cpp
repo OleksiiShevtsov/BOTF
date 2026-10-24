@@ -13,20 +13,3 @@ botf::GameLogic& botf::GameSession::getGameLogic() {
 const botf::GameLogic& botf::GameSession::getGameLogic() const {
 	return m_gameLogic;
 }
-
-void botf::GameSession::addClient(common::ClientID clientId) {
-	m_clients.insert(clientId);
-}
-
-void botf::GameSession::removeClient(common::ClientID clientId) {
-	m_clients.erase(clientId);
-	m_gameLogic.removeClient(clientId);
-}
-
-bool botf::GameSession::contains(common::ClientID clientId) const {
-	return m_clients.contains(clientId);
-}
-
-const std::unordered_set<botf::common::ClientID>& botf::GameSession::clients() const {
-	return m_clients;
-}

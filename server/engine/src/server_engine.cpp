@@ -188,11 +188,8 @@ void botf::ServerEngine::enqueueWorldState(const GameSession& session,
 										   std::uint32_t tick,
 										   std::uint64_t sequence) {
 	const auto payload = protocol::encodeWorldSnapshot(buildWorldSnapshot(session, tick), sequence);
-	// Card 46: one shared session — broadcast to all. Per-session fan-out ready for 47.
-	if (session.clients().empty()) {
-		return;
-	}
-	for (const common::ClientID clientId : session.clients()) {
+	// Fan-out to clients mapped to this session (membership in GameSessionsPool).
+	for (const common::ClientID clientId : m_gameSessionsPool.clientsOf(session)) {
 		m_outbound.push(net::OutboundNotification{clientId, payload});
 	}
 }

@@ -3,11 +3,10 @@
 #include "common/types.hpp"
 #include "logic/game_logic.h"
 
-#include <unordered_set>
-
 namespace botf {
 
-// One live match: mapId + authoritative GameLogic + clients in this session.
+// One live match: mapId + authoritative GameLogic.
+// Client membership lives in GameSessionsPool (card 46).
 // Phases Waiting/Playing — card 47. MapDesc/spawns — card 51.
 class GameSession {
 public:
@@ -21,17 +20,11 @@ public:
 	[[nodiscard]] GameLogic& getGameLogic();
 	[[nodiscard]] const GameLogic& getGameLogic() const;
 
-	void addClient(common::ClientID clientId);
-	void removeClient(common::ClientID clientId);
-	[[nodiscard]] bool contains(common::ClientID clientId) const;
-	[[nodiscard]] const std::unordered_set<common::ClientID>& clients() const;
-
 private:
 	static constexpr common::MapID kDefaultMapId{1};
 
 	common::MapID m_mapId{kDefaultMapId};
 	GameLogic m_gameLogic;
-	std::unordered_set<common::ClientID> m_clients;
 };
 
 }  // namespace botf

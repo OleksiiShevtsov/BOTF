@@ -13,7 +13,6 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ClientID cli
 		session = &createSession();
 	}
 
-	session->addClient(clientId);
 	m_clientToSession[clientId] = session;
 	return *session;
 }
@@ -41,7 +40,18 @@ void botf::GameSessionsPool::removeClient(common::ClientID clientId) {
 	}
 	GameSession* session = it->second;
 	m_clientToSession.erase(it);
-	session->removeClient(clientId);
+	session->getGameLogic().removeClient(clientId);
+}
+
+std::vector<botf::common::ClientID> botf::GameSessionsPool::clientsOf(
+	const GameSession& session) const {
+	std::vector<common::ClientID> clients;
+	for (const auto& [clientId, mapped] : m_clientToSession) {
+		if (mapped == &session) {
+			clients.push_back(clientId);
+		}
+	}
+	return clients;
 }
 
 std::size_t botf::GameSessionsPool::size() const {

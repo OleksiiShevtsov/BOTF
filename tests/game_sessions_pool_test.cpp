@@ -9,12 +9,11 @@ TEST(GameSessionsPool, EnsureDefaultForCreatesSharedSession) {
 	botf::GameSession& a = pool.ensureDefaultFor(1);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(a.getMapId(), 1u);
-	EXPECT_TRUE(a.contains(1));
+	EXPECT_EQ(pool.findByClient(1), &a);
 
 	botf::GameSession& b = pool.ensureDefaultFor(2);
 	EXPECT_EQ(pool.size(), 1u);
 	EXPECT_EQ(&a, &b);
-	EXPECT_TRUE(b.contains(2));
 	EXPECT_EQ(pool.findByClient(1), pool.findByClient(2));
 }
 
@@ -34,6 +33,8 @@ TEST(GameSessionsPool, RemoveClientDropsMembership) {
 
 	EXPECT_EQ(pool.findByClient(1), nullptr);
 	ASSERT_NE(pool.findByClient(2), nullptr);
-	EXPECT_FALSE(pool.findByClient(2)->contains(1));
-	EXPECT_TRUE(pool.findByClient(2)->contains(2));
+
+	const auto clients = pool.clientsOf(*pool.findByClient(2));
+	ASSERT_EQ(clients.size(), 1u);
+	EXPECT_EQ(clients.front(), 2u);
 }
