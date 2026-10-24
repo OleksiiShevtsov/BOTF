@@ -88,11 +88,11 @@ std::size_t botf::ServerEngine::clientCount() const {
 	return m_server.clientCount();
 }
 
-botf::GameSessionsPool& botf::ServerEngine::sessions() {
+botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() {
 	return m_gameSessionsPool;
 }
 
-const botf::GameSessionsPool& botf::ServerEngine::sessions() const {
+const botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() const {
 	return m_gameSessionsPool;
 }
 
@@ -120,8 +120,8 @@ botf::common::ID botf::ServerEngine::bindOrSpawnForClient(GameSession& session,
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, entity);
-	botf::log::info("[server] client {} bound to entity {} (sessionId={} mapId={})", clientId,
-					entity, session.getId(), session.getMapId());
+	botf::log::info("[server] client {} bound to entity {} (sessionId={})", clientId, entity,
+					session.getId());
 	return entity;
 }
 

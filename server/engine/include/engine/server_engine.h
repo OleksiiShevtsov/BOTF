@@ -36,8 +36,8 @@ public:
 
 	[[nodiscard]] std::uint16_t port() const;
 	[[nodiscard]] std::size_t clientCount() const;
-	[[nodiscard]] GameSessionsPool& sessions();
-	[[nodiscard]] const GameSessionsPool& sessions() const;
+	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
+	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
 		common::ID clientId) const;

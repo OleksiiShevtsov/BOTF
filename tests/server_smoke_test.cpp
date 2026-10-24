@@ -75,7 +75,7 @@ std::optional<botf::common::ID> clientConnectBind(botf::ServerEngine& engine,
 			continue;
 		}
 
-		EXPECT_EQ(engine.sessions().findGameSessionByClient(expectedClientId)->getGameLogic().entityForClient(expectedClientId), connect->boundId);
+		EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClient(expectedClientId)->getGameLogic().entityForClient(expectedClientId), connect->boundId);
 		return connect->boundId;
 	}
 	return std::nullopt;
@@ -106,7 +106,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
-	EXPECT_TRUE(engine.sessions().empty());
+	EXPECT_TRUE(engine.getGameSessionsPool().empty());
 
 	sf::TcpSocket client;
 	client.setBlocking(true);
@@ -117,11 +117,11 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	client.setBlocking(false);
 	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
-	ASSERT_EQ(engine.sessions().size(), 1u);
-	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().size(), 1u);
-	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getId(), *selfId);
+	ASSERT_EQ(engine.getGameSessionsPool().size(), 1u);
+	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().size(), 1u);
+	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().front().getId(), *selfId);
 
-	const auto start = engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
+	const auto start = engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
 
 	struct Sample {
 		int dx;
@@ -198,7 +198,7 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 	EXPECT_EQ(last->tick, 4u);
 	EXPECT_TRUE(botf::protocol::isIdle(*last));
 
-	const auto end = engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
+	const auto end = engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
 	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
@@ -237,13 +237,13 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	ASSERT_TRUE(idA.has_value());
 	ASSERT_TRUE(idB.has_value());
 	EXPECT_NE(*idA, *idB);
-	ASSERT_EQ(engine.sessions().size(), 1u);
-	ASSERT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().size(), 2u);
-	EXPECT_EQ(engine.sessions().findGameSessionByClient(1), engine.sessions().findGameSessionByClient(2));
+	ASSERT_EQ(engine.getGameSessionsPool().size(), 1u);
+	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().size(), 2u);
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClient(1), engine.getGameSessionsPool().findGameSessionByClient(2));
 
 	botf::common::Point startA{};
 	botf::common::Point startB{};
-	for (const auto& obj : engine.sessions().findGameSessionByClient(1)->getGameLogic().figures()) {
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures()) {
 		if (obj.getId() == *idA) {
 			startA = obj.getPosition();
 		}
@@ -274,7 +274,7 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 
 	botf::common::Point endA{};
 	botf::common::Point endB{};
-	for (const auto& obj : engine.sessions().findGameSessionByClient(1)->getGameLogic().figures()) {
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures()) {
 		if (obj.getId() == *idA) {
 			endA = obj.getPosition();
 		}
@@ -298,8 +298,8 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 		engine.applyInbound();
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	EXPECT_EQ(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().size(), 2u);
-	EXPECT_FALSE(engine.sessions().findGameSessionByClient(1)->getGameLogic().entityForClient(3).has_value());
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().size(), 2u);
+	EXPECT_FALSE(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().entityForClient(3).has_value());
 
 	clientA.disconnect();
 	clientB.disconnect();
@@ -324,7 +324,7 @@ TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
 	ASSERT_TRUE(selfId.has_value());
 
-	const auto pos = engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
+	const auto pos = engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().front().getPosition();
 	// Aim due +X from entity → expected angle 0.
 	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
 	client.setBlocking(true);
@@ -345,7 +345,7 @@ TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 	}
 	ASSERT_TRUE(gotInput);
 
-	EXPECT_NEAR(engine.sessions().findGameSessionByClient(1)->getGameLogic().figures().front().getAngle(), 0.f, 1e-4f);
+	EXPECT_NEAR(engine.getGameSessionsPool().findGameSessionByClient(1)->getGameLogic().figures().front().getAngle(), 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();

@@ -6,10 +6,6 @@ botf::common::ID botf::GameSession::getId() const {
 	return m_id;
 }
 
-botf::common::ID botf::GameSession::getMapId() const {
-	return m_mapId;
-}
-
 botf::GameLogic& botf::GameSession::getGameLogic() {
 	return m_gameLogic;
 }
