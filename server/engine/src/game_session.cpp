@@ -1,17 +1,17 @@
 #include "engine/game_session.h"
 
-botf::GameSession::GameSession(common::MapID mapId) : m_mapId{mapId} {}
+botf::GameSession::GameSession() = default;
 
-botf::common::MapID botf::GameSession::mapId() const {
+botf::common::MapID botf::GameSession::getMapId() const {
 	return m_mapId;
 }
 
-botf::GameLogic& botf::GameSession::logic() {
-	return m_logic;
+botf::GameLogic& botf::GameSession::getGameLogic() {
+	return m_gameLogic;
 }
 
-const botf::GameLogic& botf::GameSession::logic() const {
-	return m_logic;
+const botf::GameLogic& botf::GameSession::getGameLogic() const {
+	return m_gameLogic;
 }
 
 void botf::GameSession::addClient(common::ClientID clientId) {
@@ -20,7 +20,7 @@ void botf::GameSession::addClient(common::ClientID clientId) {
 
 void botf::GameSession::removeClient(common::ClientID clientId) {
 	m_clients.erase(clientId);
-	m_logic.removeClient(clientId);
+	m_gameLogic.removeClient(clientId);
 }
 
 bool botf::GameSession::contains(common::ClientID clientId) const {

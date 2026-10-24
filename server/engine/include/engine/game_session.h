@@ -11,14 +11,15 @@ namespace botf {
 // Phases Waiting/Playing — card 47. MapDesc/spawns — card 51.
 class GameSession {
 public:
-	explicit GameSession(common::MapID mapId);
+	// Picks stub mapId=1 until MapPool (card 51) supplies real ids.
+	GameSession();
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
-	[[nodiscard]] common::MapID mapId() const;
-	[[nodiscard]] GameLogic& logic();
-	[[nodiscard]] const GameLogic& logic() const;
+	[[nodiscard]] common::MapID getMapId() const;
+	[[nodiscard]] GameLogic& getGameLogic();
+	[[nodiscard]] const GameLogic& getGameLogic() const;
 
 	void addClient(common::ClientID clientId);
 	void removeClient(common::ClientID clientId);
@@ -26,8 +27,10 @@ public:
 	[[nodiscard]] const std::unordered_set<common::ClientID>& clients() const;
 
 private:
-	common::MapID m_mapId{};
-	GameLogic m_logic;
+	static constexpr common::MapID kDefaultMapId{1};
+
+	common::MapID m_mapId{kDefaultMapId};
+	GameLogic m_gameLogic;
 	std::unordered_set<common::ClientID> m_clients;
 };
 

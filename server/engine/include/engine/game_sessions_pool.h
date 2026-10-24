@@ -19,7 +19,7 @@ public:
 	GameSessionsPool(const GameSessionsPool&) = delete;
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
-	// Client → session. If unbound: join the existing default session, or create one (mapId=1).
+	// Client → session. If unbound: join the existing default session, or create one.
 	GameSession& ensureDefaultFor(common::ClientID clientId);
 
 	[[nodiscard]] GameSession* findByClient(common::ClientID clientId);
@@ -36,9 +36,7 @@ public:
 	[[nodiscard]] std::vector<std::unique_ptr<GameSession>>& sessions();
 
 private:
-	static constexpr common::MapID kDefaultMapId{1};
-
-	GameSession& createSession(common::MapID mapId);
+	GameSession& createSession();
 
 	std::vector<std::unique_ptr<GameSession>> m_sessions;
 	std::unordered_map<common::ClientID, GameSession*> m_clientToSession;

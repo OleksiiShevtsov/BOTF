@@ -10,7 +10,7 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ClientID cli
 		// Card 46: one shared match for all clients.
 		session = m_sessions.front().get();
 	} else {
-		session = &createSession(kDefaultMapId);
+		session = &createSession();
 	}
 
 	session->addClient(clientId);
@@ -60,7 +60,7 @@ std::vector<std::unique_ptr<botf::GameSession>>& botf::GameSessionsPool::session
 	return m_sessions;
 }
 
-botf::GameSession& botf::GameSessionsPool::createSession(common::MapID mapId) {
-	m_sessions.push_back(std::make_unique<GameSession>(mapId));
+botf::GameSession& botf::GameSessionsPool::createSession() {
+	m_sessions.push_back(std::make_unique<GameSession>());
 	return *m_sessions.back();
 }

@@ -8,7 +8,7 @@ TEST(GameSessionsPool, EnsureDefaultForCreatesSharedSession) {
 
 	botf::GameSession& a = pool.ensureDefaultFor(1);
 	EXPECT_EQ(pool.size(), 1u);
-	EXPECT_EQ(a.mapId(), 1u);
+	EXPECT_EQ(a.getMapId(), 1u);
 	EXPECT_TRUE(a.contains(1));
 
 	botf::GameSession& b = pool.ensureDefaultFor(2);

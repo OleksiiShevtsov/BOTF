@@ -39,8 +39,8 @@ public:
 	[[nodiscard]] std::size_t clientCount() const;
 	[[nodiscard]] GameSessionsPool& sessions();
 	[[nodiscard]] const GameSessionsPool& sessions() const;
-	// Convenience for tests: logic of the first (sole) session. Precondition: !sessions().empty().
-	[[nodiscard]] const GameLogic& game() const;
+	// GameLogic of the session that owns this client. Precondition: client is in a session.
+	[[nodiscard]] const GameLogic& getGameLogic(common::ClientID clientId) const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
 		common::ClientID clientId) const;
@@ -64,7 +64,7 @@ private:
 	net::InboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
-	GameSessionsPool m_sessions;
+	GameSessionsPool m_gameSessionsPool;
 	std::unordered_map<common::ClientID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
