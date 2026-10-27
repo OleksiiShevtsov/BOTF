@@ -1,24 +1,42 @@
 #pragma once
 
+#include "common/dto.hpp"
 #include "common/types.hpp"
 #include "logic/game_logic.h"
 
 namespace botf {
 
-// One live match: id + authoritative GameLogic.
+// One live match: id + authoritative GameLogic behind a facade.
 // Client membership lives in GameSessionsPool (card 46).
 // Map lives on/with GameLogic later (card 51) — not duplicated here.
 // Phases Waiting/Playing — card 47.
 class GameSession {
 public:
-	explicit GameSession(common::ID id);
+	explicit GameSession(const common::ID id);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
-	[[nodiscard]] GameLogic& getGameLogic();
-	[[nodiscard]] const GameLogic& getGameLogic() const;
+
+	// Default spawn + bind (GlobalSettings stub until MapPool / card 51).
+	common::ID bindOrSpawnClient(const common::ID clientId);
+
+	// Spawn at an explicit point (tests / future map spawns).
+	// Speed limit lives on FigureObject (via GameLogic / GlobalSettings stub).
+	common::ID spawnPlayer(common::Point at);
+	void bindClient(const common::ID clientId, const common::ID entityId);
+	void removeClient(const common::ID clientId);
+
+	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
+	bool applyDamage(const common::ID entityId, int damage);
+	void tick(float dt);
+
+	[[nodiscard]] common::WorldSnapshot buildWorldSnapshot(std::uint32_t tick) const;
+
+	[[nodiscard]] const std::vector<FigureObject>& figures() const;
+	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
+	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
 	common::ID m_id{};

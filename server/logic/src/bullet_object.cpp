@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-botf::BulletObject::BulletObject(common::ID id,
-								 common::ID ownerId,
+botf::BulletObject::BulletObject(const common::ID id,
+								 const common::ID ownerId,
 								 common::Point origin,
 								 common::Angle direction,
 								 float speed,

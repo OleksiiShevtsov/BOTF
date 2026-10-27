@@ -9,10 +9,10 @@ namespace botf {
 class FigureObject : public DynamicObject {
 public:
 	// hitbox: stub default from GlobalSettings until character catalog / DB (card 50).
-	FigureObject(common::ID id,
+	FigureObject(const common::ID id,
 				 common::Point dot,
 				 float speedLimit,
-				 ObjectHitbox hitbox = installObjectHitbox());
+				 ObjectHitbox hitbox = ObjectHitbox::installDefault());
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;

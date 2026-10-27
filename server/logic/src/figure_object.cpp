@@ -26,7 +26,7 @@ void applyAxisFriction(float& speed, float friction, float dt) {
 
 }  // namespace
 
-botf::FigureObject::FigureObject(common::ID id,
+botf::FigureObject::FigureObject(const common::ID id,
 								 common::Point dot,
 								 float speedLimit,
 								 ObjectHitbox hitbox)

@@ -1,5 +1,6 @@
+#include "common/dto.hpp"
 #include "common/global_settings.hpp"
-#include "logic/game_logic.h"
+#include "helpers/test_env.h"
 #include "logic/hitbox.h"
 
 #include <cmath>
@@ -10,16 +11,16 @@ namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
 
-botf::common::ID spawnBound(botf::GameLogic& game,
-								  botf::common::ID clientId,
-								  botf::common::Point at) {
-	const auto id = game.spawnPlayer(at, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.bindClient(clientId, id);
+botf::common::ID spawnBound(botf::GameSession& session,
+						   botf::common::ID clientId,
+						   botf::common::Point at) {
+	const auto id = session.spawnPlayer(at);
+	session.bindClient(clientId, id);
 	return id;
 }
 
-const botf::FigureObject* findFigure(const botf::GameLogic& game, botf::common::ID id) {
-	for (const auto& f : game.figures()) {
+const botf::FigureObject* findFigure(const botf::GameSession& session, botf::common::ID id) {
+	for (const auto& f : session.figures()) {
 		if (f.getId() == id) {
 			return &f;
 		}
@@ -30,65 +31,63 @@ const botf::FigureObject* findFigure(const botf::GameLogic& game, botf::common::
 }  // namespace
 
 TEST(GameLogicBulletHit, HitsForeignFigureAppliesDamageAndDestroysBullet) {
-	botf::GameLogic game;
-	const auto shooterId = spawnBound(game, 1, {0.f, 0.f});
-	const auto targetId = spawnBound(game, 2, {50.f, 0.f});
-	game.setClientAim(1, {100.f, 0.f});
+	botf::test::TestSession env;
+	auto& session = env.session;
+	const auto shooterId = spawnBound(session, 1, {0.f, 0.f});
+	const auto targetId = spawnBound(session, 2, {50.f, 0.f});
+	session.applyClientInput(1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
 
-	ASSERT_TRUE(game.tryFire(1));
-	ASSERT_EQ(game.bullets().size(), 1u);
+	ASSERT_EQ(session.bullets().size(), 1u);
 
-	const int hpBefore = findFigure(game, targetId)->getHp();
+	const int hpBefore = findFigure(session, targetId)->getHp();
 	bool hit = false;
 	for (int i = 0; i < 20; ++i) {
-		game.tick(kDt);
-		if (game.bullets().empty()) {
+		session.tick(kDt);
+		if (session.bullets().empty()) {
 			hit = true;
 			break;
 		}
 	}
 	ASSERT_TRUE(hit) << "bullet should hit target within range";
-	const auto* target = findFigure(game, targetId);
+	const auto* target = findFigure(session, targetId);
 	ASSERT_NE(target, nullptr);
 	EXPECT_EQ(target->getHp(), hpBefore - botf::common::GlobalSettings::bulletDamage);
-	EXPECT_EQ(findFigure(game, shooterId)->getHp(), botf::common::GlobalSettings::maxHp);
+	EXPECT_EQ(findFigure(session, shooterId)->getHp(), botf::common::GlobalSettings::maxHp);
 }
 
 TEST(GameLogicBulletHit, MissJustOutsideLeavesHpAndBulletMayExpire) {
-	botf::GameLogic game;
-	spawnBound(game, 1, {0.f, 0.f});
-	const auto targetId = spawnBound(game, 2, {50.f, 80.f});
-	game.setClientAim(1, {100.f, 0.f});
-
-	ASSERT_TRUE(game.tryFire(1));
-	const int hpBefore = findFigure(game, targetId)->getHp();
+	botf::test::TestSession env;
+	auto& session = env.session;
+	spawnBound(session, 1, {0.f, 0.f});
+	const auto targetId = spawnBound(session, 2, {50.f, 80.f});
+	session.applyClientInput(1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
+	const int hpBefore = findFigure(session, targetId)->getHp();
 
 	const float maxRange = botf::common::GlobalSettings::bulletMaxRange;
 	const float speed = botf::common::GlobalSettings::bulletSpeed;
 	const int ticksNeeded = static_cast<int>(std::ceil(maxRange / (speed * kDt))) + 2;
 	for (int i = 0; i < ticksNeeded; ++i) {
-		game.tick(kDt);
+		session.tick(kDt);
 	}
-	EXPECT_TRUE(game.bullets().empty());
-	EXPECT_EQ(findFigure(game, targetId)->getHp(), hpBefore);
+	EXPECT_TRUE(session.bullets().empty());
+	EXPECT_EQ(findFigure(session, targetId)->getHp(), hpBefore);
 }
 
 TEST(GameLogicBulletHit, OwnBulletDoesNotDamageShooter) {
-	botf::GameLogic game;
-	const auto shooterId = spawnBound(game, 1, {0.f, 0.f});
-	game.setClientAim(1, {100.f, 0.f});
-	ASSERT_TRUE(game.tryFire(1));
+	botf::test::TestSession env;
+	auto& session = env.session;
+	const auto shooterId = spawnBound(session, 1, {0.f, 0.f});
+	session.applyClientInput(1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
 
-	// First ticks: bullet still inside own AABB — must not self-hit.
 	for (int i = 0; i < 3; ++i) {
-		game.tick(kDt);
-		EXPECT_EQ(findFigure(game, shooterId)->getHp(), botf::common::GlobalSettings::maxHp);
+		session.tick(kDt);
+		EXPECT_EQ(findFigure(session, shooterId)->getHp(), botf::common::GlobalSettings::maxHp);
 	}
 }
 
 TEST(GameLogicBulletHit, PointInsideTargetAabbIsHit) {
 	const botf::common::Point center{50.f, 0.f};
-	const botf::ObjectHitbox box = botf::installObjectHitbox();
-	EXPECT_TRUE(botf::pointHitsAabb(center, box, {50.f, 0.f}));
-	EXPECT_FALSE(botf::pointHitsAabb(center, box, {50.f, box.getHalfHeight() + 0.01f}));
+	const botf::ObjectHitbox box = botf::ObjectHitbox::installDefault();
+	EXPECT_TRUE(box.containsPoint(center, {50.f, 0.f}));
+	EXPECT_FALSE(box.containsPoint(center, {50.f, box.getHalfHeight() + 0.01f}));
 }

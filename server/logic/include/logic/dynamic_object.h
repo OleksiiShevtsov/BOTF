@@ -22,7 +22,7 @@ public:
 	[[nodiscard]] virtual bool isAlive() const;
 
 protected:
-	DynamicObject(common::ID id, common::Point position);
+	DynamicObject(const common::ID id, common::Point position);
 
 	common::ID m_id{};
 	common::Point m_position{};

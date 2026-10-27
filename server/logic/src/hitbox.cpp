@@ -57,18 +57,21 @@ bool segmentIntersectsAabb(const botf::common::Point& centerHitbox,
 
 }  // namespace
 
-bool botf::pointHitsAabb(const common::Point& centerHitbox,
-						 const ObjectHitbox& hitbox,
-						 const common::Point& pointHit) {
-	return pointInAabb(centerHitbox, hitbox.getHalfWidth(), hitbox.getHalfHeight(), pointHit);
+botf::ObjectHitbox botf::ObjectHitbox::installDefault() {
+	return ObjectHitbox{common::GlobalSettings::hitboxSize,
+						common::GlobalSettings::hitboxSize};
 }
 
-bool botf::segmentHitsAabb(const common::Point& centerHitbox,
-						   const ObjectHitbox& hitbox,
-						   const common::Point& a,
-						   const common::Point& b) {
-	const float halfW = hitbox.getHalfWidth();
-	const float halfH = hitbox.getHalfHeight();
+bool botf::ObjectHitbox::containsPoint(const common::Point& centerHitbox,
+									   const common::Point& pointHit) const {
+	return pointInAabb(centerHitbox, getHalfWidth(), getHalfHeight(), pointHit);
+}
+
+bool botf::ObjectHitbox::intersectsSegment(const common::Point& centerHitbox,
+										   const common::Point& a,
+										   const common::Point& b) const {
+	const float halfW = getHalfWidth();
+	const float halfH = getHalfHeight();
 	if (a.x == b.x && a.y == b.y) {
 		return pointInAabb(centerHitbox, halfW, halfH, a);
 	}

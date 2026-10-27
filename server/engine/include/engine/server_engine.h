@@ -40,7 +40,7 @@ public:
 	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
-		common::ID clientId) const;
+		const common::ID clientId) const;
 
 private:
 	struct ClientInputState {
@@ -48,14 +48,13 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	common::ID bindOrSpawnForClient(common::ID clientId);
-	void handleClientConnect(common::ID clientId,
+	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
-	void handleClientInput(common::ID clientId,
-						   const common::ClientInput& input,
+	void handleClientInput(const common::ID clientId,
+						   const common::ClientInput& clientInput,
 						   std::uint64_t sequence);
-	void enqueueWorldState(const GameSession& session, std::uint32_t tick, std::uint64_t sequence);
+	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
 	net::InboundQueue m_inbound;
