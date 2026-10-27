@@ -46,6 +46,7 @@ private:
 
 	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
 	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
+	// TODO: нет БД — инкремент id сессии должен выдаваться из БД, не локальный счётчик.
 	common::ID m_nextId{1};
 };
 

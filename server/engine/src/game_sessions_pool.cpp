@@ -7,7 +7,8 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ID clientId)
 
 	common::ID sessionId{};
 	if (!m_sessions.empty()) {
-		// Card 46: one shared match for all clients.
+		// TODO: пока нет распределителя клиентов по доступным сессиям —
+		// Card 46 scaffold: все клиенты в одну общую сессию.
 		sessionId = m_sessions.begin()->first;
 	} else {
 		sessionId = createSession().getId();
