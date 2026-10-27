@@ -88,12 +88,12 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 	// Card 46 scaffold: TCP login still enters the sole GameSession.
 	// Later (45/47): ClientConnect = server login only; JoinSession notification joins match.
 	const common::ID sessionId = m_gameSessionsPool.ensureDefaultFor(clientId);
-	GameSession* session = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
-	if (!session) {
+	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
+	if (!gameSession) {
 		botf::log::error("[server] connect: missing session {} for client {}", sessionId, clientId);
 		return;
 	}
-	const common::ID entityId = session->bindOrSpawnClient(clientId);
+	const common::ID entityId = gameSession->bindOrSpawnClient(clientId);
 	const common::ClientConnectMessage ack{connect.playerName, entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
@@ -106,13 +106,13 @@ void botf::ServerEngine::handleClientInput(const common::ID clientId,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{clientInput, sequence};
 
-	GameSession* session = m_gameSessionsPool.findGameSessionByClientId(clientId);
-	if (!session) {
+	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
+	if (!gameSession) {
 		// Unbound ClientInput (no ClientConnect) — no-op.
 		return;
 	}
 
-	session->applyClientInput(clientId, clientInput);
+	gameSession->applyClientInput(clientId, clientInput);
 }
 
 void botf::ServerEngine::applyInbound() {
@@ -139,12 +139,12 @@ void botf::ServerEngine::applyInbound() {
 void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 										   std::uint32_t tick,
 										   std::uint64_t sequence) {
-	GameSession* session = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
-	if (!session) {
+	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
+	if (!gameSession) {
 		return;
 	}
 	const auto payload =
-		protocol::encodeWorldSnapshot(session->buildWorldSnapshot(tick), sequence);
+		protocol::encodeWorldSnapshot(gameSession->buildWorldSnapshot(tick), sequence);
 	for (const common::ID clientId : m_gameSessionsPool.getSessionClients(sessionId)) {
 		m_outbound.push(net::OutboundNotification{clientId, payload});
 	}
@@ -152,8 +152,8 @@ void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 
 void botf::ServerEngine::advanceSim(float dt) {
 	++m_simTick;
-	for (auto& [sessionId, session] : m_gameSessionsPool.sessions()) {
-		session->tick(dt);
+	for (auto& [sessionId, gameSession] : m_gameSessionsPool.sessions()) {
+		gameSession->tick(dt);
 		enqueueWorldState(sessionId, m_simTick, m_simTick);
 	}
 }
