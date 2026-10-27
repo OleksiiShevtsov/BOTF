@@ -20,7 +20,7 @@ public:
 	void finish();
 
 	void applyWorldSnapshot(const common::WorldSnapshot& snapshot,
-							std::optional<common::ObjectID> selfId = std::nullopt);
+							std::optional<common::ID> selfId = std::nullopt);
 	void draw(sf::RenderTarget& target) const;
 
 	[[nodiscard]] GameMap& getMap();

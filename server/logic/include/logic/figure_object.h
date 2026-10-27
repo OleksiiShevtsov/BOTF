@@ -9,7 +9,7 @@ namespace botf {
 class FigureObject : public DynamicObject {
 public:
 	// hitbox: stub default from GlobalSettings until character catalog / DB (card 50).
-	FigureObject(common::ObjectID id,
+	FigureObject(common::ID id,
 				 common::Point dot,
 				 float speedLimit,
 				 ObjectHitbox hitbox = installObjectHitbox());

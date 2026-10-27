@@ -36,7 +36,7 @@ private:
 	bool m_forceInputSend = true;
 	bool m_prevLmbDown = false;
 	std::optional<common::ClientInput> m_lastInputSent;
-	std::optional<common::ObjectID> m_selfId;
+	std::optional<common::ID> m_selfId;
 	std::optional<common::WorldSnapshot> m_latestWorld;
 };
 

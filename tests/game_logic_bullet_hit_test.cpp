@@ -10,17 +10,17 @@ namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
 
-botf::common::ObjectID spawnBound(botf::GameLogic& game,
-								  botf::common::ClientID clientId,
+botf::common::ID spawnBound(botf::GameLogic& game,
+								  botf::common::ID clientId,
 								  botf::common::Point at) {
 	const auto id = game.spawnPlayer(at, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
 	game.bindClient(clientId, id);
 	return id;
 }
 
-const botf::FigureObject* findFigure(const botf::GameLogic& game, botf::common::ObjectID id) {
+const botf::FigureObject* findFigure(const botf::GameLogic& game, botf::common::ID id) {
 	for (const auto& f : game.figures()) {
-		if (f.getObjectId() == id) {
+		if (f.getId() == id) {
 			return &f;
 		}
 	}

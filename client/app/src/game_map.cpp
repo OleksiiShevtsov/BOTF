@@ -2,17 +2,17 @@
 
 #include "common/global_settings.hpp"
 
-void botf::app::GameMap::setMapId(common::MapID mapId) {
-	m_mapId = mapId;
+void botf::app::GameMap::setId(common::ID id) {
+	m_id = id;
 }
 
-botf::common::MapID botf::app::GameMap::getId() const {
-	return m_mapId;
+botf::common::ID botf::app::GameMap::getId() const {
+	return m_id;
 }
 
 void botf::app::GameMap::draw(sf::RenderTarget& target) const {
-	// MVP: one default arena. mapId reserved for alternate visuals later.
-	(void)m_mapId;
+	// MVP: one default arena. id reserved for alternate visuals later.
+	(void)m_id;
 
 	const float width = static_cast<float>(common::GlobalSettings::sizeWindowX);
 	const float height = static_cast<float>(common::GlobalSettings::sizeWindowY);

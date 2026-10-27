@@ -19,41 +19,41 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure; returns its logic id.
-	common::ObjectID spawnPlayer(common::Point at, float speedLimit);
+	common::ID spawnPlayer(common::Point at, float speedLimit);
 
 	// Bind a network client to a logic entity (one entity per client).
-	void bindClient(common::ClientID clientId, common::ObjectID entityId);
+	void bindClient(common::ID clientId, common::ID entityId);
 
 	// Drop session mapping and destroy the bound figure (and its bullets).
-	void removeClient(common::ClientID clientId);
+	void removeClient(common::ID clientId);
 
 	// Apply move input for a network client (no-op if unbound or dead).
-	void setClientInput(common::ClientID clientId, int dx, int dy);
+	void setClientInput(common::ID clientId, int dx, int dy);
 
 	// Store aim world point for the bound entity; angle applied now and each tick.
-	void setClientAim(common::ClientID clientId, common::Point aimWorld);
+	void setClientAim(common::ID clientId, common::Point aimWorld);
 
 	// Rising-edge fire from ClientInput; enforces cooldown. Returns true if spawned.
 	// No-op (false) if unbound or figure is dead.
-	bool tryFire(common::ClientID clientId);
+	bool tryFire(common::ID clientId);
 
 	// Apply input directly by entity id. No-op if missing or dead.
-	void setPlayerInput(common::ObjectID entityId, int dx, int dy);
+	void setPlayerInput(common::ID entityId, int dx, int dy);
 
 	// Server damage API (card 32). Returns false if entity missing.
-	bool applyDamage(common::ObjectID entityId, int damage);
+	bool applyDamage(common::ID entityId, int damage);
 
 	// Advance the world by dt seconds, retarget aims, resolve hits, prune bullets.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
-	[[nodiscard]] std::optional<common::ObjectID> entityForClient(common::ClientID clientId) const;
+	[[nodiscard]] std::optional<common::ID> entityForClient(common::ID clientId) const;
 
 private:
-	FigureObject* findFigureMutable(common::ObjectID entityId);
-	void destroyFigure(common::ObjectID entityId);
-	void applyAimForClient(common::ClientID clientId);
+	FigureObject* findFigureMutable(common::ID entityId);
+	void destroyFigure(common::ID entityId);
+	void applyAimForClient(common::ID clientId);
 	void applyStoredAims();
 	// Point ∩ AABB vs living non-owner figures; one hit → damage + destroy bullet.
 	void resolveBulletHits();
@@ -61,12 +61,12 @@ private:
 
 	std::vector<FigureObject> m_figures;
 	std::vector<BulletObject> m_bullets;
-	std::unordered_map<common::ClientID, common::ObjectID> m_clientToEntity;
+	std::unordered_map<common::ID, common::ID> m_clientToEntity;
 	// Last aim world point per client; angle = atan2(aim − pos) after each move tick.
-	std::unordered_map<common::ClientID, common::Point> m_clientAimWorld;
-	std::unordered_map<common::ClientID, float> m_lastFireTime;
+	std::unordered_map<common::ID, common::Point> m_clientAimWorld;
+	std::unordered_map<common::ID, float> m_lastFireTime;
 	float m_worldTime{0.f};
-	common::ObjectID m_nextEntityId{1};
+	common::ID m_nextId{1};
 };
 
 }  // namespace botf

@@ -23,9 +23,9 @@ sf::Color colorForStatus(botf::common::LifeStatus status) {
 
 }  // namespace
 
-botf::app::FigureView::FigureView(common::ObjectID id) : m_id(id) {}
+botf::app::FigureView::FigureView(common::ID id) : m_id(id) {}
 
-botf::common::ObjectID botf::app::FigureView::getId() const {
+botf::common::ID botf::app::FigureView::getId() const {
 	return m_id;
 }
 

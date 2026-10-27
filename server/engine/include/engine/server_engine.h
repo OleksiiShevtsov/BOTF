@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/dto.hpp"
-#include "logic/game_logic.h"
+#include "engine/game_sessions_pool.h"
 #include "net/tcp_server.hpp"
 
 #include <cstdint>
@@ -10,7 +10,7 @@
 
 namespace botf {
 
-// Server runtime: TCP + GameLogic tick + WorldState broadcast.
+// Server runtime: TCP + GameSessionsPool tick + WorldState broadcast.
 // main should only parse args and call run().
 class ServerEngine {
 public:
@@ -31,15 +31,16 @@ public:
 	void pollNetwork();
 	// ClientConnect (spawn/bind + ack), ClientInput (own entity only).
 	void applyInbound();
-	// game.tick(dt) + enqueue WorldState for the new sim tick.
+	// tick all sessions + enqueue WorldState for the new sim tick.
 	void advanceSim(float dt);
 
 	[[nodiscard]] std::uint16_t port() const;
 	[[nodiscard]] std::size_t clientCount() const;
-	[[nodiscard]] const GameLogic& game() const;
+	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
+	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
 	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
-		common::ClientID clientId) const;
+		common::ID clientId) const;
 
 private:
 	struct ClientInputState {
@@ -47,21 +48,21 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	common::ObjectID bindOrSpawnForClient(common::ClientID clientId);
-	void handleClientConnect(common::ClientID clientId,
+	common::ID bindOrSpawnForClient(common::ID clientId);
+	void handleClientConnect(common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
-	void handleClientInput(common::ClientID clientId,
+	void handleClientInput(common::ID clientId,
 						   const common::ClientInput& input,
 						   std::uint64_t sequence);
-	void enqueueWorldState(std::uint32_t tick, std::uint64_t sequence);
+	void enqueueWorldState(const GameSession& session, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
 	net::InboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
-	GameLogic m_game;
-	std::unordered_map<common::ClientID, ClientInputState> m_inputStates;
+	GameSessionsPool m_gameSessionsPool;
+	std::unordered_map<common::ID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };

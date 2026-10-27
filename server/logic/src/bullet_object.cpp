@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-botf::BulletObject::BulletObject(common::ObjectID id,
-								 common::ObjectID ownerId,
+botf::BulletObject::BulletObject(common::ID id,
+								 common::ID ownerId,
 								 common::Point origin,
 								 common::Angle direction,
 								 float speed,
@@ -18,7 +18,7 @@ botf::common::Angle botf::BulletObject::getAngle() const {
 	return m_angle;
 }
 
-botf::common::ObjectID botf::BulletObject::getOwnerId() const {
+botf::common::ID botf::BulletObject::getOwnerId() const {
 	return m_ownerId;
 }
 

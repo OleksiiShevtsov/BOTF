@@ -4,9 +4,9 @@
 
 #include <numbers>
 
-botf::app::BulletView::BulletView(common::ObjectID id) : m_id(id) {}
+botf::app::BulletView::BulletView(common::ID id) : m_id(id) {}
 
-botf::common::ObjectID botf::app::BulletView::getId() const {
+botf::common::ID botf::app::BulletView::getId() const {
 	return m_id;
 }
 

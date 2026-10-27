@@ -17,15 +17,16 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// ClientConnect / ack (login-role). boundObjectId == 0 on client request.
+// ClientConnect / ack (login to server). boundId == 0 on client request.
+// Not a GameSession join — mapId comes with future JoinSession notification (45/47).
 struct ClientConnectMessage {
 	std::string playerName;
-	ObjectID boundObjectId{};
+	ID boundId{};
 };
 
 // Pose of a controllable actor in a world snapshot.
 struct FigurePose {
-	ObjectID objectId{};
+	ID id{};
 	Point position{};
 	Angle aimAngle{};
 	int hitPoints{};
@@ -34,8 +35,8 @@ struct FigurePose {
 
 // Reserved for future bullets (mapped from proto when present).
 struct BulletPose {
-	ObjectID objectId{};
-	ObjectID ownerObjectId{};
+	ID id{};
+	ID ownerId{};
 	Point position{};
 	Point velocity{};
 };

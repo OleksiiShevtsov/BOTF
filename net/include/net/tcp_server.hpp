@@ -33,11 +33,11 @@ public:
 	[[nodiscard]] std::uint16_t port() const { return m_port; }
 
 	// Client ids dropped since the last call (clears the buffer).
-	[[nodiscard]] std::vector<botf::common::ClientID> takeDisconnected();
+	[[nodiscard]] std::vector<botf::common::ID> takeDisconnected();
 
 private:
 	struct Client {
-		botf::common::ClientID id{};
+		botf::common::ID id{};
 		std::unique_ptr<sf::TcpSocket> socket;
 		std::vector<std::uint8_t> recvBuffer;
 		std::vector<std::uint8_t> sendBuffer;
@@ -47,19 +47,19 @@ private:
 	void receiveFromClients();
 	void dispatchOutbound();
 	void flushSendBuffers();
-	void dropClient(botf::common::ClientID id);
+	void dropClient(botf::common::ID id);
 
 	InboundQueue& m_inbound;
 	OutboundQueue& m_outbound;
 
 	sf::TcpListener m_listener;
 	sf::SocketSelector m_selector;
-	std::unordered_map<botf::common::ClientID, Client> m_clients;
+	std::unordered_map<botf::common::ID, Client> m_clients;
 
-	botf::common::ClientID m_nextClientId = 1;
+	botf::common::ID m_nextClientId = 1;
 	std::uint16_t m_port = 0;
 	bool m_listening = false;
-	std::vector<botf::common::ClientID> m_disconnected;
+	std::vector<botf::common::ID> m_disconnected;
 };
 
 }  // namespace botf::net

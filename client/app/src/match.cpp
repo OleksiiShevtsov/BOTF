@@ -16,7 +16,7 @@ void botf::app::Match::finish() {
 }
 
 void botf::app::Match::applyWorldSnapshot(const common::WorldSnapshot& snapshot,
-										  std::optional<common::ObjectID> selfId) {
+										  std::optional<common::ID> selfId) {
 	if (!m_running) {
 		start();
 	}
@@ -26,7 +26,7 @@ void botf::app::Match::applyWorldSnapshot(const common::WorldSnapshot& snapshot,
 		return;
 	}
 	for (const auto& pose : snapshot.figures) {
-		if (pose.objectId == *selfId) {
+		if (pose.id == *selfId) {
 			m_infoPanel.setHp(pose.hitPoints, common::GlobalSettings::maxHp);
 			return;
 		}
