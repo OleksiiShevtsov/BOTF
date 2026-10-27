@@ -4,23 +4,18 @@
 
 #include <stdexcept>
 
-botf::GameMap::GameMap(const common::ID id,
-						std::string name,
-						const float width,
-						const float height,
-						std::vector<common::Point> spawns)
-	: m_id{id},
-	  m_name{std::move(name)},
-	  m_width{width},
-	  m_height{height},
-	  m_spawns{std::move(spawns)} {}
-
 botf::GameMap botf::GameMap::load(const common::ID mapId) {
 	const auto data = utils::loadMap(mapId);
 	if (!data) {
 		throw std::runtime_error("GameMap::load: failed to load map id " + std::to_string(mapId));
 	}
-	return GameMap{data->id, data->name, data->width, data->height, data->spawns};
+	GameMap map;
+	map.m_id = data->id;
+	map.m_name = data->name;
+	map.m_width = data->width;
+	map.m_height = data->height;
+	map.m_spawns = data->spawns;
+	return map;
 }
 
 botf::common::ID botf::GameMap::getId() const {
