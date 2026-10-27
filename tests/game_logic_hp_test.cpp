@@ -8,8 +8,7 @@
 namespace {
 
 botf::common::ID spawnBound(botf::GameSession& session, botf::common::ID clientId) {
-	const auto entityId = session.spawnPlayer(
-		botf::common::Point{0.f, 0.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto entityId = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(clientId, entityId);
 	return entityId;
 }
@@ -19,8 +18,7 @@ botf::common::ID spawnBound(botf::GameSession& session, botf::common::ID clientI
 TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{10.f, 20.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{10.f, 20.f});
 	ASSERT_EQ(session.figures().size(), 1u);
 	EXPECT_EQ(session.figures().front().getId(), id);
 	EXPECT_EQ(session.figures().front().getHp(), botf::common::GlobalSettings::maxHp);
@@ -31,8 +29,7 @@ TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 TEST(GameLogicHp, DamageToZeroMarksDeadAndClamps) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	const int maxHp = botf::common::GlobalSettings::maxHp;
 	const int damage = botf::common::GlobalSettings::bulletDamage;
 

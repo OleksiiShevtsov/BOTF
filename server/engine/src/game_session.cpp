@@ -15,15 +15,14 @@ botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId)
 	}
 
 	const common::ID entity = m_gameLogic.spawnPlayer(
-		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
-		common::GlobalSettings::defaultPlayerSpeedLimit);
+		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY});
 	m_gameLogic.bindClient(clientId, entity);
 	botf::log::info("[server] client {} bound to entity {} (sessionId={})", clientId, entity, m_id);
 	return entity;
 }
 
-botf::common::ID botf::GameSession::spawnPlayer(common::Point at, float speedLimit) {
-	return m_gameLogic.spawnPlayer(at, speedLimit);
+botf::common::ID botf::GameSession::spawnPlayer(common::Point at) {
+	return m_gameLogic.spawnPlayer(at);
 }
 
 void botf::GameSession::bindClient(const common::ID clientId, const common::ID entityId) {
@@ -34,10 +33,11 @@ void botf::GameSession::removeClient(const common::ID clientId) {
 	m_gameLogic.removeClient(clientId);
 }
 
-void botf::GameSession::applyClientInput(const common::ID clientId, const common::ClientInput& input) {
-	m_gameLogic.setClientInput(clientId, input.dx, input.dy);
-	m_gameLogic.setClientAim(clientId, input.aim);
-	if (input.fire) {
+void botf::GameSession::applyClientInput(const common::ID clientId,
+										const common::ClientInput& clientInput) {
+	m_gameLogic.setClientInput(clientId, clientInput.dx, clientInput.dy);
+	m_gameLogic.setClientAim(clientId, clientInput.aim);
+	if (clientInput.fire) {
 		m_gameLogic.tryFire(clientId);
 	}
 }

@@ -24,8 +24,7 @@ botf::common::ClientInput moveInput(int dx, int dy) {
 TEST(GameLogicMovement, SpeedClampedByVectorMagnitude) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(1, id);
 	session.applyClientInput(1, moveInput(1, 0));
 
@@ -41,8 +40,7 @@ TEST(GameLogicMovement, SpeedClampedByVectorMagnitude) {
 TEST(GameLogicMovement, DiagonalDoesNotExceedSpeedLimit) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(1, id);
 	session.applyClientInput(1, moveInput(1, 1));
 
@@ -56,8 +54,7 @@ TEST(GameLogicMovement, DiagonalDoesNotExceedSpeedLimit) {
 TEST(GameLogicMovement, ReleaseStopsWithoutReverse) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(1, id);
 	session.applyClientInput(1, moveInput(1, 0));
 	for (int i = 0; i < 40; ++i) {
@@ -83,8 +80,7 @@ TEST(GameLogicMovement, ReleaseStopsWithoutReverse) {
 TEST(GameLogicMovement, DirectionChangeHasBoundedStep) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(1, id);
 	session.applyClientInput(1, moveInput(1, 0));
 	for (int i = 0; i < 40; ++i) {
@@ -108,8 +104,7 @@ TEST(GameLogicMovement, DirectionChangeHasBoundedStep) {
 TEST(GameLogicMovement, UpInputMovesNegativeGameY) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{0.f, 100.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{0.f, 100.f});
 	session.bindClient(1, id);
 	session.applyClientInput(1, moveInput(0, +1));
 	for (int i = 0; i < 20; ++i) {

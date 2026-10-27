@@ -14,7 +14,7 @@ constexpr float kDt = 1.0f / 20.0f;
 botf::common::ID spawnBound(botf::GameSession& session,
 						   botf::common::ID clientId,
 						   botf::common::Point at) {
-	const auto id = session.spawnPlayer(at, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(at);
 	session.bindClient(clientId, id);
 	return id;
 }

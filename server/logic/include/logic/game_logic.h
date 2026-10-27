@@ -19,7 +19,8 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure; returns its logic id.
-	common::ID spawnPlayer(common::Point at, float speedLimit);
+	// Speed limit from GlobalSettings stub until character catalog / DB.
+	common::ID spawnPlayer(common::Point at);
 
 	// Bind a network client to a logic entity (one entity per client).
 	void bindClient(const common::ID clientId, const common::ID entityId);

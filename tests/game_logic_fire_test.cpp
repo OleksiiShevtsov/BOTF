@@ -20,8 +20,7 @@ TEST(GameLogicFire, SpawnBulletFliesAndDiesAtMaxRange) {
 	botf::test::TestSession env;
 	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = session.spawnPlayer(
-		botf::common::Point{100.f, 100.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto entityId = session.spawnPlayer(botf::common::Point{100.f, 100.f});
 	session.bindClient(clientId, entityId);
 	session.applyClientInput(clientId, aimFire({200.f, 100.f}, false));
 	EXPECT_NEAR(session.figures().front().getAngle(), 0.f, 1e-4f);
@@ -43,8 +42,7 @@ TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 	botf::test::TestSession env;
 	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = session.spawnPlayer(
-		botf::common::Point{0.f, 0.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto entityId = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(clientId, entityId);
 	session.applyClientInput(clientId, aimFire({50.f, 0.f}, false));
 
@@ -66,8 +64,7 @@ TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 TEST(GameLogicFire, UnboundClientCannotFire) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	session.spawnPlayer(botf::common::Point{0.f, 0.f},
-						botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.applyClientInput(99, aimFire({50.f, 0.f}, true));
 	EXPECT_TRUE(session.bullets().empty());
 }

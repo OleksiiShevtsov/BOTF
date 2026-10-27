@@ -52,7 +52,7 @@ private:
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
 	void handleClientInput(const common::ID clientId,
-						   const common::ClientInput& input,
+						   const common::ClientInput& clientInput,
 						   std::uint64_t sequence);
 	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();

@@ -16,8 +16,7 @@ TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
 	botf::test::TestSession env;
 	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = session.spawnPlayer(
-		botf::common::Point{100.f, 100.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto entityId = session.spawnPlayer(botf::common::Point{100.f, 100.f});
 	session.bindClient(clientId, entityId);
 
 	const botf::common::Point aim{200.f, 100.f};
@@ -40,8 +39,7 @@ TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
 TEST(GameLogicAim, UnboundClientAimIsIgnored) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	session.spawnPlayer(botf::common::Point{0.f, 0.f},
-						botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.applyClientInput(99, botf::common::ClientInput{0, 0, {50.f, 0.f}, false, 0});
 	EXPECT_FLOAT_EQ(session.figures().front().getAngle(), 0.f);
 }

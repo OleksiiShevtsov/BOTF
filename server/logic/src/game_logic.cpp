@@ -8,9 +8,9 @@
 
 botf::GameLogic::GameLogic() = default;
 
-botf::common::ID botf::GameLogic::spawnPlayer(common::Point at, float speedLimit) {
+botf::common::ID botf::GameLogic::spawnPlayer(common::Point at) {
 	const common::ID id = m_nextId++;
-	m_figures.emplace_back(id, at, speedLimit);
+	m_figures.emplace_back(id, at, common::GlobalSettings::defaultPlayerSpeedLimit);
 	return id;
 }
 

@@ -102,9 +102,9 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 }
 
 void botf::ServerEngine::handleClientInput(const common::ID clientId,
-										   const common::ClientInput& input,
+										   const common::ClientInput& clientInput,
 										   std::uint64_t sequence) {
-	m_inputStates[clientId] = ClientInputState{input, sequence};
+	m_inputStates[clientId] = ClientInputState{clientInput, sequence};
 
 	GameSession* session = m_gameSessionsPool.findGameSessionByClientId(clientId);
 	if (!session) {
@@ -112,7 +112,7 @@ void botf::ServerEngine::handleClientInput(const common::ID clientId,
 		return;
 	}
 
-	session->applyClientInput(clientId, input);
+	session->applyClientInput(clientId, clientInput);
 }
 
 void botf::ServerEngine::applyInbound() {

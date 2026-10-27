@@ -23,11 +23,12 @@ public:
 	common::ID bindOrSpawnClient(const common::ID clientId);
 
 	// Spawn at an explicit point (tests / future map spawns).
-	common::ID spawnPlayer(common::Point at, float speedLimit);
+	// Speed limit lives on FigureObject (via GameLogic / GlobalSettings stub).
+	common::ID spawnPlayer(common::Point at);
 	void bindClient(const common::ID clientId, const common::ID entityId);
 	void removeClient(const common::ID clientId);
 
-	void applyClientInput(const common::ID clientId, const common::ClientInput& input);
+	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
 	bool applyDamage(const common::ID entityId, int damage);
 	void tick(float dt);
 

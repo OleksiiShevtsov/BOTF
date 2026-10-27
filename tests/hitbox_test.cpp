@@ -12,8 +12,8 @@ const botf::ObjectHitbox kDefaultBox = botf::ObjectHitbox::installDefault();
 }  // namespace
 
 TEST(Hitbox, DefaultDescMatchesGlobalSettings) {
-	EXPECT_FLOAT_EQ(kDefaultBox.width, botf::common::GlobalSettings::hitboxSize);
-	EXPECT_FLOAT_EQ(kDefaultBox.height, botf::common::GlobalSettings::hitboxSize);
+	EXPECT_FLOAT_EQ(kDefaultBox.getWidth(), botf::common::GlobalSettings::hitboxSize);
+	EXPECT_FLOAT_EQ(kDefaultBox.getHeight(), botf::common::GlobalSettings::hitboxSize);
 	EXPECT_FLOAT_EQ(kDefaultBox.getHalfWidth(), kHalf);
 	EXPECT_FLOAT_EQ(kDefaultBox.getHalfHeight(), kHalf);
 }
@@ -68,14 +68,13 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 	botf::test::TestSession env;
 	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{100.f, 100.f},
-										botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	const auto id = session.spawnPlayer(botf::common::Point{100.f, 100.f});
 	ASSERT_EQ(session.figures().size(), 1u);
 	EXPECT_EQ(session.figures().front().getId(), id);
 
 	const auto& figure = session.figures().front();
-	EXPECT_FLOAT_EQ(figure.getHitbox().width, botf::common::GlobalSettings::hitboxSize);
-	EXPECT_FLOAT_EQ(figure.getHitbox().height, botf::common::GlobalSettings::hitboxSize);
+	EXPECT_FLOAT_EQ(figure.getHitbox().getWidth(), botf::common::GlobalSettings::hitboxSize);
+	EXPECT_FLOAT_EQ(figure.getHitbox().getHeight(), botf::common::GlobalSettings::hitboxSize);
 
 	const botf::common::Point centerHitbox = figure.getPosition();
 	EXPECT_TRUE(figure.getHitbox().containsPoint(centerHitbox, {100.f, 100.f}));
