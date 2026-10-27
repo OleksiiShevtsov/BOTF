@@ -22,11 +22,11 @@ void onSignal(int) {
 
 botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameSession& session,
 											   std::uint32_t tick) {
-	const botf::GameLogic& game = session.getGameLogic();
+	const botf::GameLogic& gameLogic = session.getGameLogic();
 	botf::common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
-	snapshot.figures.reserve(game.figures().size());
-	for (const auto& figure : game.figures()) {
+	snapshot.figures.reserve(gameLogic.figures().size());
+	for (const auto& figure : gameLogic.figures()) {
 		snapshot.figures.push_back(botf::common::FigurePose{
 			figure.getId(),
 			figure.getPosition(),
@@ -35,8 +35,8 @@ botf::common::WorldSnapshot buildWorldSnapshot(const botf::GameSession& session,
 			figure.getLifeStatus(),
 		});
 	}
-	snapshot.bullets.reserve(game.bullets().size());
-	for (const auto& bullet : game.bullets()) {
+	snapshot.bullets.reserve(gameLogic.bullets().size());
+	for (const auto& bullet : gameLogic.bullets()) {
 		snapshot.bullets.push_back(botf::common::BulletPose{
 			bullet.getId(),
 			bullet.getOwnerId(),
@@ -116,15 +116,15 @@ botf::common::ID botf::ServerEngine::bindOrSpawnForClient(common::ID clientId) {
 		return 0;
 	}
 
-	GameLogic& game = session->getGameLogic();
-	if (const auto existing = game.entityForClient(clientId)) {
+	GameLogic& gameLogic = session->getGameLogic();
+	if (const auto existing = gameLogic.entityForClient(clientId)) {
 		return *existing;
 	}
 
-	const common::ID entity = game.spawnPlayer(
+	const common::ID entity = gameLogic.spawnPlayer(
 		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY},
 		common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.bindClient(clientId, entity);
+	gameLogic.bindClient(clientId, entity);
 	botf::log::info("[server] client {} bound to entity {} (sessionId={})", clientId, entity,
 					session->getId());
 	return entity;
@@ -155,11 +155,11 @@ void botf::ServerEngine::handleClientInput(common::ID clientId,
 		return;
 	}
 
-	GameLogic& game = session->getGameLogic();
-	game.setClientInput(clientId, input.dx, input.dy);
-	game.setClientAim(clientId, input.aim);
+	GameLogic& gameLogic = session->getGameLogic();
+	gameLogic.setClientInput(clientId, input.dx, input.dy);
+	gameLogic.setClientAim(clientId, input.aim);
 	if (input.fire) {
-		game.tryFire(clientId);
+		gameLogic.tryFire(clientId);
 	}
 }
 
