@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/types.hpp"
+#include "engine/game_map_pool.h"
 #include "engine/game_session.h"
 
 #include <cstddef>
@@ -12,6 +13,7 @@ namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
 // Membership: ID → ID → GameSession. Card 46: one shared session.
+// Map templates: GameMapPool (card 51).
 class GameSessionsPool {
 public:
 	GameSessionsPool() = default;
@@ -38,13 +40,18 @@ public:
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
 
+	[[nodiscard]] GameMapPool& getGameMapPool();
+	[[nodiscard]] const GameMapPool& getGameMapPool() const;
+
 	[[nodiscard]] const std::unordered_map<common::ID, std::unique_ptr<GameSession>>&
 	sessions() const;
 	[[nodiscard]] std::unordered_map<common::ID, std::unique_ptr<GameSession>>& sessions();
 
 private:
 	GameSession& createSession();
+	void ensureMapsLoaded();
 
+	GameMapPool m_gameMapPool;
 	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
 	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
 	// TODO: нет БД — инкремент id сессии должен выдаваться из БД, не локальный счётчик.

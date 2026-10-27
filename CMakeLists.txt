@@ -51,6 +51,7 @@ add_subdirectory(common/sources ${CMAKE_CURRENT_BINARY_DIR}/common)
 add_subdirectory(common/protobuf ${CMAKE_CURRENT_BINARY_DIR}/proto_messages)
 add_subdirectory(protocol)
 add_subdirectory(net)
+add_subdirectory(utils)
 
 # Executables (client owns app/, server owns logic/)
 add_subdirectory(server)

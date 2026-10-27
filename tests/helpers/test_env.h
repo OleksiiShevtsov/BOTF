@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/game_map.h"
 #include "engine/game_session.h"
 #include "engine/game_sessions_pool.h"
 
@@ -26,14 +27,15 @@ namespace botf::test {
 	return port;
 }
 
-// Stack-owned test GameSession (card 52). Drive sim through Session facade — not bare GameLogic.
+// Stack-owned test GameSession with map loaded from content (card 51/52).
 struct TestSession {
-	explicit TestSession(const common::ID id = 1) : session{id} {}
+	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
+		: session{sessionId, GameMap::load(mapId)} {}
 
 	GameSession session;
 };
 
-// Pool + one default session for membership tests.
+// Pool + one default session for membership tests (loads maps via GameMapPool).
 struct TestSessionPool {
 	common::ID ensureClient(const common::ID clientId) {
 		return pool.ensureDefaultFor(clientId);

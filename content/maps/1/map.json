@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "name": "arena_stub",
+  "server": {
+    "width": 1080,
+    "height": 640,
+    "spawns": [
+      [100, 300],
+      [980, 300]
+    ]
+  },
+  "client": {
+    "background": "client/background.png"
+  }
+}

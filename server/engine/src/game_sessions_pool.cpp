@@ -1,5 +1,16 @@
 #include "engine/game_sessions_pool.h"
 
+#include <stdexcept>
+
+void botf::GameSessionsPool::ensureMapsLoaded() {
+	if (!m_gameMapPool.empty()) {
+		return;
+	}
+	if (!m_gameMapPool.refresh()) {
+		throw std::runtime_error("GameSessionsPool: no maps in content/maps (GameMapPool empty)");
+	}
+}
+
 botf::common::ID botf::GameSessionsPool::ensureDefaultFor(const common::ID clientId) {
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
 		return existing->getId();
@@ -55,8 +66,8 @@ void botf::GameSessionsPool::removeClient(const common::ID clientId) {
 	}
 	const common::ID sessionId = it->second;
 	m_clientToSessionId.erase(it);
-	if (GameSession* session = findGameSessionBySessionId(sessionId)) {
-		session->removeClient(clientId);
+	if (GameSession* gameSession = findGameSessionBySessionId(sessionId)) {
+		gameSession->removeClient(clientId);
 	}
 }
 
@@ -79,6 +90,14 @@ bool botf::GameSessionsPool::empty() const {
 	return m_sessions.empty();
 }
 
+botf::GameMapPool& botf::GameSessionsPool::getGameMapPool() {
+	return m_gameMapPool;
+}
+
+const botf::GameMapPool& botf::GameSessionsPool::getGameMapPool() const {
+	return m_gameMapPool;
+}
+
 const std::unordered_map<botf::common::ID, std::unique_ptr<botf::GameSession>>&
 botf::GameSessionsPool::sessions() const {
 	return m_sessions;
@@ -90,9 +109,14 @@ botf::GameSessionsPool::sessions() {
 }
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
+	ensureMapsLoaded();
+	const common::ID mapId = m_gameMapPool.pickNextMapId();
+	const GameMap mapCopy = m_gameMapPool.getMap(mapId);
+
 	const common::ID id = m_nextId;
 	++m_nextId;
-	auto [it, inserted] = m_sessions.emplace(id, std::make_unique<GameSession>(id));
+	auto [it, inserted] =
+		m_sessions.emplace(id, std::make_unique<GameSession>(id, mapCopy));
 	(void)inserted;
 	return *it->second;
 }

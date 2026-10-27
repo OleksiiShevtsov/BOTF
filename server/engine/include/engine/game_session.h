@@ -2,27 +2,30 @@
 
 #include "common/dto.hpp"
 #include "common/types.hpp"
+#include "engine/game_map.h"
 #include "logic/game_logic.h"
+
+#include <cstddef>
 
 namespace botf {
 
-// One live match: id + authoritative GameLogic behind a facade.
+// One live match: id + GameMap + authoritative GameLogic behind a facade.
 // Client membership lives in GameSessionsPool (card 46).
-// Map lives on/with GameLogic later (card 51) — not duplicated here.
 // Phases Waiting/Playing — card 47.
 class GameSession {
 public:
-	explicit GameSession(const common::ID id);
+	GameSession(const common::ID id, GameMap gameMap);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
+	[[nodiscard]] const GameMap& getGameMap() const;
 
-	// Default spawn + bind (GlobalSettings stub until MapPool / card 51).
+	// Spawn at next map spawn point + bind.
 	common::ID bindOrSpawnClient(const common::ID clientId);
 
-	// Spawn at an explicit point (tests / future map spawns).
+	// Spawn at an explicit point (tests).
 	// Speed limit lives on FigureObject (via GameLogic / GlobalSettings stub).
 	common::ID spawnPlayer(common::Point at);
 	void bindClient(const common::ID clientId, const common::ID entityId);
@@ -39,8 +42,12 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
+	[[nodiscard]] common::Point nextSpawnPoint();
+
 	common::ID m_id{};
+	GameMap m_gameMap;
 	GameLogic m_gameLogic;
+	std::size_t m_nextSpawnIndex{0};
 };
 
 }  // namespace botf

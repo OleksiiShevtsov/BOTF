@@ -1,7 +1,7 @@
 # Format only BOTF project C++ sources: *.cpp / *.h / *.hpp
-# under client/, server/, net/, common/sources/, tests/.
+# under client/, server/, net/, protocol/, utils/, common/sources/, tests/.
 #
-# Never touches: LIB (SFML/protobuf/googletest), .proto, generated *.pb.cc/h, cmake/.
+# Never touches: LIB (SFML/protobuf/googletest/nlohmann), .proto, generated *.pb.cc/h, cmake/.
 #
 #   BOTF_FORMAT_ON_BUILD=ON  (default) — format, then compile
 #   BOTF_FORMAT_ON_BUILD=OFF — skip (manual: cmake --build ... --target botf_format)
@@ -18,6 +18,7 @@ set(_botf_format_roots
     "${CMAKE_SOURCE_DIR}/server"
     "${CMAKE_SOURCE_DIR}/net"
     "${CMAKE_SOURCE_DIR}/protocol"
+    "${CMAKE_SOURCE_DIR}/utils"
     "${CMAKE_SOURCE_DIR}/common/sources"
     "${CMAKE_SOURCE_DIR}/tests"
 )

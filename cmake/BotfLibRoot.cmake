@@ -16,7 +16,8 @@
 
 function(_botf_dir_looks_like_lib dir)
 	if(EXISTS "${dir}/SFML" OR EXISTS "${dir}/sfml" OR EXISTS "${dir}/README.md"
-	   OR EXISTS "${dir}/googletest" OR EXISTS "${dir}/protobuf" OR EXISTS "${dir}/spdlog")
+	   OR EXISTS "${dir}/googletest" OR EXISTS "${dir}/protobuf" OR EXISTS "${dir}/spdlog"
+	   OR EXISTS "${dir}/nlohmann_json")
 		set(_botf_dir_looks_like_lib_result TRUE PARENT_SCOPE)
 	else()
 		set(_botf_dir_looks_like_lib_result FALSE PARENT_SCOPE)
