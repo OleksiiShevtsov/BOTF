@@ -17,22 +17,18 @@ struct ObjectHitbox {
 	[[nodiscard]] float getHalfHeight() const {
 		return height * 0.5f;
 	}
+
+	// Default object hitbox — TODO: нет БД, load from DB / character catalog later.
+	[[nodiscard]] static ObjectHitbox installDefault();
+
+	// Closed AABB: boundary counts as hit (triangle vertices sit on the square edge).
+	[[nodiscard]] bool containsPoint(const common::Point& centerHitbox,
+									 const common::Point& pointHit) const;
+
+	// True if segment [a, b] intersects the AABB (inclusive). Degenerate a==b → point test.
+	[[nodiscard]] bool intersectsSegment(const common::Point& centerHitbox,
+										 const common::Point& a,
+										 const common::Point& b) const;
 };
-
-// Default object hitbox — TODO: нет БД, load from DB / character catalog later.
-[[nodiscard]] inline ObjectHitbox installObjectHitbox() {
-	return ObjectHitbox{common::GlobalSettings::hitboxSize, common::GlobalSettings::hitboxSize};
-}
-
-// Closed AABB: boundary counts as hit (triangle vertices sit on the square edge).
-[[nodiscard]] bool pointHitsAabb(const common::Point& centerHitbox,
-								 const ObjectHitbox& hitbox,
-								 const common::Point& pointHit);
-
-// True if segment [a, b] intersects the AABB (inclusive). Degenerate a==b → point test.
-[[nodiscard]] bool segmentHitsAabb(const common::Point& centerHitbox,
-								   const ObjectHitbox& hitbox,
-								   const common::Point& a,
-								   const common::Point& b);
 
 }  // namespace botf

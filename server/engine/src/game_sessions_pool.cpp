@@ -1,8 +1,8 @@
 #include "engine/game_sessions_pool.h"
 
-botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ID clientId) {
+botf::common::ID botf::GameSessionsPool::ensureDefaultFor(common::ID clientId) {
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
-		return *existing;
+		return existing->getId();
 	}
 
 	common::ID sessionId{};
@@ -15,7 +15,7 @@ botf::GameSession& botf::GameSessionsPool::ensureDefaultFor(common::ID clientId)
 	}
 
 	m_clientToSessionId[clientId] = sessionId;
-	return *m_sessions.at(sessionId);
+	return sessionId;
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(common::ID clientId) {
@@ -60,7 +60,7 @@ void botf::GameSessionsPool::removeClient(common::ID clientId) {
 	const common::ID sessionId = it->second;
 	m_clientToSessionId.erase(it);
 	if (GameSession* session = findGameSessionBySessionId(sessionId)) {
-		session->getGameLogic().removeClient(clientId);
+		session->removeClient(clientId);
 	}
 }
 

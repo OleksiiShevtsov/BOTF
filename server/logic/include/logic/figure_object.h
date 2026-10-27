@@ -12,7 +12,7 @@ public:
 	FigureObject(common::ID id,
 				 common::Point dot,
 				 float speedLimit,
-				 ObjectHitbox hitbox = installObjectHitbox());
+				 ObjectHitbox hitbox = ObjectHitbox::installDefault());
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;

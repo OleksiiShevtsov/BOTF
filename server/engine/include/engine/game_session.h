@@ -1,11 +1,12 @@
 #pragma once
 
+#include "common/dto.hpp"
 #include "common/types.hpp"
 #include "logic/game_logic.h"
 
 namespace botf {
 
-// One live match: id + authoritative GameLogic.
+// One live match: id + authoritative GameLogic behind a facade.
 // Client membership lives in GameSessionsPool (card 46).
 // Map lives on/with GameLogic later (card 51) — not duplicated here.
 // Phases Waiting/Playing — card 47.
@@ -17,8 +18,24 @@ public:
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
-	[[nodiscard]] GameLogic& getGameLogic();
-	[[nodiscard]] const GameLogic& getGameLogic() const;
+
+	// Default spawn + bind (GlobalSettings stub until MapPool / card 51).
+	common::ID bindOrSpawnClient(common::ID clientId);
+
+	// Spawn at an explicit point (tests / future map spawns).
+	common::ID spawnPlayer(common::Point at, float speedLimit);
+	void bindClient(common::ID clientId, common::ID entityId);
+	void removeClient(common::ID clientId);
+
+	void applyClientInput(common::ID clientId, const common::ClientInput& input);
+	bool applyDamage(common::ID entityId, int damage);
+	void tick(float dt);
+
+	[[nodiscard]] common::WorldSnapshot buildWorldSnapshot(std::uint32_t tick) const;
+
+	[[nodiscard]] const std::vector<FigureObject>& figures() const;
+	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
+	[[nodiscard]] std::optional<common::ID> entityForClient(common::ID clientId) const;
 
 private:
 	common::ID m_id{};

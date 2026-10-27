@@ -1,5 +1,6 @@
+#include "common/dto.hpp"
 #include "common/global_settings.hpp"
-#include "logic/game_logic.h"
+#include "helpers/test_env.h"
 
 #include <cmath>
 
@@ -12,36 +13,35 @@ constexpr float kDt = 1.0f / 20.0f;
 }  // namespace
 
 TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
-	botf::GameLogic game;
+	botf::test::TestSession env;
+	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = game.spawnPlayer(botf::common::Point{100.f, 100.f},
-										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.bindClient(clientId, entityId);
+	const auto entityId = session.spawnPlayer(
+		botf::common::Point{100.f, 100.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.bindClient(clientId, entityId);
 
-	// Fixed world aim to the right of spawn → angle 0 at apply time.
 	const botf::common::Point aim{200.f, 100.f};
-	game.setClientAim(clientId, aim);
-	EXPECT_NEAR(game.figures().front().getAngle(), 0.f, 1e-4f);
+	session.applyClientInput(clientId, botf::common::ClientInput{0, 0, aim, false, 0});
+	EXPECT_NEAR(session.figures().front().getAngle(), 0.f, 1e-4f);
 
-	// Move without a new Aim message. Angle must follow the stored point.
-	game.setClientInput(clientId, 0, +1);
+	session.applyClientInput(clientId, botf::common::ClientInput{0, +1, aim, false, 0});
 	for (int i = 0; i < 40; ++i) {
-		game.tick(kDt);
+		session.tick(kDt);
 	}
 
-	const auto pos = game.figures().front().getPosition();
+	const auto pos = session.figures().front().getPosition();
 	ASSERT_LT(pos.y, 100.f - 5.f);
 
 	const float expected = std::atan2(aim.y - pos.y, aim.x - pos.x);
-	EXPECT_NEAR(game.figures().front().getAngle(), expected, 1e-4f);
-	// Frozen-angle bug would keep 0; retarget must leave that.
-	EXPECT_GT(std::fabs(game.figures().front().getAngle()), 0.1f);
+	EXPECT_NEAR(session.figures().front().getAngle(), expected, 1e-4f);
+	EXPECT_GT(std::fabs(session.figures().front().getAngle()), 0.1f);
 }
 
 TEST(GameLogicAim, UnboundClientAimIsIgnored) {
-	botf::GameLogic game;
-	game.spawnPlayer(botf::common::Point{0.f, 0.f},
-					 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.setClientAim(99, botf::common::Point{50.f, 0.f});
-	EXPECT_FLOAT_EQ(game.figures().front().getAngle(), 0.f);
+	botf::test::TestSession env;
+	auto& session = env.session;
+	session.spawnPlayer(botf::common::Point{0.f, 0.f},
+						botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.applyClientInput(99, botf::common::ClientInput{0, 0, {50.f, 0.f}, false, 0});
+	EXPECT_FLOAT_EQ(session.figures().front().getAngle(), 0.f);
 }

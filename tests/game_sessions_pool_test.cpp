@@ -1,43 +1,42 @@
-#include "engine/game_sessions_pool.h"
+#include "helpers/test_env.h"
 
 #include <gtest/gtest.h>
 
 TEST(GameSessionsPool, EnsureDefaultForCreatesSharedSession) {
-	botf::GameSessionsPool pool;
-	EXPECT_TRUE(pool.empty());
+	botf::test::TestSessionPool env;
+	EXPECT_TRUE(env.pool.empty());
 
-	botf::GameSession& a = pool.ensureDefaultFor(1);
-	EXPECT_EQ(pool.size(), 1u);
-	EXPECT_EQ(a.getId(), 1u);
-	EXPECT_EQ(pool.findGameSessionByClientId(1), &a);
-	EXPECT_EQ(pool.findGameSessionBySessionId(a.getId()), &a);
+	const botf::common::ID idA = env.ensureClient(1);
+	EXPECT_EQ(env.pool.size(), 1u);
+	EXPECT_EQ(idA, 1u);
+	ASSERT_NE(env.sessionByClient(1), nullptr);
+	EXPECT_EQ(env.sessionByClient(1)->getId(), idA);
+	EXPECT_EQ(env.sessionById(idA), env.sessionByClient(1));
 
-	botf::GameSession& b = pool.ensureDefaultFor(2);
-	EXPECT_EQ(pool.size(), 1u);
-	EXPECT_EQ(&a, &b);
-	EXPECT_EQ(a.getId(), b.getId());
-	EXPECT_EQ(pool.findGameSessionByClientId(1), pool.findGameSessionByClientId(2));
+	const botf::common::ID idB = env.ensureClient(2);
+	EXPECT_EQ(env.pool.size(), 1u);
+	EXPECT_EQ(idA, idB);
+	EXPECT_EQ(env.sessionByClient(1), env.sessionByClient(2));
 }
 
 TEST(GameSessionsPool, EnsureDefaultForIsIdempotentPerClient) {
-	botf::GameSessionsPool pool;
-	botf::GameSession& first = pool.ensureDefaultFor(7);
-	botf::GameSession& again = pool.ensureDefaultFor(7);
-	EXPECT_EQ(&first, &again);
-	EXPECT_EQ(first.getId(), again.getId());
-	EXPECT_EQ(pool.size(), 1u);
+	botf::test::TestSessionPool env;
+	const botf::common::ID first = env.ensureClient(7);
+	const botf::common::ID again = env.ensureClient(7);
+	EXPECT_EQ(first, again);
+	EXPECT_EQ(env.pool.size(), 1u);
 }
 
 TEST(GameSessionsPool, RemoveClientDropsMembership) {
-	botf::GameSessionsPool pool;
-	pool.ensureDefaultFor(1);
-	pool.ensureDefaultFor(2);
-	pool.removeClient(1);
+	botf::test::TestSessionPool env;
+	env.ensureClient(1);
+	env.ensureClient(2);
+	env.pool.removeClient(1);
 
-	EXPECT_EQ(pool.findGameSessionByClientId(1), nullptr);
-	ASSERT_NE(pool.findGameSessionByClientId(2), nullptr);
+	EXPECT_EQ(env.sessionByClient(1), nullptr);
+	ASSERT_NE(env.sessionByClient(2), nullptr);
 
-	const auto clients = pool.getSessionClients(pool.findGameSessionByClientId(2)->getId());
+	const auto clients = env.pool.getSessionClients(env.sessionByClient(2)->getId());
 	ASSERT_EQ(clients.size(), 1u);
 	EXPECT_EQ(clients.front(), 2u);
 }

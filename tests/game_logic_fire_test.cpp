@@ -1,5 +1,6 @@
+#include "common/dto.hpp"
 #include "common/global_settings.hpp"
-#include "logic/game_logic.h"
+#include "helpers/test_env.h"
 
 #include <cmath>
 
@@ -9,57 +10,64 @@ namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
 
+botf::common::ClientInput aimFire(botf::common::Point aim, bool fire) {
+	return botf::common::ClientInput{0, 0, aim, fire, 0};
+}
+
 }  // namespace
 
 TEST(GameLogicFire, SpawnBulletFliesAndDiesAtMaxRange) {
-	botf::GameLogic game;
+	botf::test::TestSession env;
+	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = game.spawnPlayer(botf::common::Point{100.f, 100.f},
-										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.bindClient(clientId, entityId);
-	game.setClientAim(clientId, botf::common::Point{200.f, 100.f});
-	EXPECT_NEAR(game.figures().front().getAngle(), 0.f, 1e-4f);
+	const auto entityId = session.spawnPlayer(
+		botf::common::Point{100.f, 100.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.bindClient(clientId, entityId);
+	session.applyClientInput(clientId, aimFire({200.f, 100.f}, false));
+	EXPECT_NEAR(session.figures().front().getAngle(), 0.f, 1e-4f);
 
-	ASSERT_TRUE(game.tryFire(clientId));
-	ASSERT_EQ(game.bullets().size(), 1u);
-	EXPECT_EQ(game.bullets().front().getOwnerId(), entityId);
+	session.applyClientInput(clientId, aimFire({200.f, 100.f}, true));
+	ASSERT_EQ(session.bullets().size(), 1u);
+	EXPECT_EQ(session.bullets().front().getOwnerId(), entityId);
 
 	const float maxRange = botf::common::GlobalSettings::bulletMaxRange;
 	const float speed = botf::common::GlobalSettings::bulletSpeed;
 	const int ticksNeeded = static_cast<int>(std::ceil(maxRange / (speed * kDt))) + 2;
 	for (int i = 0; i < ticksNeeded; ++i) {
-		game.tick(kDt);
+		session.tick(kDt);
 	}
-	EXPECT_TRUE(game.bullets().empty()) << "bullet should be destroyed past max range";
+	EXPECT_TRUE(session.bullets().empty()) << "bullet should be destroyed past max range";
 }
 
 TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
-	botf::GameLogic game;
+	botf::test::TestSession env;
+	auto& session = env.session;
 	const botf::common::ID clientId = 1;
-	const auto entityId = game.spawnPlayer(botf::common::Point{0.f, 0.f},
-										   botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	game.bindClient(clientId, entityId);
-	game.setClientAim(clientId, botf::common::Point{50.f, 0.f});
+	const auto entityId = session.spawnPlayer(
+		botf::common::Point{0.f, 0.f}, botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.bindClient(clientId, entityId);
+	session.applyClientInput(clientId, aimFire({50.f, 0.f}, false));
 
-	ASSERT_TRUE(game.tryFire(clientId));
-	EXPECT_FALSE(game.tryFire(clientId));
-	EXPECT_EQ(game.bullets().size(), 1u);
+	session.applyClientInput(clientId, aimFire({50.f, 0.f}, true));
+	EXPECT_EQ(session.bullets().size(), 1u);
+	session.applyClientInput(clientId, aimFire({50.f, 0.f}, true));
+	EXPECT_EQ(session.bullets().size(), 1u);
 
 	const float cooldown = botf::common::GlobalSettings::fireCooldownSeconds;
 	const int waitTicks = static_cast<int>(std::ceil(cooldown / kDt)) + 1;
 	for (int i = 0; i < waitTicks; ++i) {
-		game.tick(kDt);
+		session.tick(kDt);
 	}
-	// First bullet may still be in flight (maxRange can outlive cooldown).
-	const auto bulletsBefore = game.bullets().size();
-	ASSERT_TRUE(game.tryFire(clientId));
-	EXPECT_EQ(game.bullets().size(), bulletsBefore + 1u);
+	const auto bulletsBefore = session.bullets().size();
+	session.applyClientInput(clientId, aimFire({50.f, 0.f}, true));
+	EXPECT_EQ(session.bullets().size(), bulletsBefore + 1u);
 }
 
 TEST(GameLogicFire, UnboundClientCannotFire) {
-	botf::GameLogic game;
-	game.spawnPlayer(botf::common::Point{0.f, 0.f},
-					 botf::common::GlobalSettings::defaultPlayerSpeedLimit);
-	EXPECT_FALSE(game.tryFire(99));
-	EXPECT_TRUE(game.bullets().empty());
+	botf::test::TestSession env;
+	auto& session = env.session;
+	session.spawnPlayer(botf::common::Point{0.f, 0.f},
+						botf::common::GlobalSettings::defaultPlayerSpeedLimit);
+	session.applyClientInput(99, aimFire({50.f, 0.f}, true));
+	EXPECT_TRUE(session.bullets().empty());
 }

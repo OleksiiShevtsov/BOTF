@@ -145,7 +145,7 @@ ClientInput → session GameLogic → WorldState
 ```
 
 Player hitbox (server): `ObjectHitbox` on `FigureObject` (default stub = `hitboxSize`×`hitboxSize`
-from GlobalSettings via `installObjectHitbox()`); AABB centered on entity pos; does not rotate
+from GlobalSettings via `ObjectHitbox::installDefault()`); AABB centered on entity pos; does not rotate
 with aim. Hit-test in `logic/hitbox.h` reads hitbox from the target (point / segment ∩ AABB).
 
 HP + LifeStatus (`Alive` / `Dead` / `Waiting`): server authority; synced in WorldSnapshot.

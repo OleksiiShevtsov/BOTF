@@ -48,14 +48,13 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	common::ID bindOrSpawnForClient(common::ID clientId);
 	void handleClientConnect(common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
 	void handleClientInput(common::ID clientId,
 						   const common::ClientInput& input,
 						   std::uint64_t sequence);
-	void enqueueWorldState(const GameSession& session, std::uint32_t tick, std::uint64_t sequence);
+	void enqueueWorldState(common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
 	net::InboundQueue m_inbound;

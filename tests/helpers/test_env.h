@@ -1,5 +1,8 @@
 #pragma once
 
+#include "engine/game_session.h"
+#include "engine/game_sessions_pool.h"
+
 #include <cstdint>
 #include <optional>
 
@@ -22,5 +25,29 @@ namespace botf::test {
 	}
 	return port;
 }
+
+// Stack-owned test GameSession (card 52). Drive sim through Session facade — not bare GameLogic.
+struct TestSession {
+	explicit TestSession(common::ID id = 1) : session{id} {}
+
+	GameSession session;
+};
+
+// Pool + one default session for membership tests.
+struct TestSessionPool {
+	common::ID ensureClient(common::ID clientId) {
+		return pool.ensureDefaultFor(clientId);
+	}
+
+	[[nodiscard]] GameSession* sessionById(common::ID sessionId) {
+		return pool.findGameSessionBySessionId(sessionId);
+	}
+
+	[[nodiscard]] GameSession* sessionByClient(common::ID clientId) {
+		return pool.findGameSessionByClientId(clientId);
+	}
+
+	GameSessionsPool pool;
+};
 
 }  // namespace botf::test
