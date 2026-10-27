@@ -8,8 +8,8 @@ namespace botf {
 // Client draws a temporary segment; hit-test uses this point only (card 41).
 class BulletObject : public DynamicObject {
 public:
-	BulletObject(common::ID id,
-				 common::ID ownerId,
+	BulletObject(const common::ID id,
+				 const common::ID ownerId,
 				 common::Point origin,
 				 common::Angle direction,
 				 float speed,

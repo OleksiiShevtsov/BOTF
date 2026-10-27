@@ -74,7 +74,7 @@ std::uint32_t botf::ServerEngine::simTick() const {
 }
 
 std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
-	common::ID clientId) const {
+	const common::ID clientId) const {
 	const auto it = m_inputStates.find(clientId);
 	if (it == m_inputStates.end()) {
 		return std::nullopt;
@@ -82,7 +82,7 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	return it->second.command;
 }
 
-void botf::ServerEngine::handleClientConnect(common::ID clientId,
+void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::uint64_t sequence) {
 	// Card 46 scaffold: TCP login still enters the sole GameSession.
@@ -101,7 +101,7 @@ void botf::ServerEngine::handleClientConnect(common::ID clientId,
 	});
 }
 
-void botf::ServerEngine::handleClientInput(common::ID clientId,
+void botf::ServerEngine::handleClientInput(const common::ID clientId,
 										   const common::ClientInput& input,
 										   std::uint64_t sequence) {
 	m_inputStates[clientId] = ClientInputState{input, sequence};
@@ -136,7 +136,7 @@ void botf::ServerEngine::applyInbound() {
 	}
 }
 
-void botf::ServerEngine::enqueueWorldState(common::ID sessionId,
+void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 										   std::uint32_t tick,
 										   std::uint64_t sequence) {
 	GameSession* session = m_gameSessionsPool.findGameSessionBySessionId(sessionId);

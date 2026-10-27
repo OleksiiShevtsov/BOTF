@@ -3,13 +3,13 @@
 #include "common/global_settings.hpp"
 #include "common/log.hpp"
 
-botf::GameSession::GameSession(common::ID id) : m_id{id} {}
+botf::GameSession::GameSession(const common::ID id) : m_id{id} {}
 
 botf::common::ID botf::GameSession::getId() const {
 	return m_id;
 }
 
-botf::common::ID botf::GameSession::bindOrSpawnClient(common::ID clientId) {
+botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
 	if (const auto existing = m_gameLogic.entityForClient(clientId)) {
 		return *existing;
 	}
@@ -26,15 +26,15 @@ botf::common::ID botf::GameSession::spawnPlayer(common::Point at, float speedLim
 	return m_gameLogic.spawnPlayer(at, speedLimit);
 }
 
-void botf::GameSession::bindClient(common::ID clientId, common::ID entityId) {
+void botf::GameSession::bindClient(const common::ID clientId, const common::ID entityId) {
 	m_gameLogic.bindClient(clientId, entityId);
 }
 
-void botf::GameSession::removeClient(common::ID clientId) {
+void botf::GameSession::removeClient(const common::ID clientId) {
 	m_gameLogic.removeClient(clientId);
 }
 
-void botf::GameSession::applyClientInput(common::ID clientId, const common::ClientInput& input) {
+void botf::GameSession::applyClientInput(const common::ID clientId, const common::ClientInput& input) {
 	m_gameLogic.setClientInput(clientId, input.dx, input.dy);
 	m_gameLogic.setClientAim(clientId, input.aim);
 	if (input.fire) {
@@ -42,7 +42,7 @@ void botf::GameSession::applyClientInput(common::ID clientId, const common::Clie
 	}
 }
 
-bool botf::GameSession::applyDamage(common::ID entityId, int damage) {
+bool botf::GameSession::applyDamage(const common::ID entityId, int damage) {
 	return m_gameLogic.applyDamage(entityId, damage);
 }
 
@@ -83,6 +83,6 @@ const std::vector<botf::BulletObject>& botf::GameSession::bullets() const {
 	return m_gameLogic.bullets();
 }
 
-std::optional<botf::common::ID> botf::GameSession::entityForClient(common::ID clientId) const {
+std::optional<botf::common::ID> botf::GameSession::entityForClient(const common::ID clientId) const {
 	return m_gameLogic.entityForClient(clientId);
 }

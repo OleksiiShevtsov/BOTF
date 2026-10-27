@@ -22,38 +22,38 @@ public:
 	common::ID spawnPlayer(common::Point at, float speedLimit);
 
 	// Bind a network client to a logic entity (one entity per client).
-	void bindClient(common::ID clientId, common::ID entityId);
+	void bindClient(const common::ID clientId, const common::ID entityId);
 
 	// Drop session mapping and destroy the bound figure (and its bullets).
-	void removeClient(common::ID clientId);
+	void removeClient(const common::ID clientId);
 
 	// Apply move input for a network client (no-op if unbound or dead).
-	void setClientInput(common::ID clientId, int dx, int dy);
+	void setClientInput(const common::ID clientId, int dx, int dy);
 
 	// Store aim world point for the bound entity; angle applied now and each tick.
-	void setClientAim(common::ID clientId, common::Point aimWorld);
+	void setClientAim(const common::ID clientId, common::Point aimWorld);
 
 	// Rising-edge fire from ClientInput; enforces cooldown. Returns true if spawned.
 	// No-op (false) if unbound or figure is dead.
-	bool tryFire(common::ID clientId);
+	bool tryFire(const common::ID clientId);
 
 	// Apply input directly by entity id. No-op if missing or dead.
-	void setPlayerInput(common::ID entityId, int dx, int dy);
+	void setPlayerInput(const common::ID entityId, int dx, int dy);
 
 	// Server damage API (card 32). Returns false if entity missing.
-	bool applyDamage(common::ID entityId, int damage);
+	bool applyDamage(const common::ID entityId, int damage);
 
 	// Advance the world by dt seconds, retarget aims, resolve hits, prune bullets.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
-	[[nodiscard]] std::optional<common::ID> entityForClient(common::ID clientId) const;
+	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	FigureObject* findFigureMutable(common::ID entityId);
-	void destroyFigure(common::ID entityId);
-	void applyAimForClient(common::ID clientId);
+	FigureObject* findFigureMutable(const common::ID entityId);
+	void destroyFigure(const common::ID entityId);
+	void applyAimForClient(const common::ID clientId);
 	void applyStoredAims();
 	// Point ∩ AABB vs living non-owner figures; one hit → damage + destroy bullet.
 	void resolveBulletHits();

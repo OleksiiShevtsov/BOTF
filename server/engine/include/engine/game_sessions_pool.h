@@ -21,19 +21,19 @@ public:
 
 	// Client → session. If unbound: join the existing default session, or create one.
 	// Returns session id (not a reference).
-	common::ID ensureDefaultFor(common::ID clientId);
+	common::ID ensureDefaultFor(const common::ID clientId);
 
-	[[nodiscard]] GameSession* findGameSessionByClientId(common::ID clientId);
-	[[nodiscard]] const GameSession* findGameSessionByClientId(common::ID clientId) const;
+	[[nodiscard]] GameSession* findGameSessionByClientId(const common::ID clientId);
+	[[nodiscard]] const GameSession* findGameSessionByClientId(const common::ID clientId) const;
 
-	[[nodiscard]] GameSession* findGameSessionBySessionId(common::ID sessionId);
-	[[nodiscard]] const GameSession* findGameSessionBySessionId(common::ID sessionId) const;
+	[[nodiscard]] GameSession* findGameSessionBySessionId(const common::ID sessionId);
+	[[nodiscard]] const GameSession* findGameSessionBySessionId(const common::ID sessionId) const;
 
 	// Drop client→session membership and destroy bound figure in that session.
-	void removeClient(common::ID clientId);
+	void removeClient(const common::ID clientId);
 
 	// Clients currently mapped to this session (for WorldState fan-out).
-	[[nodiscard]] std::vector<common::ID> getSessionClients(common::ID sessionId) const;
+	[[nodiscard]] std::vector<common::ID> getSessionClients(const common::ID sessionId) const;
 
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
