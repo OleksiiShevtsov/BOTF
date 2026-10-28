@@ -5,6 +5,7 @@
 #include "engine/game_sessions_pool.h"
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 
 #include <SFML/Network.hpp>
@@ -27,10 +28,10 @@ namespace botf::test {
 	return port;
 }
 
-// Stack-owned test GameSession with map loaded from content (card 51/52).
+// Stack-owned test GameSession with shared map loaded from content (card 51/52).
 struct TestSession {
 	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
-		: session{sessionId, GameMap::load(mapId)} {}
+		: session{sessionId, std::make_shared<const GameMap>(GameMap::load(mapId))} {}
 
 	GameSession session;
 };

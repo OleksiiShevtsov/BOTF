@@ -5,25 +5,30 @@
 #include "engine/game_map.h"
 #include "logic/game_logic.h"
 
-#include <cstddef>
+#include <memory>
 
 namespace botf {
 
-// One live match: id + GameMap + authoritative GameLogic behind a facade.
+// One live match: id + shared GameMap template + authoritative GameLogic facade.
 // Client membership lives in GameSessionsPool (card 46).
 // Phases Waiting/Playing — card 47.
 class GameSession {
 public:
-	GameSession(const common::ID id, GameMap gameMap);
+	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
+	[[nodiscard]] std::shared_ptr<const GameMap> getGameMapPtr() const;
 
-	// Spawn at next map spawn point + bind.
+	// Scaffold: spawn + bind on connect (temporary until card 47).
 	common::ID bindOrSpawnClient(const common::ID clientId);
+
+	// TODO(card 47): when session enters Playing (≥2 clients), assign clients to
+	// map spawns via random permutation — not join order. Stub until then.
+	void seatPlayersRandom();
 
 	// Spawn at an explicit point (tests).
 	// Speed limit lives on FigureObject (via GameLogic / GlobalSettings stub).
@@ -42,12 +47,12 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] common::Point nextSpawnPoint();
+	// Temporary connect-time spawn until seatPlayersRandom is wired (card 47).
+	[[nodiscard]] common::Point pickRandomSpawnPoint() const;
 
 	common::ID m_id{};
-	GameMap m_gameMap;
+	std::shared_ptr<const GameMap> m_gameMap;
 	GameLogic m_gameLogic;
-	std::size_t m_nextSpawnIndex{0};
 };
 
 }  // namespace botf

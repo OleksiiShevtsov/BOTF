@@ -5,6 +5,22 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cmath>
+
+namespace {
+
+bool isMapSpawn(const botf::GameMap& map, const botf::common::Point& pos) {
+	for (const auto& spawn : map.getSpawns()) {
+		if (spawn.x == pos.x && spawn.y == pos.y) {
+			return true;
+		}
+	}
+	return false;
+}
+
+}  // namespace
+
 TEST(UtilsMapLoader, ListAndLoadMapOne) {
 	const auto ids = botf::utils::listMapIds();
 	ASSERT_FALSE(ids.empty());
@@ -32,23 +48,24 @@ TEST(GameMap, LoadFromContent) {
 	ASSERT_EQ(map.getSpawns().size(), 2u);
 }
 
-TEST(GameMapPool, RefreshPickAndGet) {
+TEST(GameMapPool, RefreshPickRandomAndShare) {
 	botf::GameMapPool pool;
 	ASSERT_TRUE(pool.refresh());
 	EXPECT_EQ(pool.size(), 1u);
-	EXPECT_FALSE(pool.mapIds().empty());
 
-	const botf::common::ID first = pool.pickNextMapId();
-	const botf::common::ID second = pool.pickNextMapId();
+	const botf::common::ID first = pool.pickRandomMapId();
+	const botf::common::ID second = pool.pickRandomMapId();
 	EXPECT_EQ(first, 1u);
 	EXPECT_EQ(second, 1u);  // single map → always 1
 
-	const botf::GameMap& map = pool.getMap(first);
-	EXPECT_EQ(map.getId(), 1u);
-	EXPECT_FLOAT_EQ(map.getWidth(), 1080.f);
+	const auto gameMap = pool.getGameMapById(first);
+	ASSERT_NE(gameMap, nullptr);
+	EXPECT_EQ(gameMap->getId(), 1u);
+	EXPECT_FLOAT_EQ(gameMap->getWidth(), 1080.f);
+	EXPECT_EQ(pool.findGameMapById(first), gameMap);
 }
 
-TEST(GameSessionsPool, CreateSessionGetsMapCopy) {
+TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
 	botf::test::TestSessionPool env;
 	const botf::common::ID sessionId = env.ensureClient(1);
 	botf::GameSession* gameSession = env.sessionById(sessionId);
@@ -56,6 +73,9 @@ TEST(GameSessionsPool, CreateSessionGetsMapCopy) {
 	EXPECT_EQ(gameSession->getGameMap().getId(), 1u);
 	EXPECT_FLOAT_EQ(gameSession->getGameMap().getWidth(), 1080.f);
 	ASSERT_GE(gameSession->getGameMap().getSpawns().size(), 2u);
+
+	const auto fromPool = env.pool.getGameMapPool().getGameMapById(1);
+	EXPECT_EQ(gameSession->getGameMapPtr(), fromPool);
 }
 
 TEST(GameSession, BindOrSpawnUsesMapSpawns) {
@@ -63,11 +83,12 @@ TEST(GameSession, BindOrSpawnUsesMapSpawns) {
 	const auto a = env.session.bindOrSpawnClient(1);
 	const auto b = env.session.bindOrSpawnClient(2);
 	ASSERT_EQ(env.session.figures().size(), 2u);
-
-	const auto& spawns = env.session.getGameMap().getSpawns();
-	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().x, spawns[0].x);
-	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().y, spawns[0].y);
-	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().x, spawns[1].x);
-	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().y, spawns[1].y);
 	EXPECT_NE(a, b);
+
+	const auto& map = env.session.getGameMap();
+	EXPECT_TRUE(isMapSpawn(map, env.session.figures()[0].getPosition()));
+	EXPECT_TRUE(isMapSpawn(map, env.session.figures()[1].getPosition()));
+
+	// Stub exists for card 47 (no-op until Playing seating).
+	env.session.seatPlayersRandom();
 }

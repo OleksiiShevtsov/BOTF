@@ -2,53 +2,54 @@
 
 #include "utils/map_loader.hpp"
 
+#include <random>
 #include <stdexcept>
 
-bool botf::GameMapPool::refresh() {
-	m_mapIds.clear();
-	m_maps.clear();
-	m_nextPickIndex = 0;
+void botf::GameMapPool::clear() {
+	m_gameMaps.clear();
+}
 
-	m_mapIds = utils::listMapIds();
-	for (const common::ID mapId : m_mapIds) {
-		m_maps.emplace(mapId, GameMap::load(mapId));
+bool botf::GameMapPool::refresh() {
+	clear();
+	for (const common::ID mapId : utils::listMapIds()) {
+		m_gameMaps.push_back(std::make_shared<const GameMap>(GameMap::load(mapId)));
 	}
-	return !m_maps.empty();
+	return !m_gameMaps.empty();
 }
 
 bool botf::GameMapPool::empty() const {
-	return m_maps.empty();
+	return m_gameMaps.empty();
 }
 
 std::size_t botf::GameMapPool::size() const {
-	return m_maps.size();
+	return m_gameMaps.size();
 }
 
-const std::vector<botf::common::ID>& botf::GameMapPool::mapIds() const {
-	return m_mapIds;
-}
-
-botf::common::ID botf::GameMapPool::pickNextMapId() {
-	if (m_mapIds.empty()) {
-		throw std::runtime_error("GameMapPool::pickNextMapId: pool is empty (call refresh)");
+botf::common::ID botf::GameMapPool::pickRandomMapId() const {
+	if (m_gameMaps.empty()) {
+		throw std::runtime_error("GameMapPool::pickRandomMapId: pool is empty (call refresh)");
 	}
-	const common::ID id = m_mapIds[m_nextPickIndex % m_mapIds.size()];
-	++m_nextPickIndex;
-	return id;
+	thread_local std::mt19937 rng{std::random_device{}()};
+	std::uniform_int_distribution<std::size_t> dist{0, m_gameMaps.size() - 1};
+	return m_gameMaps[dist(rng)]->getId();
 }
 
-const botf::GameMap* botf::GameMapPool::findMap(const common::ID mapId) const {
-	const auto it = m_maps.find(mapId);
-	if (it == m_maps.end()) {
-		return nullptr;
+std::shared_ptr<const botf::GameMap> botf::GameMapPool::findGameMapById(
+	const common::ID mapId) const {
+	for (const auto& gameMap : m_gameMaps) {
+		if (gameMap && gameMap->getId() == mapId) {
+			return gameMap;
+		}
 	}
-	return &it->second;
+	return nullptr;
 }
 
-const botf::GameMap& botf::GameMapPool::getMap(const common::ID mapId) const {
-	const GameMap* map = findMap(mapId);
-	if (!map) {
-		throw std::runtime_error("GameMapPool::getMap: unknown map id " + std::to_string(mapId));
+std::shared_ptr<const botf::GameMap> botf::GameMapPool::getGameMapById(
+	const common::ID mapId) const {
+	std::shared_ptr<const GameMap> gameMap = findGameMapById(mapId);
+	if (!gameMap) {
+		throw std::runtime_error("GameMapPool::getGameMapById: unknown map id " +
+								 std::to_string(mapId));
 	}
-	return *map;
+	return gameMap;
 }

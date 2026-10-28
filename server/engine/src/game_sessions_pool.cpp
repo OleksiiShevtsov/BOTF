@@ -1,5 +1,6 @@
 #include "engine/game_sessions_pool.h"
 
+#include <memory>
 #include <stdexcept>
 
 void botf::GameSessionsPool::ensureMapsLoaded() {
@@ -110,13 +111,13 @@ botf::GameSessionsPool::sessions() {
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
 	ensureMapsLoaded();
-	const common::ID mapId = m_gameMapPool.pickNextMapId();
-	const GameMap mapCopy = m_gameMapPool.getMap(mapId);
+	const std::shared_ptr<const GameMap> gameMap =
+		m_gameMapPool.getGameMapById(m_gameMapPool.pickRandomMapId());
 
 	const common::ID id = m_nextId;
 	++m_nextId;
 	auto [it, inserted] =
-		m_sessions.emplace(id, std::make_unique<GameSession>(id, mapCopy));
+		m_sessions.emplace(id, std::make_unique<GameSession>(id, gameMap));
 	(void)inserted;
 	return *it->second;
 }

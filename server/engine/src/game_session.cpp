@@ -2,27 +2,41 @@
 
 #include "common/log.hpp"
 
+#include <random>
 #include <stdexcept>
 
-botf::GameSession::GameSession(const common::ID id, GameMap gameMap)
-	: m_id{id}, m_gameMap{std::move(gameMap)} {}
+botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
+	: m_id{id}, m_gameMap{std::move(gameMap)} {
+	if (!m_gameMap) {
+		throw std::runtime_error("GameSession: gameMap is null");
+	}
+}
 
 botf::common::ID botf::GameSession::getId() const {
 	return m_id;
 }
 
 const botf::GameMap& botf::GameSession::getGameMap() const {
+	return *m_gameMap;
+}
+
+std::shared_ptr<const botf::GameMap> botf::GameSession::getGameMapPtr() const {
 	return m_gameMap;
 }
 
-botf::common::Point botf::GameSession::nextSpawnPoint() {
-	const auto& spawns = m_gameMap.getSpawns();
+botf::common::Point botf::GameSession::pickRandomSpawnPoint() const {
+	const auto& spawns = m_gameMap->getSpawns();
 	if (spawns.empty()) {
 		throw std::runtime_error("GameSession: map has no spawn points");
 	}
-	const common::Point point = spawns[m_nextSpawnIndex % spawns.size()];
-	++m_nextSpawnIndex;
-	return point;
+	thread_local std::mt19937 rng{std::random_device{}()};
+	std::uniform_int_distribution<std::size_t> dist{0, spawns.size() - 1};
+	return spawns[dist(rng)];
+}
+
+void botf::GameSession::seatPlayersRandom() {
+	// TODO(card 47): after Waiting→Playing (≥2 clients), shuffle clients onto
+	// map spawns (random permutation). Do not seat by join order.
 }
 
 botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
@@ -30,10 +44,11 @@ botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId)
 		return *existing;
 	}
 
-	const common::ID entity = m_gameLogic.spawnPlayer(nextSpawnPoint());
+	// Temporary until card 47 calls seatPlayersRandom() at match start.
+	const common::ID entity = m_gameLogic.spawnPlayer(pickRandomSpawnPoint());
 	m_gameLogic.bindClient(clientId, entity);
 	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={})", clientId,
-					entity, m_id, m_gameMap.getId());
+					entity, m_id, m_gameMap->getId());
 	return entity;
 }
 
