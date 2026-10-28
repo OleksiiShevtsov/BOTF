@@ -25,13 +25,12 @@ std::shared_ptr<const botf::GameMap> botf::GameSession::getGameMapPtr() const {
 }
 
 botf::common::Point botf::GameSession::pickRandomSpawnPoint() const {
-	const auto& spawns = m_gameMap->getSpawns();
-	if (spawns.empty()) {
+	if (m_gameMap->getSpawns().empty()) {
 		throw std::runtime_error("GameSession: map has no spawn points");
 	}
 	thread_local std::mt19937 rng{std::random_device{}()};
-	std::uniform_int_distribution<std::size_t> dist{0, spawns.size() - 1};
-	return spawns[dist(rng)];
+	std::uniform_int_distribution<std::size_t> dist{0, m_gameMap->getSpawns().size() - 1};
+	return m_gameMap->getSpawns()[dist(rng)];
 }
 
 void botf::GameSession::seatPlayersRandom() {

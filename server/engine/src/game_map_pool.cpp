@@ -9,10 +9,28 @@ void botf::GameMapPool::clear() {
 	m_gameMaps.clear();
 }
 
+std::shared_ptr<const botf::GameMap> botf::GameMapPool::loadGameMap(const common::ID mapId) const {
+	const auto data = utils::loadMap(mapId);
+	if (!data) {
+		throw std::runtime_error("GameMapPool::loadGameMap: failed to load map id " +
+								 std::to_string(mapId));
+	}
+
+	// GameMapPool is friend — private default ctor + field fill (no public load/ctor).
+	std::shared_ptr<GameMap> gameMap{new GameMap()};
+	gameMap->m_id = data->id;
+	gameMap->m_name = data->name;
+	gameMap->m_width = data->width;
+	gameMap->m_height = data->height;
+	gameMap->m_maxNumberPlayers = data->maxNumberPlayers;
+	gameMap->m_spawns = data->spawns;
+	return gameMap;
+}
+
 bool botf::GameMapPool::refresh() {
 	clear();
 	for (const common::ID mapId : utils::listMapIds()) {
-		m_gameMaps.push_back(std::make_shared<const GameMap>(GameMap::load(mapId)));
+		m_gameMaps.push_back(loadGameMap(mapId));
 	}
 	return !m_gameMaps.empty();
 }

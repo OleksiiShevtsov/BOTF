@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/types.hpp"
-#include "engine/game_map.h"
+#include "logic/game_map.h"
 
 #include <cstddef>
 #include <memory>
@@ -11,6 +11,7 @@ namespace botf {
 
 // Catalog of map templates (card 51). Not live sessions — see GameSessionsPool.
 // Owns shared templates; sessions hold shared_ptr<const GameMap> (no deep copy).
+// Loads maps via utils (GameMap has no public load).
 class GameMapPool {
 public:
 	GameMapPool() = default;
@@ -34,6 +35,8 @@ public:
 	[[nodiscard]] std::shared_ptr<const GameMap> getGameMapById(const common::ID mapId) const;
 
 private:
+	[[nodiscard]] std::shared_ptr<const GameMap> loadGameMap(const common::ID mapId) const;
+
 	std::vector<std::shared_ptr<const GameMap>> m_gameMaps;
 };
 

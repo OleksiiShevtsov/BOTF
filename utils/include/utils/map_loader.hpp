@@ -16,6 +16,7 @@ struct MapData {
 	std::string name;
 	float width{0.f};
 	float height{0.f};
+	std::uint32_t maxNumberPlayers{0};
 	std::vector<common::Point> spawns;
 	std::string clientBackground;  // relative to map dir; may be empty
 };

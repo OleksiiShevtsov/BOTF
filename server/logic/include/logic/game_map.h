@@ -2,19 +2,22 @@
 
 #include "common/types.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace botf {
 
-// Server-side map template (card 51). Immutable after load.
-// Create only via load() — fields come from content JSON (grows over time: collision, …).
-// Not the client app::GameMap.
-class GameMap {
-public:
-	// Load from content via utils::loadMap. Throws std::runtime_error on failure.
-	[[nodiscard]] static GameMap load(const common::ID mapId);
+class GameMapPool;
 
+// Server-side map template (card 51). Immutable after pool load.
+// Fields come from content JSON (grows over time: collision, …).
+// Not the client app::GameMap. Created only by GameMapPool (friend).
+class GameMap {
+	friend class GameMapPool;
+
+public:
 	GameMap(const GameMap&) = default;
 	GameMap& operator=(const GameMap&) = default;
 	GameMap(GameMap&&) = default;
@@ -24,6 +27,7 @@ public:
 	[[nodiscard]] const std::string& getName() const;
 	[[nodiscard]] float getWidth() const;
 	[[nodiscard]] float getHeight() const;
+	[[nodiscard]] std::uint32_t getMaxNumberPlayers() const;
 	[[nodiscard]] const std::vector<common::Point>& getSpawns() const;
 
 private:
@@ -33,6 +37,7 @@ private:
 	std::string m_name;
 	float m_width{0.f};
 	float m_height{0.f};
+	std::uint32_t m_maxNumberPlayers{0};
 	std::vector<common::Point> m_spawns;
 };
 

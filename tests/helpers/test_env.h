@@ -1,8 +1,9 @@
 #pragma once
 
-#include "engine/game_map.h"
+#include "engine/game_map_pool.h"
 #include "engine/game_session.h"
 #include "engine/game_sessions_pool.h"
+#include "logic/game_map.h"
 
 #include <cstdint>
 #include <memory>
@@ -28,10 +29,19 @@ namespace botf::test {
 	return port;
 }
 
-// Stack-owned test GameSession with shared map loaded from content (card 51/52).
+[[nodiscard]] inline std::shared_ptr<const GameMap> loadSharedGameMap(
+	const common::ID mapId = 1) {
+	GameMapPool mapPool;
+	if (!mapPool.refresh()) {
+		return nullptr;
+	}
+	return mapPool.getGameMapById(mapId);
+}
+
+// Stack-owned test GameSession with shared map from GameMapPool (card 51/52).
 struct TestSession {
 	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
-		: session{sessionId, std::make_shared<const GameMap>(GameMap::load(mapId))} {}
+		: session{sessionId, loadSharedGameMap(mapId)} {}
 
 	GameSession session;
 };

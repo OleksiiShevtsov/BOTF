@@ -83,6 +83,10 @@ std::optional<botf::utils::MapData> botf::utils::loadMap(const common::ID mapId)
 		const auto& server = j.at("server");
 		data.width = server.at("width").get<float>();
 		data.height = server.at("height").get<float>();
+		data.maxNumberPlayers = server.at("maxNumberPlayers").get<std::uint32_t>();
+		if (data.maxNumberPlayers < 2) {
+			return std::nullopt;
+		}
 		if (!server.contains("spawns") || !server.at("spawns").is_array()) {
 			return std::nullopt;
 		}
@@ -92,7 +96,7 @@ std::optional<botf::utils::MapData> botf::utils::loadMap(const common::ID mapId)
 			}
 			data.spawns.push_back(common::Point{spawn.at(0).get<float>(), spawn.at(1).get<float>()});
 		}
-		if (data.spawns.size() < 2) {
+		if (data.spawns.size() != data.maxNumberPlayers) {
 			return std::nullopt;
 		}
 

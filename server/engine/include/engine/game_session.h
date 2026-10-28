@@ -2,7 +2,7 @@
 
 #include "common/dto.hpp"
 #include "common/types.hpp"
-#include "engine/game_map.h"
+#include "logic/game_map.h"
 #include "logic/game_logic.h"
 
 #include <memory>

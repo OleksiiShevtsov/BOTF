@@ -1,12 +1,9 @@
-#include "engine/game_map.h"
 #include "engine/game_map_pool.h"
 #include "helpers/test_env.h"
+#include "logic/game_map.h"
 #include "utils/map_loader.hpp"
 
 #include <gtest/gtest.h>
-
-#include <algorithm>
-#include <cmath>
 
 namespace {
 
@@ -32,20 +29,27 @@ TEST(UtilsMapLoader, ListAndLoadMapOne) {
 	EXPECT_EQ(data->name, "arena_stub");
 	EXPECT_FLOAT_EQ(data->width, 1080.f);
 	EXPECT_FLOAT_EQ(data->height, 640.f);
-	ASSERT_GE(data->spawns.size(), 2u);
+	EXPECT_EQ(data->maxNumberPlayers, 2u);
+	ASSERT_EQ(data->spawns.size(), data->maxNumberPlayers);
 	EXPECT_FLOAT_EQ(data->spawns[0].x, 100.f);
 	EXPECT_FLOAT_EQ(data->spawns[0].y, 300.f);
 	EXPECT_FLOAT_EQ(data->spawns[1].x, 980.f);
 	EXPECT_FLOAT_EQ(data->spawns[1].y, 300.f);
 }
 
-TEST(GameMap, LoadFromContent) {
-	const botf::GameMap map = botf::GameMap::load(1);
-	EXPECT_EQ(map.getId(), 1u);
-	EXPECT_EQ(map.getName(), "arena_stub");
-	EXPECT_FLOAT_EQ(map.getWidth(), 1080.f);
-	EXPECT_FLOAT_EQ(map.getHeight(), 640.f);
-	ASSERT_EQ(map.getSpawns().size(), 2u);
+TEST(GameMapPool, RefreshLoadsGameMap) {
+	botf::GameMapPool pool;
+	ASSERT_TRUE(pool.refresh());
+	EXPECT_EQ(pool.size(), 1u);
+
+	const auto gameMap = pool.getGameMapById(1);
+	ASSERT_NE(gameMap, nullptr);
+	EXPECT_EQ(gameMap->getId(), 1u);
+	EXPECT_EQ(gameMap->getName(), "arena_stub");
+	EXPECT_FLOAT_EQ(gameMap->getWidth(), 1080.f);
+	EXPECT_FLOAT_EQ(gameMap->getHeight(), 640.f);
+	EXPECT_EQ(gameMap->getMaxNumberPlayers(), 2u);
+	ASSERT_EQ(gameMap->getSpawns().size(), 2u);
 }
 
 TEST(GameMapPool, RefreshPickRandomAndShare) {
@@ -60,8 +64,6 @@ TEST(GameMapPool, RefreshPickRandomAndShare) {
 
 	const auto gameMap = pool.getGameMapById(first);
 	ASSERT_NE(gameMap, nullptr);
-	EXPECT_EQ(gameMap->getId(), 1u);
-	EXPECT_FLOAT_EQ(gameMap->getWidth(), 1080.f);
 	EXPECT_EQ(pool.findGameMapById(first), gameMap);
 }
 
