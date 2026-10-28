@@ -22,11 +22,11 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 
 std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
 	const common::ID clientId) {
-	const auto& spawns = m_gameMap->getSpawns();
-	for (std::size_t i = 0; i < spawns.size(); ++i) {
+	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
+	for (std::size_t candidate = 0; candidate < spawns.size(); ++candidate) {
 		bool taken = false;
-		for (const auto& [_, spawnIndex] : m_clientSpawnIndex) {
-			if (spawnIndex == i) {
+		for (const std::pair<const common::ID, std::size_t>& entry : m_clientSpawnIndex) {
+			if (entry.second == candidate) {
 				taken = true;
 				break;
 			}
@@ -34,8 +34,8 @@ std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
 		if (taken) {
 			continue;
 		}
-		m_clientSpawnIndex.emplace(clientId, i);
-		return i;
+		m_clientSpawnIndex.emplace(clientId, candidate);
+		return candidate;
 	}
 	return std::nullopt;
 }
