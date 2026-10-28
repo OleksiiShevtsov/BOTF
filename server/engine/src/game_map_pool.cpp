@@ -41,22 +41,13 @@ std::shared_ptr<const botf::GameMap> botf::GameMapPool::pickRandomGameMap() cons
 	return m_gameMaps[utils::randomIndex(m_gameMaps.size())];
 }
 
-std::shared_ptr<const botf::GameMap> botf::GameMapPool::findGameMapById(
+std::shared_ptr<const botf::GameMap> botf::GameMapPool::getGameMapById(
 	const common::ID mapId) const {
 	for (const auto& gameMap : m_gameMaps) {
 		if (gameMap && gameMap->getId() == mapId) {
 			return gameMap;
 		}
 	}
-	return nullptr;
-}
-
-std::shared_ptr<const botf::GameMap> botf::GameMapPool::getGameMapById(
-	const common::ID mapId) const {
-	std::shared_ptr<const GameMap> gameMap = findGameMapById(mapId);
-	if (!gameMap) {
-		throw std::runtime_error("GameMapPool::getGameMapById: unknown map id " +
-								 std::to_string(mapId));
-	}
-	return gameMap;
+	throw std::runtime_error("GameMapPool::getGameMapById: unknown map id " +
+							 std::to_string(mapId));
 }

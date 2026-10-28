@@ -30,10 +30,11 @@ public:
 	// Uniform random template from the cache.
 	[[nodiscard]] std::shared_ptr<const GameMap> pickRandomGameMap() const;
 
-	[[nodiscard]] std::shared_ptr<const GameMap> findGameMapById(const common::ID mapId) const;
+	// From cache (after load()). Throws if unknown id.
 	[[nodiscard]] std::shared_ptr<const GameMap> getGameMapById(const common::ID mapId) const;
 
 private:
+	// Disk → GameMap (used only by load()).
 	[[nodiscard]] std::shared_ptr<const GameMap> loadGameMap(const common::ID mapId) const;
 
 	std::vector<std::shared_ptr<const GameMap>> m_gameMaps;

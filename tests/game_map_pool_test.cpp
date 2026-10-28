@@ -49,7 +49,7 @@ TEST(GameMapPool, LoadPickRandomAndShare) {
 	EXPECT_EQ(first->getId(), 1u);
 	EXPECT_EQ(second->getId(), 1u);
 	EXPECT_EQ(first, second);  // single map template instance in pool
-	EXPECT_EQ(pool.findGameMapById(1), first);
+	EXPECT_EQ(pool.getGameMapById(1), first);
 }
 
 TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
