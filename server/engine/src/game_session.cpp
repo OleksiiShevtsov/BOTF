@@ -2,14 +2,15 @@
 
 #include "common/log.hpp"
 
-#include <random>
 #include <stdexcept>
+#include <utility>
 
 botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
 	: m_id{id}, m_gameMap{std::move(gameMap)} {
 	if (!m_gameMap) {
 		throw std::runtime_error("GameSession: gameMap is null");
 	}
+	m_spawnTaken.assign(m_gameMap->getSpawns().size(), false);
 }
 
 botf::common::ID botf::GameSession::getId() const {
@@ -20,17 +21,14 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 	return *m_gameMap;
 }
 
-std::shared_ptr<const botf::GameMap> botf::GameSession::getGameMapPtr() const {
-	return m_gameMap;
-}
-
-botf::common::Point botf::GameSession::pickRandomSpawnPoint() const {
-	if (m_gameMap->getSpawns().empty()) {
-		throw std::runtime_error("GameSession: map has no spawn points");
+std::optional<std::size_t> botf::GameSession::takeFirstFreeSpawnIndex() {
+	for (std::size_t i = 0; i < m_spawnTaken.size(); ++i) {
+		if (!m_spawnTaken[i]) {
+			m_spawnTaken[i] = true;
+			return i;
+		}
 	}
-	thread_local std::mt19937 rng{std::random_device{}()};
-	std::uniform_int_distribution<std::size_t> dist{0, m_gameMap->getSpawns().size() - 1};
-	return m_gameMap->getSpawns()[dist(rng)];
+	return std::nullopt;
 }
 
 bool botf::GameSession::hasFreeSeats() const {
@@ -42,16 +40,32 @@ void botf::GameSession::seatPlayersRandom() {
 	// shuffle clients onto map spawns (random permutation). Do not seat by join order.
 }
 
-botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
+std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
 	if (const auto existing = m_gameLogic.entityForClient(clientId)) {
 		return *existing;
 	}
 
-	// Temporary until card 47 calls seatPlayersRandom() at match start.
-	const common::ID entity = m_gameLogic.spawnPlayer(pickRandomSpawnPoint());
+	if (!hasFreeSeats()) {
+		// TODO(card 47): single-session scaffold — later open a new session and seat there.
+		botf::log::warn(
+			"[server] TODO(card 47): session {} full (spawns={}); refuse client {} (only one "
+			"session for now)",
+			m_id, m_gameMap->getSpawns().size(), clientId);
+		return std::nullopt;
+	}
+
+	const auto spawnIndex = takeFirstFreeSpawnIndex();
+	if (!spawnIndex) {
+		botf::log::warn("[server] session {} has free seat count but no free spawn index", m_id);
+		return std::nullopt;
+	}
+
+	const common::Point at = m_gameMap->getSpawns()[*spawnIndex];
+	const common::ID entity = m_gameLogic.spawnPlayer(at);
 	m_gameLogic.bindClient(clientId, entity);
-	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={})", clientId,
-					entity, m_id, m_gameMap->getId());
+	m_clientSpawnIndex[clientId] = *spawnIndex;
+	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={}, spawn={})",
+					clientId, entity, m_id, m_gameMap->getId(), *spawnIndex);
 	return entity;
 }
 
@@ -64,6 +78,13 @@ void botf::GameSession::bindClient(const common::ID clientId, const common::ID e
 }
 
 void botf::GameSession::removeClient(const common::ID clientId) {
+	if (const auto it = m_clientSpawnIndex.find(clientId); it != m_clientSpawnIndex.end()) {
+		const std::size_t spawnIndex = it->second;
+		if (spawnIndex < m_spawnTaken.size()) {
+			m_spawnTaken[spawnIndex] = false;
+		}
+		m_clientSpawnIndex.erase(it);
+	}
 	m_gameLogic.removeClient(clientId);
 }
 

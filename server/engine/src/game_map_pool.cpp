@@ -1,8 +1,8 @@
 #include "engine/game_map_pool.h"
 
 #include "utils/map_loader.hpp"
+#include "utils/random.hpp"
 
-#include <random>
 #include <stdexcept>
 
 void botf::GameMapPool::clear() {
@@ -15,15 +15,7 @@ std::shared_ptr<const botf::GameMap> botf::GameMapPool::loadGameMap(const common
 		throw std::runtime_error("GameMapPool::loadGameMap: failed to load map id " +
 								 std::to_string(mapId));
 	}
-
-	// GameMapPool is friend — private default ctor + field fill (no public load/ctor).
-	std::shared_ptr<GameMap> gameMap{new GameMap()};
-	gameMap->m_id = data->id;
-	gameMap->m_name = data->name;
-	gameMap->m_width = data->width;
-	gameMap->m_height = data->height;
-	gameMap->m_spawns = data->spawns;
-	return gameMap;
+	return std::make_shared<const GameMap>(*data);
 }
 
 bool botf::GameMapPool::refresh() {
@@ -42,13 +34,11 @@ std::size_t botf::GameMapPool::size() const {
 	return m_gameMaps.size();
 }
 
-botf::common::ID botf::GameMapPool::pickRandomMapId() const {
+std::shared_ptr<const botf::GameMap> botf::GameMapPool::pickRandomGameMap() const {
 	if (m_gameMaps.empty()) {
-		throw std::runtime_error("GameMapPool::pickRandomMapId: pool is empty (call refresh)");
+		throw std::runtime_error("GameMapPool::pickRandomGameMap: pool is empty (call refresh)");
 	}
-	thread_local std::mt19937 rng{std::random_device{}()};
-	std::uniform_int_distribution<std::size_t> dist{0, m_gameMaps.size() - 1};
-	return m_gameMaps[dist(rng)]->getId();
+	return m_gameMaps[utils::randomIndex(m_gameMaps.size())];
 }
 
 std::shared_ptr<const botf::GameMap> botf::GameMapPool::findGameMapById(

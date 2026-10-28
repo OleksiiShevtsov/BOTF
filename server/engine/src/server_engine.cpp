@@ -93,8 +93,15 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 		botf::log::error("[server] connect: missing session {} for client {}", sessionId, clientId);
 		return;
 	}
-	const common::ID entityId = gameSession->bindOrSpawnClient(clientId);
-	const common::ClientConnectMessage ack{connect.playerName, entityId};
+	const auto entityId = gameSession->bindOrSpawnClient(clientId);
+	if (!entityId) {
+		// TODO(card 47): create/join another session instead of dropping connect.
+		botf::log::warn(
+			"[server] TODO(card 47): client {} refused (session full; single-session scaffold)",
+			clientId);
+		return;
+	}
+	const common::ClientConnectMessage ack{connect.playerName, *entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
 		protocol::encodeClientConnect(ack, sequence),

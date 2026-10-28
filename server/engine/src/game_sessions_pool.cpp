@@ -111,8 +111,7 @@ botf::GameSessionsPool::sessions() {
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
 	ensureMapsLoaded();
-	const std::shared_ptr<const GameMap> gameMap =
-		m_gameMapPool.getGameMapById(m_gameMapPool.pickRandomMapId());
+	const std::shared_ptr<const GameMap> gameMap = m_gameMapPool.pickRandomGameMap();
 
 	const common::ID id = m_nextId;
 	++m_nextId;

@@ -1,22 +1,19 @@
 #pragma once
 
 #include "common/types.hpp"
+#include "utils/map_loader.hpp"
 
 #include <string>
 #include <vector>
 
 namespace botf {
 
-class GameMapPool;
-
-// Server-side map template (card 51). Immutable after pool load.
-// Fields come from content JSON (grows over time: collision, …).
+// Server-side map template (card 51). Immutable after construction from MapData.
 // Seat capacity = getSpawns().size(). Not the client app::GameMap.
-// Created only by GameMapPool (friend).
 class GameMap {
-	friend class GameMapPool;
-
 public:
+	explicit GameMap(utils::MapData data);
+
 	GameMap(const GameMap&) = default;
 	GameMap& operator=(const GameMap&) = default;
 	GameMap(GameMap&&) = default;
@@ -29,8 +26,6 @@ public:
 	[[nodiscard]] const std::vector<common::Point>& getSpawns() const;
 
 private:
-	GameMap() = default;
-
 	common::ID m_id{};
 	std::string m_name;
 	float m_width{0.f};

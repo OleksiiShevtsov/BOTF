@@ -1,5 +1,14 @@
 #include "logic/game_map.h"
 
+#include <utility>
+
+botf::GameMap::GameMap(utils::MapData data)
+	: m_id{data.id},
+	  m_name{std::move(data.name)},
+	  m_width{data.width},
+	  m_height{data.height},
+	  m_spawns{std::move(data.spawns)} {}
+
 botf::common::ID botf::GameMap::getId() const {
 	return m_id;
 }
