@@ -133,7 +133,7 @@ BOTF/
 ├── utils/               # content I/O / JSON loaders (nlohmann PRIVATE)
 ├── server/
 │   ├── engine/          # ServerEngine + GameSessionsPool / GameSession + GameMapPool
-│   └── logic/           # GameLogic / DynamicObject (no *.pb.h)
+│   └── logic/           # GameLogic / GameMap / DynamicObject (no *.pb.h)
 ├── client/
 │   └── app/             # ClientApp, AppRendering, Match (app::GameMap + Scene/IViewObject)
 └── tests/               # gtest: helpers + smoke (свой main.cpp)
