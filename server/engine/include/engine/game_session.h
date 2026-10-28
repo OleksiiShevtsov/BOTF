@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -50,7 +49,7 @@ private:
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;
 	GameLogic m_gameLogic;
-	std::unordered_map<common::ID, std::set<std::size_t>> m_clientSpawnIndex;
+	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
 };
 
 }  // namespace botf
