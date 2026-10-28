@@ -11,7 +11,7 @@
 
 namespace botf {
 
-// Server runtime: TCP + content catalogs + GameSessionsPool tick + WorldState broadcast.
+// Server runtime: TCP + object catalogs + GameSessionsPool tick + WorldState broadcast.
 // main should only parse args and call run().
 class ServerEngine {
 public:
