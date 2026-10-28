@@ -39,11 +39,6 @@ std::optional<std::size_t> botf::GameSession::claimFirstFreeSpawn(const common::
 	return std::nullopt;
 }
 
-void botf::GameSession::seatPlayersRandom() {
-	// TODO(card 47): after Waiting→Playing (session full / no free seats),
-	// shuffle clients onto map spawns (random permutation). Do not seat by join order.
-}
-
 std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
 	if (const auto existing = m_gameLogic.entityForClient(clientId)) {
 		return *existing;

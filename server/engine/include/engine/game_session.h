@@ -31,9 +31,6 @@ public:
 	// (scaffold still has a single shared session).
 	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
 
-	// TODO(card 47): when entering Playing, reassign clients to spawns randomly.
-	void seatPlayersRandom();
-
 	common::ID spawnPlayer(common::Point at);
 	void bindClient(const common::ID clientId, const common::ID entityId);
 	void removeClient(const common::ID clientId);
@@ -50,7 +47,6 @@ public:
 
 private:
 	// First map spawn index not held in m_clientSpawnIndex → claim for clientId.
-	// TODO(card 47): replace with seatPlayersRandom permutation at Playing.
 	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(const common::ID clientId);
 
 	common::ID m_id{};

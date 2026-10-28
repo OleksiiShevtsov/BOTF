@@ -85,6 +85,4 @@ TEST(GameSession, BindOrSpawnUsesFirstFreeSpawnsAndRefusesWhenFull) {
 	const auto refused = env.session.bindOrSpawnClient(3);
 	EXPECT_FALSE(refused.has_value());
 	EXPECT_EQ(env.session.figures().size(), 2u);
-
-	env.session.seatPlayersRandom();
 }
