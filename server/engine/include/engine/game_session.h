@@ -42,12 +42,6 @@ public:
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
-protected:
-	// Direct GameLogic hooks for tests (subclass) — production uses bindOrSpawnClient.
-	common::ID spawnPlayer(common::Point at);
-	void bindClient(const common::ID clientId, const common::ID entityId);
-	bool applyDamage(const common::ID entityId, int damage);
-
 private:
 	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(const common::ID clientId);
 

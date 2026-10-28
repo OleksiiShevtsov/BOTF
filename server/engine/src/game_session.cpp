@@ -62,14 +62,6 @@ std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const commo
 	return entity;
 }
 
-botf::common::ID botf::GameSession::spawnPlayer(common::Point at) {
-	return m_gameLogic.spawnPlayer(at);
-}
-
-void botf::GameSession::bindClient(const common::ID clientId, const common::ID entityId) {
-	m_gameLogic.bindClient(clientId, entityId);
-}
-
 void botf::GameSession::removeClient(const common::ID clientId) {
 	m_clientSpawnIndex.erase(clientId);
 	m_gameLogic.removeClient(clientId);
@@ -82,10 +74,6 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 	if (clientInput.fire) {
 		m_gameLogic.tryFire(clientId);
 	}
-}
-
-bool botf::GameSession::applyDamage(const common::ID entityId, int damage) {
-	return m_gameLogic.applyDamage(entityId, damage);
 }
 
 void botf::GameSession::tick(float dt) {

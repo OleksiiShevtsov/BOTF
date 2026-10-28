@@ -1,5 +1,5 @@
 #include "common/global_settings.hpp"
-#include "helpers/test_env.h"
+#include "logic/game_logic.h"
 #include "logic/hitbox.h"
 
 #include <gtest/gtest.h>
@@ -66,13 +66,12 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 }
 
 TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
-	botf::test::TestSession env;
-	auto& session = env.session;
-	const auto id = session.spawnPlayer(botf::common::Point{100.f, 100.f});
-	ASSERT_EQ(session.figures().size(), 1u);
-	EXPECT_EQ(session.figures().front().getId(), id);
+	botf::GameLogic logic;
+	const auto id = logic.spawnPlayer(botf::common::Point{100.f, 100.f});
+	ASSERT_EQ(logic.figures().size(), 1u);
+	EXPECT_EQ(logic.figures().front().getId(), id);
 
-	const auto& figure = session.figures().front();
+	const auto& figure = logic.figures().front();
 	EXPECT_FLOAT_EQ(figure.getHitbox().getWidth(), botf::common::GlobalSettings::hitboxSize);
 	EXPECT_FLOAT_EQ(figure.getHitbox().getHeight(), botf::common::GlobalSettings::hitboxSize);
 
