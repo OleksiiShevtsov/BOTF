@@ -52,10 +52,9 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	// Walk spawns[]; first index not in m_clientSpawnIndex → claim for clientId.
+	// First map spawn index not held in m_clientSpawnIndex → claim for clientId.
 	// TODO(card 47): replace with seatPlayersRandom permutation at Playing.
-	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(
-		const std::vector<common::Point>& spawns, const common::ID clientId);
+	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(const common::ID clientId);
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;

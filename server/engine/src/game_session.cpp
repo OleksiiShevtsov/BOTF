@@ -20,8 +20,8 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 	return *m_gameMap;
 }
 
-std::optional<std::size_t> botf::GameSession::claimFirstFreeSpawn(
-	const std::vector<common::Point>& spawns, const common::ID clientId) {
+std::optional<std::size_t> botf::GameSession::claimFirstFreeSpawn(const common::ID clientId) {
+	const auto& spawns = m_gameMap->getSpawns();
 	for (std::size_t i = 0; i < spawns.size(); ++i) {
 		bool taken = false;
 		for (const auto& [_, spawnIndex] : m_clientSpawnIndex) {
@@ -53,18 +53,17 @@ std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const commo
 		return *existing;
 	}
 
-	const auto& spawns = m_gameMap->getSpawns();
-	const auto spawnIndex = claimFirstFreeSpawn(spawns, clientId);
+	const auto spawnIndex = claimFirstFreeSpawn(clientId);
 	if (!spawnIndex) {
 		// TODO(card 47): single-session scaffold — later open a new session and seat there.
 		botf::log::warn(
 			"[server] TODO(card 47): session {} full (spawns={}); refuse client {} (only one "
 			"session for now)",
-			m_id, spawns.size(), clientId);
+			m_id, m_gameMap->getSpawns().size(), clientId);
 		return std::nullopt;
 	}
 
-	const common::Point at = spawns[*spawnIndex];
+	const common::Point at = m_gameMap->getSpawns()[*spawnIndex];
 	const common::ID entity = m_gameLogic.spawnPlayer(at);
 	m_gameLogic.bindClient(clientId, entity);
 	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={}, spawn={})",
