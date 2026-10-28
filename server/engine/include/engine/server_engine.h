@@ -51,8 +51,8 @@ private:
 		std::uint64_t sequence = 0;
 	};
 
-	// Content catalogs at engine start (maps now; more domains later → ContentLoader card).
-	void loadContent();
+	// Object catalogs at engine start (maps now; more domains later → card 53).
+	void loadObjectData();
 
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,

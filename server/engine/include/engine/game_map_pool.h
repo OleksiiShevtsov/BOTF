@@ -21,7 +21,7 @@ public:
 	void clear();
 
 	// Scan content/maps, load each GameMap into cache. Returns false if no maps.
-	// Called once at ServerEngine start (content bootstrap).
+	// Called once at ServerEngine start (loadObjectData).
 	bool load();
 
 	[[nodiscard]] bool empty() const;

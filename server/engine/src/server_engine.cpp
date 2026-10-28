@@ -25,7 +25,7 @@ void onSignal(int) {
 
 botf::ServerEngine::ServerEngine()
 	: m_server(m_inbound, m_outbound), m_gameSessionsPool(m_gameMapPool) {
-	loadContent();
+	loadObjectData();
 }
 
 botf::ServerEngine::~ServerEngine() {
@@ -36,7 +36,7 @@ botf::ServerEngine::~ServerEngine() {
 	}
 }
 
-void botf::ServerEngine::loadContent() {
+void botf::ServerEngine::loadObjectData() {
 	if (!m_gameMapPool.load()) {
 		throw std::runtime_error("ServerEngine: no maps in content/maps (GameMapPool empty)");
 	}

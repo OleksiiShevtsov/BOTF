@@ -98,7 +98,7 @@ botf::GameSessionsPool::sessions() {
 botf::GameSession& botf::GameSessionsPool::createSession() {
 	if (m_gameMapPool.empty()) {
 		throw std::runtime_error(
-			"GameSessionsPool::createSession: GameMapPool empty (ServerEngine must load content)");
+			"GameSessionsPool::createSession: GameMapPool empty (ServerEngine must loadObjectData)");
 	}
 	const std::shared_ptr<const GameMap> gameMap = m_gameMapPool.pickRandomGameMap();
 
