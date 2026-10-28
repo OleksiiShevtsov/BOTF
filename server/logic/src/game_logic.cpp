@@ -115,6 +115,10 @@ std::optional<botf::common::ID> botf::GameLogic::entityForClient(
 	return it->second;
 }
 
+std::size_t botf::GameLogic::boundClientCount() const {
+	return m_clientToEntity.size();
+}
+
 botf::FigureObject* botf::GameLogic::findFigureMutable(const common::ID entityId) {
 	for (auto& obj : m_figures) {
 		if (obj.getId() == entityId) {

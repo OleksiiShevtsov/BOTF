@@ -11,7 +11,7 @@ PROTOBUF_URL="https://github.com/protocolbuffers/protobuf.git"
 
 lib_looks_ok() {
   local d="$1"
-  [[ -d "${d}/SFML" || -d "${d}/sfml" || -d "${d}/googletest" || -d "${d}/protobuf" || -d "${d}/spdlog" || -f "${d}/README.md" ]]
+  [[ -d "${d}/SFML" || -d "${d}/sfml" || -d "${d}/googletest" || -d "${d}/protobuf" || -d "${d}/spdlog" || -d "${d}/nlohmann_json" || -f "${d}/README.md" ]]
 }
 
 if [[ -n "${BOTF_LIB_ROOT:-}" ]]; then
@@ -94,6 +94,7 @@ ensure_protobuf() {
 clone_if_missing SFML https://github.com/SFML/SFML.git
 clone_if_missing googletest https://github.com/google/googletest.git
 clone_if_missing spdlog https://github.com/gabime/spdlog.git
+clone_if_missing nlohmann_json https://github.com/nlohmann/json.git
 ensure_protobuf
 
 if command -v apt-get >/dev/null 2>&1; then

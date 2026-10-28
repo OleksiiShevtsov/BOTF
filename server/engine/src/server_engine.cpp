@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <stdexcept>
 #include <thread>
 #include <type_traits>
 
@@ -22,7 +23,10 @@ void onSignal(int) {
 
 }  // namespace
 
-botf::ServerEngine::ServerEngine() : m_server(m_inbound, m_outbound) {}
+botf::ServerEngine::ServerEngine()
+	: m_server(m_inbound, m_outbound), m_gameSessionsPool(m_gameMapPool) {
+	loadObjectData();
+}
 
 botf::ServerEngine::~ServerEngine() {
 	requestStop();
@@ -30,6 +34,13 @@ botf::ServerEngine::~ServerEngine() {
 	if (gActiveEngine.load() == this) {
 		gActiveEngine.store(nullptr);
 	}
+}
+
+void botf::ServerEngine::loadObjectData() {
+	if (!m_gameMapPool.load()) {
+		throw std::runtime_error("ServerEngine: no maps in content/maps (GameMapPool empty)");
+	}
+	botf::log::info("[server] loaded {} map template(s)", m_gameMapPool.size());
 }
 
 void botf::ServerEngine::requestStop() {
@@ -59,6 +70,14 @@ std::uint16_t botf::ServerEngine::port() const {
 
 std::size_t botf::ServerEngine::clientCount() const {
 	return m_server.clientCount();
+}
+
+botf::GameMapPool& botf::ServerEngine::getGameMapPool() {
+	return m_gameMapPool;
+}
+
+const botf::GameMapPool& botf::ServerEngine::getGameMapPool() const {
+	return m_gameMapPool;
 }
 
 botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() {
@@ -93,8 +112,15 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 		botf::log::error("[server] connect: missing session {} for client {}", sessionId, clientId);
 		return;
 	}
-	const common::ID entityId = gameSession->bindOrSpawnClient(clientId);
-	const common::ClientConnectMessage ack{connect.playerName, entityId};
+	const auto entityId = gameSession->bindOrSpawnClient(clientId);
+	if (!entityId) {
+		// TODO(card 47): create/join another session instead of dropping connect.
+		botf::log::warn(
+			"[server] TODO(card 47): client {} refused (session full; single-session scaffold)",
+			clientId);
+		return;
+	}
+	const common::ClientConnectMessage ack{connect.playerName, *entityId};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
 		protocol::encodeClientConnect(ack, sequence),

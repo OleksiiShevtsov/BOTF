@@ -57,6 +57,9 @@ if errorlevel 1 goto :fail
 call :ensure_dep spdlog "https://github.com/gabime/spdlog.git"
 if errorlevel 1 goto :fail
 
+call :ensure_dep nlohmann_json "https://github.com/nlohmann/json.git"
+if errorlevel 1 goto :fail
+
 call :ensure_protobuf
 if errorlevel 1 goto :fail
 
@@ -87,6 +90,7 @@ if exist "%~1\sfml\" set "LIB_OK=1"
 if exist "%~1\googletest\" set "LIB_OK=1"
 if exist "%~1\protobuf\" set "LIB_OK=1"
 if exist "%~1\spdlog\" set "LIB_OK=1"
+if exist "%~1\nlohmann_json\" set "LIB_OK=1"
 if exist "%~1\README.md" set "LIB_OK=1"
 exit /b 0
 

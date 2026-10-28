@@ -11,7 +11,7 @@ file(GLOB logic_SRC CONFIGURE_DEPENDS
 if(logic_SRC)
     add_library(${PROJECT_NAME} STATIC ${logic_SRC})
     target_include_directories(${PROJECT_NAME} PUBLIC include)
-    target_link_libraries(${PROJECT_NAME} PUBLIC common)
+    target_link_libraries(${PROJECT_NAME} PUBLIC common utils)
 else()
     add_library(${PROJECT_NAME} INTERFACE)
     target_include_directories(${PROJECT_NAME} INTERFACE include)

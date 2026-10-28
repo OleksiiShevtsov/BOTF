@@ -1,6 +1,7 @@
 project(server_engine)
 
 add_library(${PROJECT_NAME} STATIC
+    src/game_map_pool.cpp
     src/game_session.cpp
     src/game_sessions_pool.cpp
     src/server_engine.cpp
@@ -17,4 +18,5 @@ target_link_libraries(${PROJECT_NAME}
         net
         common
         protocol
+        utils
 )

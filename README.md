@@ -9,7 +9,7 @@
 ```
 <parent>/
 ├── BOTF/     ← этот репозиторий (исходники)
-├── LIB/      ← SFML, googletest, protobuf, spdlog
+├── LIB/      ← SFML, googletest, protobuf, spdlog, nlohmann_json
 └── BUILD/    ← CMAKE_BUILDS_ROOT указывает сюда
 ```
 
@@ -22,6 +22,7 @@
 Опционально:
 
 - `BOTF_LIB_ROOT` → папка `LIB` (если CMake/setup не находят её сами)
+- `BOTF_CONTENT_ROOT` → папка `content/` (карты/ассеты; иначе CMake default = `<repo>/content`)
 
 ## CMakePresets
 
@@ -52,10 +53,11 @@ setup.bat
 ```
 
 Ищет `LIB` рядом с `BOTF` (или `BOTF_LIB_ROOT`).  
-Если SFML / googletest / protobuf / spdlog уже есть — **не клонирует**.  
+Если SFML / googletest / protobuf / spdlog / nlohmann_json уже есть — **не клонирует**.  
 Protobuf: тег `v21.12` в `%LIB%\protobuf` (битую папку без `CMakeLists.txt` переклонирует).  
 CMake на Windows/LIB собирает protobuf из исходников (`protobuf_BUILD_TESTS=OFF`), без системного `find_package`.  
 spdlog: `LIB/spdlog` → цветная консоль через `botf::log`.  
+nlohmann_json: `LIB/nlohmann_json` → только target `utils` (парсинг content JSON).  
 После первого clone **запусти `setup.bat`** — иначе CMake не найдёт зависимости.
 
 ## Logging
@@ -122,16 +124,18 @@ cmake --build --preset debug
 ```
 BOTF/
 ├── cmake/
+├── content/             # maps/<id>/map.json + client assets (не код)
 ├── common/
 │   ├── sources/                  # types, DTO, botf::log (spdlog)
 │   └── protobuf/messages/        # .proto codegen
 ├── protocol/            # Envelope oneof codec, dispatch registry, proto ↔ DTO
 ├── net/                 # TcpServer, TcpClient, framing, queues (no protobuf)
+├── utils/               # content I/O / JSON loaders (nlohmann PRIVATE)
 ├── server/
-│   ├── engine/          # ServerEngine + GameSessionsPool / GameSession
-│   └── logic/           # GameLogic / DynamicObject (no *.pb.h)
+│   ├── engine/          # ServerEngine (owns GameMapPool + GameSessionsPool) / GameSession
+│   └── logic/           # GameLogic / GameMap / DynamicObject (no *.pb.h)
 ├── client/
-│   └── app/             # ClientApp, AppRendering, Match (GameMap + Scene/IViewObject) (no *.pb.h)
+│   └── app/             # ClientApp, AppRendering, Match (app::GameMap + Scene/IViewObject)
 └── tests/               # gtest: helpers + smoke (свой main.cpp)
 ```
 

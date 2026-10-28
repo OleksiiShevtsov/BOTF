@@ -11,8 +11,7 @@ constexpr std::chrono::milliseconds pauseBetweenButtonPresses{50};
 
 // Default gameplay tuning (server logic).
 constexpr float defaultPlayerSpeedLimit{200.0f};
-constexpr float defaultSpawnX{100.0f};
-constexpr float defaultSpawnY{300.0f};
+// Spawns / map bounds live in content/maps/<id>/map.json (card 51), not here.
 // Movement — TODO: нет БД, load from DB later. (card 36 incremental physics)
 constexpr float playerAcceleration{600.0f};	 // world units / s^2
 constexpr float playerFriction{400};		 // decelerate when no input on axis / idle

@@ -1,5 +1,11 @@
 #include "engine/game_sessions_pool.h"
 
+#include <memory>
+#include <stdexcept>
+
+botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
+	: m_gameMapPool(gameMapPool) {}
+
 botf::common::ID botf::GameSessionsPool::ensureDefaultFor(const common::ID clientId) {
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
 		return existing->getId();
@@ -55,8 +61,8 @@ void botf::GameSessionsPool::removeClient(const common::ID clientId) {
 	}
 	const common::ID sessionId = it->second;
 	m_clientToSessionId.erase(it);
-	if (GameSession* session = findGameSessionBySessionId(sessionId)) {
-		session->removeClient(clientId);
+	if (GameSession* gameSession = findGameSessionBySessionId(sessionId)) {
+		gameSession->removeClient(clientId);
 	}
 }
 
@@ -90,9 +96,16 @@ botf::GameSessionsPool::sessions() {
 }
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
+	if (m_gameMapPool.empty()) {
+		throw std::runtime_error(
+			"GameSessionsPool::createSession: GameMapPool empty (ServerEngine must loadObjectData)");
+	}
+	const std::shared_ptr<const GameMap> gameMap = m_gameMapPool.pickRandomGameMap();
+
 	const common::ID id = m_nextId;
 	++m_nextId;
-	auto [it, inserted] = m_sessions.emplace(id, std::make_unique<GameSession>(id));
+	auto [it, inserted] =
+		m_sessions.emplace(id, std::make_unique<GameSession>(id, gameMap));
 	(void)inserted;
 	return *it->second;
 }

@@ -1,35 +1,70 @@
 #include "engine/game_session.h"
 
-#include "common/global_settings.hpp"
 #include "common/log.hpp"
 
-botf::GameSession::GameSession(const common::ID id) : m_id{id} {}
+#include <stdexcept>
+#include <utility>
+
+botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
+	: m_id{id}, m_gameMap{std::move(gameMap)} {
+	if (!m_gameMap) {
+		throw std::runtime_error("GameSession: gameMap is null");
+	}
+}
 
 botf::common::ID botf::GameSession::getId() const {
 	return m_id;
 }
 
-botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
+const botf::GameMap& botf::GameSession::getGameMap() const {
+	return *m_gameMap;
+}
+
+std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
+	const common::ID clientId) {
+	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
+	for (std::size_t candidate = 0; candidate < spawns.size(); ++candidate) {
+		bool taken = false;
+		for (const std::pair<const common::ID, std::size_t>& entry : m_clientSpawnIndex) {
+			if (entry.second == candidate) {
+				taken = true;
+				break;
+			}
+		}
+		if (taken) {
+			continue;
+		}
+		m_clientSpawnIndex.emplace(clientId, candidate);
+		return candidate;
+	}
+	return std::nullopt;
+}
+
+std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
 	if (const auto existing = m_gameLogic.entityForClient(clientId)) {
 		return *existing;
 	}
 
-	const common::ID entity = m_gameLogic.spawnPlayer(
-		common::Point{common::GlobalSettings::defaultSpawnX, common::GlobalSettings::defaultSpawnY});
+	const auto spawnIndex = placeInFirstAvailableSpawnPoint(clientId);
+	if (!spawnIndex) {
+		// TODO(card 47): single-session scaffold — later open a new session and seat there.
+		botf::log::warn(
+			"[server] TODO(card 47): session {} full (spawns={}); refuse client {} (only one "
+			"session for now)",
+			m_id, m_gameMap->getSpawns().size(), clientId);
+		return std::nullopt;
+	}
+
+	const common::Point at = m_gameMap->getSpawns()[*spawnIndex];
+	const common::ID entity = m_gameLogic.spawnPlayer(at);
 	m_gameLogic.bindClient(clientId, entity);
-	botf::log::info("[server] client {} bound to entity {} (sessionId={})", clientId, entity, m_id);
+	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={}, spawn={})",
+					clientId, entity, m_id, m_gameMap->getId(), *spawnIndex);
 	return entity;
 }
 
-botf::common::ID botf::GameSession::spawnPlayer(common::Point at) {
-	return m_gameLogic.spawnPlayer(at);
-}
-
-void botf::GameSession::bindClient(const common::ID clientId, const common::ID entityId) {
-	m_gameLogic.bindClient(clientId, entityId);
-}
-
 void botf::GameSession::removeClient(const common::ID clientId) {
+	m_clientSpawnIndex.erase(clientId);
 	m_gameLogic.removeClient(clientId);
 }
 
@@ -40,10 +75,6 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 	if (clientInput.fire) {
 		m_gameLogic.tryFire(clientId);
 	}
-}
-
-bool botf::GameSession::applyDamage(const common::ID entityId, int damage) {
-	return m_gameLogic.applyDamage(entityId, damage);
 }
 
 void botf::GameSession::tick(float dt) {

@@ -3,33 +3,37 @@
 #include "common/dto.hpp"
 #include "common/types.hpp"
 #include "logic/game_logic.h"
+#include "logic/game_map.h"
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <unordered_map>
+#include <vector>
 
 namespace botf {
 
-// One live match: id + authoritative GameLogic behind a facade.
+// One live match: id + shared GameMap template + authoritative GameLogic facade.
 // Client membership lives in GameSessionsPool (card 46).
-// Map lives on/with GameLogic later (card 51) — not duplicated here.
 // Phases Waiting/Playing — card 47.
 class GameSession {
 public:
-	explicit GameSession(const common::ID id);
+	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
+	[[nodiscard]] const GameMap& getGameMap() const;
 
-	// Default spawn + bind (GlobalSettings stub until MapPool / card 51).
-	common::ID bindOrSpawnClient(const common::ID clientId);
+	// Bind existing client or spawn on first free seat. nullopt if session is full.
+	// TODO(card 47): on full session, open another session instead of refusing forever
+	// (scaffold still has a single shared session).
+	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
 
-	// Spawn at an explicit point (tests / future map spawns).
-	// Speed limit lives on FigureObject (via GameLogic / GlobalSettings stub).
-	common::ID spawnPlayer(common::Point at);
-	void bindClient(const common::ID clientId, const common::ID entityId);
 	void removeClient(const common::ID clientId);
 
 	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
-	bool applyDamage(const common::ID entityId, int damage);
 	void tick(float dt);
 
 	[[nodiscard]] common::WorldSnapshot buildWorldSnapshot(std::uint32_t tick) const;
@@ -39,8 +43,13 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
+	[[nodiscard]] std::optional<std::size_t> placeInFirstAvailableSpawnPoint(
+		const common::ID clientId);
+
 	common::ID m_id{};
+	std::shared_ptr<const GameMap> m_gameMap;
 	GameLogic m_gameLogic;
+	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
 };
 
 }  // namespace botf
