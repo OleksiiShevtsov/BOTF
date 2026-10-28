@@ -2,6 +2,7 @@
 
 #include "common/global_settings.hpp"
 
+#include <SFML/Config.hpp>
 #include <SFML/Window/Mouse.hpp>
 
 botf::app::AppRendering::AppRendering()
@@ -43,6 +44,14 @@ const botf::app::Match& botf::app::AppRendering::getMatch() const {
 	return m_match;
 }
 
+botf::app::MenuScreen& botf::app::AppRendering::getMenuScreen() {
+	return m_menuScreen;
+}
+
+const botf::app::MenuScreen& botf::app::AppRendering::getMenuScreen() const {
+	return m_menuScreen;
+}
+
 bool botf::app::AppRendering::isWindowOpen() const {
 	return m_window && m_window->isOpen();
 }
@@ -60,7 +69,7 @@ botf::common::Point botf::app::AppRendering::mouseWorldPosition() const {
 #endif
 }
 
-void botf::app::AppRendering::draw() {
+void botf::app::AppRendering::draw(const GameState gameState) {
 	if (!m_window) {
 		return;
 	}
@@ -81,6 +90,12 @@ void botf::app::AppRendering::draw() {
 #endif
 
 	m_window->clear(sf::Color(25, 25, 25));
-	m_match.draw(*m_window);
+	if (gameState == GameState::Menu) {
+		m_menuScreen.draw(*m_window);
+	} else if (gameState == GameState::Waiting) {
+		// Placeholder until card 47 (Waiting UI). Same clear color, no arena yet.
+	} else {
+		m_match.draw(*m_window);
+	}
 	m_window->display();
 }

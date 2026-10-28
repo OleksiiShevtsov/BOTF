@@ -63,18 +63,37 @@ namespace {
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
 
-void botf::app::ClientApp::sendClientConnect() {
-	if (!m_net.isConnected() || m_clientConnectSent) {
+void botf::app::ClientApp::sendJoinSession() {
+	if (!m_net.isConnected() || m_joinSessionSent) {
 		return;
 	}
 
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
-		protocol::encodeClientConnect(common::ClientConnectMessage{}, m_sequence),
+		protocol::encodeJoinSession(common::JoinSessionMessage{}, m_sequence),
 	});
 	++m_sequence;
-	m_clientConnectSent = true;
-	botf::log::info("[client] ClientConnect sent");
+	m_joinSessionSent = true;
+	botf::log::info("[client] JoinSession sent");
+}
+
+void botf::app::ClientApp::onStartGamePressed(const std::uint16_t port) {
+	if (m_gameState != GameState::Menu) {
+		return;
+	}
+
+	if (!m_net.isConnected()) {
+		if (!m_net.connect(sf::IpAddress::LocalHost, port, sf::seconds(1))) {
+			botf::log::warn("[client] server not available on {} — JoinSession not sent", port);
+			return;
+		}
+		botf::log::info("[client] connected to server");
+	}
+
+	// Card 45: do not send ClientConnect (login/spawn). JoinSession only — server ignores
+	// until card 47; match path is intentionally broken until then.
+	sendJoinSession();
+	m_gameState = GameState::Waiting;
 }
 
 void botf::app::ClientApp::applyInbound() {
@@ -98,7 +117,7 @@ void botf::app::ClientApp::applyInbound() {
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
 				m_latestWorld = body;
 			}
-			// ClientInput from server is ignored.
+			// ClientInput / JoinSession from server are ignored.
 		});
 	}
 }
@@ -133,19 +152,14 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 	botf::log::init();
 
 	m_rendering.getPlayer().setId(0);
-	m_rendering.getMatch().start();
-
-	if (!m_net.connect(sf::IpAddress::LocalHost, port, sf::seconds(1))) {
-		botf::log::warn("[client] server not available on {} — UI only (input/WorldState offline)",
-						port);
-	} else {
-		botf::log::info("[client] connected to server");
-		sendClientConnect();
+	m_gameState = GameState::Menu;
+	if (!m_rendering.getMenuScreen().isReady()) {
+		botf::log::error("[client] menu font missing (content/ui/DejaVuSans.ttf)");
 	}
 
 	std::uint32_t tick = 1;
 	while (m_rendering.isWindowOpen()) {
-		const MoveInput move = m_rendering.getInputHandler().readMoveInput();
+		const common::Point mouse = m_rendering.mouseWorldPosition();
 #if SFML_VERSION_MAJOR >= 3
 		const bool lmbDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 #else
@@ -153,28 +167,45 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 #endif
 		const bool fireEdge = lmbDown && !m_prevLmbDown;
 		m_prevLmbDown = lmbDown;
-		maybeSendInput(move, fireEdge, tick);
-		++tick;
 
-		if (m_net.isConnected()) {
-			m_net.poll();
-			if (!m_net.isConnected()) {
-				botf::log::warn("[client] disconnected from server");
-				m_clientConnectSent = false;
-				m_selfId.reset();
-				m_forceInputSend = true;
-				m_lastInputSent.reset();
-				m_prevLmbDown = false;
+		if (m_gameState == GameState::Menu) {
+			MenuScreen& menu = m_rendering.getMenuScreen();
+			menu.setHovered(menu.containsPoint(mouse));
+			if (fireEdge && menu.containsPoint(mouse)) {
+				onStartGamePressed(port);
 			}
+		} else {
+			const MoveInput move = m_rendering.getInputHandler().readMoveInput();
+			maybeSendInput(move, fireEdge, tick);
+			++tick;
+
+			if (m_net.isConnected()) {
+				m_net.poll();
+				if (!m_net.isConnected()) {
+					botf::log::warn("[client] disconnected from server");
+					m_joinSessionSent = false;
+					m_selfId.reset();
+					m_forceInputSend = true;
+					m_lastInputSent.reset();
+					m_prevLmbDown = false;
+					m_gameState = GameState::Menu;
+				}
+			}
+
+			applyInbound();
+
+			if (m_latestWorld) {
+				m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld, m_selfId);
+			}
+			m_rendering.getMatch().update();
 		}
 
-		applyInbound();
-
-		if (m_latestWorld) {
-			m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld, m_selfId);
+		if (m_gameState == GameState::Menu && m_net.isConnected()) {
+			m_net.poll();
+			applyInbound();
 		}
-		m_rendering.getMatch().update();
-		m_rendering.draw();
+
+		m_rendering.draw(m_gameState);
 	}
 
 	m_rendering.getMatch().finish();
