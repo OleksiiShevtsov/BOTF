@@ -26,8 +26,13 @@ public:
 	// Scaffold: spawn + bind on connect (temporary until card 47).
 	common::ID bindOrSpawnClient(const common::ID clientId);
 
-	// TODO(card 47): when session enters Playing (≥2 clients), assign clients to
-	// map spawns via random permutation — not join order. Stub until then.
+	// Free seats = map spawns.size() − bound clients. Capacity is spawns only.
+	// TODO(card 47): use when joining — if no free seats, do not accept more
+	// clients and start Playing instead.
+	[[nodiscard]] bool hasFreeSeats() const;
+
+	// TODO(card 47): when session enters Playing (no free seats / enough clients),
+	// assign clients to map spawns via random permutation — not join order.
 	void seatPlayersRandom();
 
 	// Spawn at an explicit point (tests).

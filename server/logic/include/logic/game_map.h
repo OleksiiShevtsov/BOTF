@@ -2,8 +2,6 @@
 
 #include "common/types.hpp"
 
-#include <cstddef>
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -13,7 +11,8 @@ class GameMapPool;
 
 // Server-side map template (card 51). Immutable after pool load.
 // Fields come from content JSON (grows over time: collision, …).
-// Not the client app::GameMap. Created only by GameMapPool (friend).
+// Seat capacity = getSpawns().size(). Not the client app::GameMap.
+// Created only by GameMapPool (friend).
 class GameMap {
 	friend class GameMapPool;
 
@@ -27,7 +26,6 @@ public:
 	[[nodiscard]] const std::string& getName() const;
 	[[nodiscard]] float getWidth() const;
 	[[nodiscard]] float getHeight() const;
-	[[nodiscard]] std::uint32_t getMaxNumberPlayers() const;
 	[[nodiscard]] const std::vector<common::Point>& getSpawns() const;
 
 private:
@@ -37,7 +35,6 @@ private:
 	std::string m_name;
 	float m_width{0.f};
 	float m_height{0.f};
-	std::uint32_t m_maxNumberPlayers{0};
 	std::vector<common::Point> m_spawns;
 };
 

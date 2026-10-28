@@ -29,8 +29,7 @@ TEST(UtilsMapLoader, ListAndLoadMapOne) {
 	EXPECT_EQ(data->name, "arena_stub");
 	EXPECT_FLOAT_EQ(data->width, 1080.f);
 	EXPECT_FLOAT_EQ(data->height, 640.f);
-	EXPECT_EQ(data->maxNumberPlayers, 2u);
-	ASSERT_EQ(data->spawns.size(), data->maxNumberPlayers);
+	ASSERT_EQ(data->spawns.size(), 2u);
 	EXPECT_FLOAT_EQ(data->spawns[0].x, 100.f);
 	EXPECT_FLOAT_EQ(data->spawns[0].y, 300.f);
 	EXPECT_FLOAT_EQ(data->spawns[1].x, 980.f);
@@ -48,7 +47,6 @@ TEST(GameMapPool, RefreshLoadsGameMap) {
 	EXPECT_EQ(gameMap->getName(), "arena_stub");
 	EXPECT_FLOAT_EQ(gameMap->getWidth(), 1080.f);
 	EXPECT_FLOAT_EQ(gameMap->getHeight(), 640.f);
-	EXPECT_EQ(gameMap->getMaxNumberPlayers(), 2u);
 	ASSERT_EQ(gameMap->getSpawns().size(), 2u);
 }
 
@@ -82,10 +80,15 @@ TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
 
 TEST(GameSession, BindOrSpawnUsesMapSpawns) {
 	botf::test::TestSession env;
+	EXPECT_TRUE(env.session.hasFreeSeats());
+
 	const auto a = env.session.bindOrSpawnClient(1);
+	EXPECT_TRUE(env.session.hasFreeSeats());
+
 	const auto b = env.session.bindOrSpawnClient(2);
 	ASSERT_EQ(env.session.figures().size(), 2u);
 	EXPECT_NE(a, b);
+	EXPECT_FALSE(env.session.hasFreeSeats());
 
 	const auto& map = env.session.getGameMap();
 	EXPECT_TRUE(isMapSpawn(map, env.session.figures()[0].getPosition()));

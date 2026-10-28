@@ -4,7 +4,6 @@
   "server": {
     "width": 1080,
     "height": 640,
-    "maxNumberPlayers": 2,
     "spawns": [
       [100, 300],
       [980, 300]

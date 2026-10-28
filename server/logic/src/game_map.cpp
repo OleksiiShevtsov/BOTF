@@ -16,10 +16,6 @@ float botf::GameMap::getHeight() const {
 	return m_height;
 }
 
-std::uint32_t botf::GameMap::getMaxNumberPlayers() const {
-	return m_maxNumberPlayers;
-}
-
 const std::vector<botf::common::Point>& botf::GameMap::getSpawns() const {
 	return m_spawns;
 }

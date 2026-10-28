@@ -22,7 +22,6 @@ std::shared_ptr<const botf::GameMap> botf::GameMapPool::loadGameMap(const common
 	gameMap->m_name = data->name;
 	gameMap->m_width = data->width;
 	gameMap->m_height = data->height;
-	gameMap->m_maxNumberPlayers = data->maxNumberPlayers;
 	gameMap->m_spawns = data->spawns;
 	return gameMap;
 }

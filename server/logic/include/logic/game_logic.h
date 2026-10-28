@@ -4,6 +4,7 @@
 #include "logic/bullet_object.h"
 #include "logic/figure_object.h"
 
+#include <cstddef>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -50,6 +51,7 @@ public:
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
+	[[nodiscard]] std::size_t boundClientCount() const;
 
 private:
 	FigureObject* findFigureMutable(const common::ID entityId);

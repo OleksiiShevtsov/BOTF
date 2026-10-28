@@ -33,9 +33,13 @@ botf::common::Point botf::GameSession::pickRandomSpawnPoint() const {
 	return m_gameMap->getSpawns()[dist(rng)];
 }
 
+bool botf::GameSession::hasFreeSeats() const {
+	return m_gameLogic.boundClientCount() < m_gameMap->getSpawns().size();
+}
+
 void botf::GameSession::seatPlayersRandom() {
-	// TODO(card 47): after Waiting→Playing (≥2 clients), shuffle clients onto
-	// map spawns (random permutation). Do not seat by join order.
+	// TODO(card 47): after Waiting→Playing (session full / no free seats),
+	// shuffle clients onto map spawns (random permutation). Do not seat by join order.
 }
 
 botf::common::ID botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
