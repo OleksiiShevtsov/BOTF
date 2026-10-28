@@ -70,18 +70,15 @@ TEST(GameSession, BindOrSpawnUsesFirstFreeSpawnsAndRefusesWhenFull) {
 	botf::test::TestSession env;
 	const auto& spawns = env.session.getGameMap().getSpawns();
 	ASSERT_EQ(spawns.size(), 2u);
-	EXPECT_TRUE(env.session.hasFreeSeats());
 
 	const auto a = env.session.bindOrSpawnClient(1);
 	ASSERT_TRUE(a.has_value());
-	EXPECT_TRUE(env.session.hasFreeSeats());
 	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().x, spawns[0].x);
 	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().y, spawns[0].y);
 
 	const auto b = env.session.bindOrSpawnClient(2);
 	ASSERT_TRUE(b.has_value());
 	EXPECT_NE(*a, *b);
-	EXPECT_FALSE(env.session.hasFreeSeats());
 	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().x, spawns[1].x);
 	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().y, spawns[1].y);
 

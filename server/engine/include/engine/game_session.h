@@ -26,13 +26,10 @@ public:
 	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
 
-	// Bind existing client or spawn if hasFreeSeats(). nullopt if session is full.
+	// Bind existing client or spawn on first free seat. nullopt if session is full.
 	// TODO(card 47): on full session, open another session instead of refusing forever
 	// (scaffold still has a single shared session).
 	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
-
-	// Free seats = spawns.size() − bound clients.
-	[[nodiscard]] bool hasFreeSeats() const;
 
 	// TODO(card 47): when entering Playing, reassign clients to spawns randomly.
 	void seatPlayersRandom();
