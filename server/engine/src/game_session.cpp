@@ -3,7 +3,6 @@
 #include "common/log.hpp"
 
 #include <stdexcept>
-#include <unordered_set>
 #include <utility>
 
 botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
@@ -23,14 +22,15 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 
 std::optional<std::size_t> botf::GameSession::claimFirstFreeSpawn(
 	const std::vector<common::Point>& spawns, const common::ID clientId) {
-	std::unordered_set<std::size_t> occupied;
-	occupied.reserve(m_clientSpawnIndex.size());
-	for (const auto& [_, spawnIndex] : m_clientSpawnIndex) {
-		occupied.insert(spawnIndex);
-	}
-
 	for (std::size_t i = 0; i < spawns.size(); ++i) {
-		if (occupied.contains(i)) {
+		bool taken = false;
+		for (const auto& [_, spawnIndex] : m_clientSpawnIndex) {
+			if (spawnIndex == i) {
+				taken = true;
+				break;
+			}
+		}
+		if (taken) {
 			continue;
 		}
 		m_clientSpawnIndex.emplace(clientId, i);
