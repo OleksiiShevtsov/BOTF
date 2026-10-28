@@ -31,12 +31,9 @@ public:
 	// (scaffold still has a single shared session).
 	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
 
-	common::ID spawnPlayer(common::Point at);
-	void bindClient(const common::ID clientId, const common::ID entityId);
 	void removeClient(const common::ID clientId);
 
 	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
-	bool applyDamage(const common::ID entityId, int damage);
 	void tick(float dt);
 
 	[[nodiscard]] common::WorldSnapshot buildWorldSnapshot(std::uint32_t tick) const;
@@ -45,8 +42,13 @@ public:
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
+protected:
+	// Direct GameLogic hooks for tests (subclass) — production uses bindOrSpawnClient.
+	common::ID spawnPlayer(common::Point at);
+	void bindClient(const common::ID clientId, const common::ID entityId);
+	bool applyDamage(const common::ID entityId, int damage);
+
 private:
-	// First map spawn index not held in m_clientSpawnIndex → claim for clientId.
 	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(const common::ID clientId);
 
 	common::ID m_id{};

@@ -7,7 +7,7 @@
 
 namespace {
 
-botf::common::ID spawnBound(botf::GameSession& session, botf::common::ID clientId) {
+botf::common::ID spawnBound(botf::test::TestGameSession& session, botf::common::ID clientId) {
 	const auto entityId = session.spawnPlayer(botf::common::Point{0.f, 0.f});
 	session.bindClient(clientId, entityId);
 	return entityId;

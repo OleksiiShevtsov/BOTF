@@ -11,7 +11,7 @@ namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
 
-botf::common::ID spawnBound(botf::GameSession& session,
+botf::common::ID spawnBound(botf::test::TestGameSession& session,
 						   botf::common::ID clientId,
 						   botf::common::Point at) {
 	const auto id = session.spawnPlayer(at);

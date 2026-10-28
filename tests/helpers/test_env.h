@@ -39,12 +39,20 @@ namespace botf::test {
 	return mapPool.getGameMapById(mapId);
 }
 
-// Stack-owned test GameSession with shared map from GameMapPool (card 51/52).
+// Test-only surface: production GameSession stays lean; hooks stay protected there.
+class TestGameSession : public GameSession {
+public:
+	using GameSession::GameSession;
+	using GameSession::spawnPlayer;
+	using GameSession::bindClient;
+	using GameSession::applyDamage;
+};
+
 struct TestSession {
 	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
 		: session{sessionId, loadSharedGameMap(mapId)} {}
 
-	GameSession session;
+	TestGameSession session;
 };
 
 // Map catalog + sessions pool for membership tests (mirrors ServerEngine ownership).
