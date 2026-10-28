@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace botf {
@@ -50,6 +51,7 @@ private:
 	std::shared_ptr<const GameMap> m_gameMap;
 	GameLogic m_gameLogic;
 	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
+	std::unordered_set<std::size_t> m_takenSpawnIndices;
 };
 
 }  // namespace botf
