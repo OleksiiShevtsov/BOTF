@@ -43,7 +43,8 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] std::optional<std::size_t> claimFirstFreeSpawn(const common::ID clientId);
+	[[nodiscard]] std::optional<std::size_t> placeInFirstAvailableSpawnPoint(
+		const common::ID clientId);
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;

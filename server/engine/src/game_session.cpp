@@ -20,7 +20,8 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 	return *m_gameMap;
 }
 
-std::optional<std::size_t> botf::GameSession::claimFirstFreeSpawn(const common::ID clientId) {
+std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
+	const common::ID clientId) {
 	const auto& spawns = m_gameMap->getSpawns();
 	for (std::size_t i = 0; i < spawns.size(); ++i) {
 		bool taken = false;
@@ -44,7 +45,7 @@ std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const commo
 		return *existing;
 	}
 
-	const auto spawnIndex = claimFirstFreeSpawn(clientId);
+	const auto spawnIndex = placeInFirstAvailableSpawnPoint(clientId);
 	if (!spawnIndex) {
 		// TODO(card 47): single-session scaffold — later open a new session and seat there.
 		botf::log::warn(
