@@ -24,11 +24,17 @@ std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
 	const common::ID clientId) {
 	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
 	for (std::size_t candidate = 0; candidate < spawns.size(); ++candidate) {
-		if (m_takenSpawnIndices.contains(candidate)) {
+		bool taken = false;
+		for (const std::pair<const common::ID, std::size_t>& entry : m_clientSpawnIndex) {
+			if (entry.second == candidate) {
+				taken = true;
+				break;
+			}
+		}
+		if (taken) {
 			continue;
 		}
 		m_clientSpawnIndex.emplace(clientId, candidate);
-		m_takenSpawnIndices.insert(candidate);
 		return candidate;
 	}
 	return std::nullopt;
@@ -58,12 +64,7 @@ std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const commo
 }
 
 void botf::GameSession::removeClient(const common::ID clientId) {
-	const std::unordered_map<common::ID, std::size_t>::iterator it =
-		m_clientSpawnIndex.find(clientId);
-	if (it != m_clientSpawnIndex.end()) {
-		m_takenSpawnIndices.erase(it->second);
-		m_clientSpawnIndex.erase(it);
-	}
+	m_clientSpawnIndex.erase(clientId);
 	m_gameLogic.removeClient(clientId);
 }
 
