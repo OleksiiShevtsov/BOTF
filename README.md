@@ -132,7 +132,7 @@ BOTF/
 ├── net/                 # TcpServer, TcpClient, framing, queues (no protobuf)
 ├── utils/               # content I/O / JSON loaders (nlohmann PRIVATE)
 ├── server/
-│   ├── engine/          # ServerEngine + GameSessionsPool / GameSession + GameMapPool
+│   ├── engine/          # ServerEngine (owns GameMapPool + GameSessionsPool) / GameSession
 │   └── logic/           # GameLogic / GameMap / DynamicObject (no *.pb.h)
 ├── client/
 │   └── app/             # ClientApp, AppRendering, Match (app::GameMap + Scene/IViewObject)

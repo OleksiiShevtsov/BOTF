@@ -18,7 +18,7 @@ std::shared_ptr<const botf::GameMap> botf::GameMapPool::loadGameMap(const common
 	return std::make_shared<const GameMap>(*data);
 }
 
-bool botf::GameMapPool::refresh() {
+bool botf::GameMapPool::load() {
 	clear();
 	for (const common::ID mapId : utils::listMapIds()) {
 		m_gameMaps.push_back(loadGameMap(mapId));
@@ -36,7 +36,7 @@ std::size_t botf::GameMapPool::size() const {
 
 std::shared_ptr<const botf::GameMap> botf::GameMapPool::pickRandomGameMap() const {
 	if (m_gameMaps.empty()) {
-		throw std::runtime_error("GameMapPool::pickRandomGameMap: pool is empty (call refresh)");
+		throw std::runtime_error("GameMapPool::pickRandomGameMap: pool is empty (call load)");
 	}
 	return m_gameMaps[utils::randomIndex(m_gameMaps.size())];
 }

@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <stdexcept>
 #include <thread>
 #include <type_traits>
 
@@ -22,7 +23,10 @@ void onSignal(int) {
 
 }  // namespace
 
-botf::ServerEngine::ServerEngine() : m_server(m_inbound, m_outbound) {}
+botf::ServerEngine::ServerEngine()
+	: m_server(m_inbound, m_outbound), m_gameSessionsPool(m_gameMapPool) {
+	loadContent();
+}
 
 botf::ServerEngine::~ServerEngine() {
 	requestStop();
@@ -30,6 +34,13 @@ botf::ServerEngine::~ServerEngine() {
 	if (gActiveEngine.load() == this) {
 		gActiveEngine.store(nullptr);
 	}
+}
+
+void botf::ServerEngine::loadContent() {
+	if (!m_gameMapPool.load()) {
+		throw std::runtime_error("ServerEngine: no maps in content/maps (GameMapPool empty)");
+	}
+	botf::log::info("[server] loaded {} map template(s)", m_gameMapPool.size());
 }
 
 void botf::ServerEngine::requestStop() {
@@ -59,6 +70,14 @@ std::uint16_t botf::ServerEngine::port() const {
 
 std::size_t botf::ServerEngine::clientCount() const {
 	return m_server.clientCount();
+}
+
+botf::GameMapPool& botf::ServerEngine::getGameMapPool() {
+	return m_gameMapPool;
+}
+
+const botf::GameMapPool& botf::ServerEngine::getGameMapPool() const {
+	return m_gameMapPool;
 }
 
 botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() {

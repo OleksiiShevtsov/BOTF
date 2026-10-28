@@ -23,9 +23,9 @@ TEST(UtilsMapLoader, ListAndLoadMapOne) {
 	EXPECT_FLOAT_EQ(data->spawns[1].y, 300.f);
 }
 
-TEST(GameMapPool, RefreshLoadsGameMap) {
+TEST(GameMapPool, LoadLoadsGameMap) {
 	botf::GameMapPool pool;
-	ASSERT_TRUE(pool.refresh());
+	ASSERT_TRUE(pool.load());
 	EXPECT_EQ(pool.size(), 1u);
 
 	const auto gameMap = pool.getGameMapById(1);
@@ -37,9 +37,9 @@ TEST(GameMapPool, RefreshLoadsGameMap) {
 	ASSERT_EQ(gameMap->getSpawns().size(), 2u);
 }
 
-TEST(GameMapPool, RefreshPickRandomAndShare) {
+TEST(GameMapPool, LoadPickRandomAndShare) {
 	botf::GameMapPool pool;
-	ASSERT_TRUE(pool.refresh());
+	ASSERT_TRUE(pool.load());
 	EXPECT_EQ(pool.size(), 1u);
 
 	const auto first = pool.pickRandomGameMap();
@@ -61,7 +61,7 @@ TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
 	EXPECT_FLOAT_EQ(gameSession->getGameMap().getWidth(), 1080.f);
 	ASSERT_GE(gameSession->getGameMap().getSpawns().size(), 2u);
 
-	const auto fromPool = env.pool.getGameMapPool().getGameMapById(1);
+	const auto fromPool = env.mapPool.getGameMapById(1);
 	ASSERT_NE(fromPool, nullptr);
 	EXPECT_EQ(&gameSession->getGameMap(), fromPool.get());
 }

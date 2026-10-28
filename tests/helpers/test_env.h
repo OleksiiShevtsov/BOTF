@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 
 #include <SFML/Network.hpp>
 
@@ -32,7 +33,7 @@ namespace botf::test {
 [[nodiscard]] inline std::shared_ptr<const GameMap> loadSharedGameMap(
 	const common::ID mapId = 1) {
 	GameMapPool mapPool;
-	if (!mapPool.refresh()) {
+	if (!mapPool.load()) {
 		return nullptr;
 	}
 	return mapPool.getGameMapById(mapId);
@@ -46,8 +47,14 @@ struct TestSession {
 	GameSession session;
 };
 
-// Pool + one default session for membership tests (loads maps via GameMapPool).
+// Map catalog + sessions pool for membership tests (mirrors ServerEngine ownership).
 struct TestSessionPool {
+	TestSessionPool() : pool{mapPool} {
+		if (!mapPool.load()) {
+			throw std::runtime_error("TestSessionPool: no maps in content/maps");
+		}
+	}
+
 	common::ID ensureClient(const common::ID clientId) {
 		return pool.ensureDefaultFor(clientId);
 	}
@@ -60,6 +67,7 @@ struct TestSessionPool {
 		return pool.findGameSessionByClientId(clientId);
 	}
 
+	GameMapPool mapPool;
 	GameSessionsPool pool;
 };
 

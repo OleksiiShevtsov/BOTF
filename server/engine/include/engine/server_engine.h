@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/dto.hpp"
+#include "engine/game_map_pool.h"
 #include "engine/game_sessions_pool.h"
 #include "net/tcp_server.hpp"
 
@@ -10,7 +11,7 @@
 
 namespace botf {
 
-// Server runtime: TCP + GameSessionsPool tick + WorldState broadcast.
+// Server runtime: TCP + content catalogs + GameSessionsPool tick + WorldState broadcast.
 // main should only parse args and call run().
 class ServerEngine {
 public:
@@ -36,6 +37,8 @@ public:
 
 	[[nodiscard]] std::uint16_t port() const;
 	[[nodiscard]] std::size_t clientCount() const;
+	[[nodiscard]] GameMapPool& getGameMapPool();
+	[[nodiscard]] const GameMapPool& getGameMapPool() const;
 	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
 	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
@@ -47,6 +50,9 @@ private:
 		common::ClientInput command{};
 		std::uint64_t sequence = 0;
 	};
+
+	// Content catalogs at engine start (maps now; more domains later → ContentLoader card).
+	void loadContent();
 
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
@@ -60,6 +66,8 @@ private:
 	net::InboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
+	// Order: map catalog before sessions (sessions hold a ref to the catalog).
+	GameMapPool m_gameMapPool;
 	GameSessionsPool m_gameSessionsPool;
 	std::unordered_map<common::ID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;

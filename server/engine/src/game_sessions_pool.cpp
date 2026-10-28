@@ -3,14 +3,8 @@
 #include <memory>
 #include <stdexcept>
 
-void botf::GameSessionsPool::ensureMapsLoaded() {
-	if (!m_gameMapPool.empty()) {
-		return;
-	}
-	if (!m_gameMapPool.refresh()) {
-		throw std::runtime_error("GameSessionsPool: no maps in content/maps (GameMapPool empty)");
-	}
-}
+botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
+	: m_gameMapPool(gameMapPool) {}
 
 botf::common::ID botf::GameSessionsPool::ensureDefaultFor(const common::ID clientId) {
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
@@ -91,14 +85,6 @@ bool botf::GameSessionsPool::empty() const {
 	return m_sessions.empty();
 }
 
-botf::GameMapPool& botf::GameSessionsPool::getGameMapPool() {
-	return m_gameMapPool;
-}
-
-const botf::GameMapPool& botf::GameSessionsPool::getGameMapPool() const {
-	return m_gameMapPool;
-}
-
 const std::unordered_map<botf::common::ID, std::unique_ptr<botf::GameSession>>&
 botf::GameSessionsPool::sessions() const {
 	return m_sessions;
@@ -110,7 +96,10 @@ botf::GameSessionsPool::sessions() {
 }
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
-	ensureMapsLoaded();
+	if (m_gameMapPool.empty()) {
+		throw std::runtime_error(
+			"GameSessionsPool::createSession: GameMapPool empty (ServerEngine must load content)");
+	}
 	const std::shared_ptr<const GameMap> gameMap = m_gameMapPool.pickRandomGameMap();
 
 	const common::ID id = m_nextId;
