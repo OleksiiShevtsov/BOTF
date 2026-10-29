@@ -1,6 +1,5 @@
 #pragma once
 
-#include "app/game_state.h"
 #include "app/input_handler.h"
 #include "app/match.h"
 #include "app/menu_screen.h"
@@ -13,7 +12,7 @@
 
 namespace botf::app {
 
-// Window + input + draw orchestration (Match owns map + scene).
+// Window + input + screen presenters. Flow ownership stays in ClientApp.
 class AppRendering {
 public:
 	AppRendering();
@@ -33,9 +32,15 @@ public:
 	[[nodiscard]] bool isWindowOpen() const;
 	// Window pixel coords (identity with world while camera is 1:1).
 	[[nodiscard]] common::Point mouseWorldPosition() const;
-	void draw(GameState gameState);
+
+	void drawMenu();
+	void drawWaiting();
+	void drawMatch();
 
 private:
+	void beginFrame();
+	void endFrame();
+
 	Player m_player{};
 	InputHandler m_inputHandler{};
 	Match m_match{};

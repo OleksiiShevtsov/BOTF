@@ -69,7 +69,7 @@ botf::common::Point botf::app::AppRendering::mouseWorldPosition() const {
 #endif
 }
 
-void botf::app::AppRendering::draw(const GameState gameState) {
+void botf::app::AppRendering::beginFrame() {
 	if (!m_window) {
 		return;
 	}
@@ -90,12 +90,33 @@ void botf::app::AppRendering::draw(const GameState gameState) {
 #endif
 
 	m_window->clear(sf::Color(25, 25, 25));
-	if (gameState == GameState::Menu) {
-		m_menuScreen.draw(*m_window);
-	} else if (gameState == GameState::Waiting) {
-		// Placeholder until card 47 (Waiting UI). Same clear color, no arena yet.
-	} else {
-		m_match.draw(*m_window);
+}
+
+void botf::app::AppRendering::endFrame() {
+	if (!m_window) {
+		return;
 	}
 	m_window->display();
+}
+
+void botf::app::AppRendering::drawMenu() {
+	beginFrame();
+	if (m_window) {
+		m_menuScreen.draw(*m_window);
+	}
+	endFrame();
+}
+
+void botf::app::AppRendering::drawWaiting() {
+	beginFrame();
+	// Placeholder until card 47 (Waiting UI). Same clear color, no arena.
+	endFrame();
+}
+
+void botf::app::AppRendering::drawMatch() {
+	beginFrame();
+	if (m_window) {
+		m_match.draw(*m_window);
+	}
+	endFrame();
 }

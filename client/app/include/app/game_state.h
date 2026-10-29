@@ -2,10 +2,11 @@
 
 namespace botf::app {
 
-// Client UI flow (card 45). Playing / match phases → card 47.
+// Client UI / session flow (card 45). Playing entered from Waiting → card 47.
 enum class GameState {
 	Menu,
 	Waiting,
+	Playing,
 };
 
 }  // namespace botf::app

@@ -59,6 +59,14 @@ namespace {
 								   botf::common::GlobalSettings::aimSendPointDelta;
 }
 
+[[nodiscard]] bool isLeftMouseDown() {
+#if SFML_VERSION_MAJOR >= 3
+	return sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+#else
+	return sf::Mouse::isButtonPressed(sf::Mouse::Left);
+#endif
+}
+
 }  // namespace
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
@@ -94,6 +102,31 @@ void botf::app::ClientApp::onStartGamePressed(const std::uint16_t port) {
 	// until card 47; match path is intentionally broken until then.
 	sendJoinSession();
 	m_gameState = GameState::Waiting;
+}
+
+void botf::app::ClientApp::returnToMenu() {
+	m_joinSessionSent = false;
+	m_selfId.reset();
+	m_forceInputSend = true;
+	m_lastInputSent.reset();
+	m_latestWorld.reset();
+	m_prevLmbDown = false;
+	m_rendering.getMatch().finish();
+	m_gameState = GameState::Menu;
+}
+
+void botf::app::ClientApp::pollNetwork() {
+	if (!m_net.isConnected()) {
+		return;
+	}
+
+	m_net.poll();
+	if (!m_net.isConnected()) {
+		botf::log::warn("[client] disconnected from server");
+		returnToMenu();
+		return;
+	}
+	applyInbound();
 }
 
 void botf::app::ClientApp::applyInbound() {
@@ -148,6 +181,36 @@ void botf::app::ClientApp::maybeSendInput(const MoveInput& move, bool fire, std:
 	++m_sequence;
 }
 
+void botf::app::ClientApp::tickPlaying(const bool fire, std::uint32_t& tick) {
+	const MoveInput move = m_rendering.getInputHandler().readMoveInput();
+	maybeSendInput(move, fire, tick);
+	++tick;
+
+	pollNetwork();
+	if (m_gameState != GameState::Playing) {
+		return;
+	}
+
+	if (m_latestWorld) {
+		m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld, m_selfId);
+	}
+	m_rendering.getMatch().update();
+}
+
+void botf::app::ClientApp::present() {
+	switch (m_gameState) {
+	case GameState::Menu:
+		m_rendering.drawMenu();
+		break;
+	case GameState::Waiting:
+		m_rendering.drawWaiting();
+		break;
+	case GameState::Playing:
+		m_rendering.drawMatch();
+		break;
+	}
+}
+
 int botf::app::ClientApp::run(std::uint16_t port) {
 	botf::log::init();
 
@@ -159,53 +222,30 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 
 	std::uint32_t tick = 1;
 	while (m_rendering.isWindowOpen()) {
-		const common::Point mouse = m_rendering.mouseWorldPosition();
-#if SFML_VERSION_MAJOR >= 3
-		const bool lmbDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
-#else
-		const bool lmbDown = sf::Mouse::isButtonPressed(sf::Mouse::Left);
-#endif
-		const bool fireEdge = lmbDown && !m_prevLmbDown;
+		const bool lmbDown = isLeftMouseDown();
+		const bool lmbPressed = lmbDown && !m_prevLmbDown;
 		m_prevLmbDown = lmbDown;
 
-		if (m_gameState == GameState::Menu) {
+		switch (m_gameState) {
+		case GameState::Menu: {
 			MenuScreen& menu = m_rendering.getMenuScreen();
+			const common::Point mouse = m_rendering.mouseWorldPosition();
 			menu.setHovered(menu.containsPoint(mouse));
-			if (fireEdge && menu.containsPoint(mouse)) {
+			if (lmbPressed && menu.containsPoint(mouse)) {
 				onStartGamePressed(port);
 			}
-		} else {
-			const MoveInput move = m_rendering.getInputHandler().readMoveInput();
-			maybeSendInput(move, fireEdge, tick);
-			++tick;
-
-			if (m_net.isConnected()) {
-				m_net.poll();
-				if (!m_net.isConnected()) {
-					botf::log::warn("[client] disconnected from server");
-					m_joinSessionSent = false;
-					m_selfId.reset();
-					m_forceInputSend = true;
-					m_lastInputSent.reset();
-					m_prevLmbDown = false;
-					m_gameState = GameState::Menu;
-				}
-			}
-
-			applyInbound();
-
-			if (m_latestWorld) {
-				m_rendering.getMatch().applyWorldSnapshot(*m_latestWorld, m_selfId);
-			}
-			m_rendering.getMatch().update();
+			break;
+		}
+		case GameState::Waiting:
+			// Hold TCP + listen only. No Match / combat input until Playing (card 47).
+			pollNetwork();
+			break;
+		case GameState::Playing:
+			tickPlaying(lmbPressed, tick);
+			break;
 		}
 
-		if (m_gameState == GameState::Menu && m_net.isConnected()) {
-			m_net.poll();
-			applyInbound();
-		}
-
-		m_rendering.draw(m_gameState);
+		present();
 	}
 
 	m_rendering.getMatch().finish();

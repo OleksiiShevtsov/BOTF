@@ -11,7 +11,7 @@
 
 namespace botf::app {
 
-// Client runtime: menu → JoinSession → (later) match.
+// Client runtime: Menu → JoinSession → Waiting → (card 47) Playing.
 class ClientApp {
 public:
 	ClientApp();
@@ -25,8 +25,12 @@ public:
 private:
 	void sendJoinSession();
 	void onStartGamePressed(std::uint16_t port);
+	void returnToMenu();
+	void pollNetwork();
 	void applyInbound();
+	void tickPlaying(bool fire, std::uint32_t& tick);
 	void maybeSendInput(const MoveInput& move, bool fire, std::uint32_t tick);
+	void present();
 
 	net::ClientInboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
