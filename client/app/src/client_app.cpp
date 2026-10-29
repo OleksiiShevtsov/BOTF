@@ -86,7 +86,7 @@ void botf::app::ClientApp::sendJoinSession() {
 }
 
 void botf::app::ClientApp::onStartGamePressed(const std::uint16_t port) {
-	if (m_gameState != GameState::Menu) {
+	if (m_clientState != common::ClientState::Menu) {
 		return;
 	}
 
@@ -101,7 +101,7 @@ void botf::app::ClientApp::onStartGamePressed(const std::uint16_t port) {
 	// Card 45: do not send ClientConnect (login/spawn). JoinSession only — server ignores
 	// until card 47; match path is intentionally broken until then.
 	sendJoinSession();
-	m_gameState = GameState::Waiting;
+	m_clientState = common::ClientState::Waiting;
 }
 
 void botf::app::ClientApp::returnToMenu() {
@@ -112,7 +112,7 @@ void botf::app::ClientApp::returnToMenu() {
 	m_latestWorld.reset();
 	m_prevLmbDown = false;
 	m_rendering.getMatch().finish();
-	m_gameState = GameState::Menu;
+	m_clientState = common::ClientState::Menu;
 }
 
 void botf::app::ClientApp::pollNetwork() {
@@ -187,7 +187,7 @@ void botf::app::ClientApp::tickPlaying(const bool fire, std::uint32_t& tick) {
 	++tick;
 
 	pollNetwork();
-	if (m_gameState != GameState::Playing) {
+	if (m_clientState != common::ClientState::Playing) {
 		return;
 	}
 
@@ -198,14 +198,14 @@ void botf::app::ClientApp::tickPlaying(const bool fire, std::uint32_t& tick) {
 }
 
 void botf::app::ClientApp::present() {
-	switch (m_gameState) {
-	case GameState::Menu:
+	switch (m_clientState) {
+	case common::ClientState::Menu:
 		m_rendering.drawMenu();
 		break;
-	case GameState::Waiting:
+	case common::ClientState::Waiting:
 		m_rendering.drawWaiting();
 		break;
-	case GameState::Playing:
+	case common::ClientState::Playing:
 		m_rendering.drawMatch();
 		break;
 	}
@@ -215,7 +215,7 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 	botf::log::init();
 
 	m_rendering.getPlayer().setId(0);
-	m_gameState = GameState::Menu;
+	m_clientState = common::ClientState::Menu;
 	if (!m_rendering.getMenuScreen().isReady()) {
 		botf::log::error("[client] menu font missing (content/ui/DejaVuSans.ttf)");
 	}
@@ -226,8 +226,8 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 		const bool lmbPressed = lmbDown && !m_prevLmbDown;
 		m_prevLmbDown = lmbDown;
 
-		switch (m_gameState) {
-		case GameState::Menu: {
+		switch (m_clientState) {
+		case common::ClientState::Menu: {
 			MenuScreen& menu = m_rendering.getMenuScreen();
 			const common::Point mouse = m_rendering.mouseWorldPosition();
 			menu.setHovered(menu.containsPoint(mouse));
@@ -236,11 +236,11 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 			}
 			break;
 		}
-		case GameState::Waiting:
+		case common::ClientState::Waiting:
 			// Hold TCP + listen only. No Match / combat input until Playing (card 47).
 			pollNetwork();
 			break;
-		case GameState::Playing:
+		case common::ClientState::Playing:
 			tickPlaying(lmbPressed, tick);
 			break;
 		}

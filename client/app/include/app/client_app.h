@@ -1,7 +1,6 @@
 #pragma once
 
 #include "app/app_rendering.h"
-#include "app/game_state.h"
 #include "common/dto.hpp"
 #include "common/types.hpp"
 #include "net/tcp_client.hpp"
@@ -36,7 +35,7 @@ private:
 	net::OutboundQueue m_outbound;
 	net::TcpClient m_net;
 	AppRendering m_rendering;
-	GameState m_gameState{GameState::Menu};
+	common::ClientState m_clientState{common::ClientState::Menu};
 
 	std::uint64_t m_sequence = 1;
 	bool m_joinSessionSent = false;
