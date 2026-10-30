@@ -54,6 +54,14 @@ namespace {
 	return common::JoinSessionMessage{};
 }
 
+[[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage&) {
+	return botf::SessionStart{};
+}
+
+[[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart&) {
+	return common::SessionStartMessage{};
+}
+
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {
 	botf::ClientInput message;
 	message.set_tick(input.tick);

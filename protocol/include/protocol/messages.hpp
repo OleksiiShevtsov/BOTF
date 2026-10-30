@@ -11,7 +11,8 @@ namespace botf::protocol {
 using MessageBody = std::variant<common::ClientConnectMessage,
 								 common::ClientInput,
 								 common::WorldSnapshot,
-								 common::JoinSessionMessage>;
+								 common::JoinSessionMessage,
+								 common::SessionStartMessage>;
 
 // decode() result: DTO + envelope sequence.
 struct DecodedEnvelope {

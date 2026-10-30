@@ -84,6 +84,14 @@ inline std::string encodeJoinSession(const common::JoinSessionMessage& join,
 	return envelope.SerializeAsString();
 }
 
+inline std::string encodeSessionStart(const common::SessionStartMessage& start,
+									  std::uint64_t sequence) {
+	botf::Envelope envelope;
+	envelope.set_sequence(sequence);
+	*envelope.mutable_session_start() = toProto(start);
+	return envelope.SerializeAsString();
+}
+
 inline std::optional<DecodedEnvelope> decode(const std::string& envelopeBytes) {
 	botf::Envelope envelope;
 	if (!envelope.ParseFromString(envelopeBytes)) {
@@ -100,6 +108,8 @@ inline std::optional<DecodedEnvelope> decode(const std::string& envelopeBytes) {
 			return DecodedEnvelope{fromProto(envelope.world_state()), envelope.sequence()};
 		case botf::Envelope::kJoinSession:
 			return DecodedEnvelope{fromProto(envelope.join_session()), envelope.sequence()};
+		case botf::Envelope::kSessionStart:
+			return DecodedEnvelope{fromProto(envelope.session_start()), envelope.sequence()};
 		case botf::Envelope::BODY_NOT_SET:
 		default:
 			return std::nullopt;

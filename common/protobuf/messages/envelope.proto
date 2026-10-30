@@ -17,6 +17,9 @@ message ClientConnect {
 // Empty payload for now; server handling + map_id → card 47.
 message JoinSession {}
 
+// Server → client: match may begin (Waiting → Playing). Empty for now; fields → card 47.
+message SessionStart {}
+
 // Wire envelope: SFML TCP sends [uint32 le length][serialized Envelope].
 // Message kind = which `body` oneof arm is set (no separate MessageType enum).
 message Envelope {
@@ -26,5 +29,6 @@ message Envelope {
     ClientInput client_input = 3;
     WorldState world_state = 4;
     JoinSession join_session = 5;
+    SessionStart session_start = 6;
   }
 }

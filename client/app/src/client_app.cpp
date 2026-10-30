@@ -149,6 +149,14 @@ void botf::app::ClientApp::applyInbound() {
 				botf::log::info("[client] bound to entity {}", *m_selfId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
 				m_latestWorld = body;
+			} else if constexpr (std::is_same_v<Body, common::SessionStartMessage>) {
+				if (m_clientState != common::ClientState::Waiting) {
+					botf::log::warn("[client] SessionStart ignored (not Waiting)");
+					return;
+				}
+				m_rendering.getMatch().start();
+				m_clientState = common::ClientState::Playing;
+				botf::log::info("[client] SessionStart → Playing");
 			}
 			// ClientInput / JoinSession from server are ignored.
 		});
