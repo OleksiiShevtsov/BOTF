@@ -33,7 +33,11 @@ void centerText(sf::Text& text, const float centerX, const float centerY) {
 
 }  // namespace
 
-botf::app::MenuScreen::MenuScreen() {
+botf::app::MenuScreen::MenuScreen()
+#if SFML_VERSION_MAJOR >= 3
+	: m_label(m_font), m_waitingLabel(m_font)
+#endif
+{
 	const std::filesystem::path fontPath = utils::contentRoot() / "ui" / "DejaVuSans.ttf";
 #if SFML_VERSION_MAJOR >= 3
 	m_fontLoaded = m_font.openFromFile(fontPath.string());
@@ -53,13 +57,15 @@ botf::app::MenuScreen::MenuScreen() {
 	m_button.setPosition(sf::Vector2f{buttonX, buttonY});
 	m_button.setFillColor(kButtonFill);
 
+#if SFML_VERSION_MAJOR < 3
 	m_label.setFont(m_font);
+	m_waitingLabel.setFont(m_font);
+#endif
 	m_label.setString("START GAME");
 	m_label.setCharacterSize(kLabelCharacterSize);
 	m_label.setFillColor(kLabelFill);
 	centerText(m_label, buttonX + kButtonWidth * 0.5f, buttonY + kButtonHeight * 0.5f);
 
-	m_waitingLabel.setFont(m_font);
 	m_waitingLabel.setString("WAITING...");
 	m_waitingLabel.setCharacterSize(kWaitingCharacterSize);
 	m_waitingLabel.setFillColor(kLabelFill);
