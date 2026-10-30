@@ -1,23 +1,33 @@
 #include "engine/game_sessions_pool.h"
 
+#include "common/log.hpp"
+
 #include <memory>
 #include <stdexcept>
 
 botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
 	: m_gameMapPool(gameMapPool) {}
 
-botf::common::ID botf::GameSessionsPool::ensureDefaultFor(const common::ID clientId) {
+botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(const common::ID clientId) {
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
 		return existing->getId();
 	}
 
-	// TODO: пока нет распределителя клиентов по доступным сессиям —
-	// всегда сажаем в первую (и пока единственную) сессию.
-	const common::ID sessionId =
-		!m_sessions.empty() ? m_sessions.begin()->first : createSession().getId();
+	for (auto& [sessionId, gameSession] : m_sessions) {
+		const std::size_t occupied = getSessionClients(sessionId).size();
+		if (gameSession->hasFreeSeats(occupied)) {
+			m_clientToSessionId[clientId] = sessionId;
+			botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId,
+							sessionId, occupied + 1, gameSession->seatCapacity());
+			return sessionId;
+		}
+	}
 
-	m_clientToSessionId[clientId] = sessionId;
-	return sessionId;
+	GameSession& created = createSession();
+	m_clientToSessionId[clientId] = created.getId();
+	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
+					created.getId(), created.seatCapacity(), created.getGameMap().getId());
+	return created.getId();
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const common::ID clientId) {

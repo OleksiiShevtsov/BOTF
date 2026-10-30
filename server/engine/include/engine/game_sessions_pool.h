@@ -12,9 +12,8 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Membership: ID → ID → GameSession. Card 46: one shared session.
-// Map templates live in GameMapPool (owned by ServerEngine, card 51) —
-// this pool only holds a reference for createSession().
+// Membership clientId → sessionId lives only here (card 46/47).
+// Map templates: GameMapPool ref for createSession().
 class GameSessionsPool {
 public:
 	explicit GameSessionsPool(GameMapPool& gameMapPool);
@@ -22,9 +21,9 @@ public:
 	GameSessionsPool(const GameSessionsPool&) = delete;
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
-	// Client → session. If unbound: join the existing default session, or create one.
-	// Returns session id (not a reference).
-	common::ID ensureDefaultFor(const common::ID clientId);
+	// JoinSession path: first Forming with free seats, else create (map picked now).
+	// Idempotent if client already mapped. Does not spawn figures (Forming).
+	common::ID joinFormingOrCreate(const common::ID clientId);
 
 	[[nodiscard]] GameSession* findGameSessionByClientId(const common::ID clientId);
 	[[nodiscard]] const GameSession* findGameSessionByClientId(const common::ID clientId) const;
@@ -32,10 +31,8 @@ public:
 	[[nodiscard]] GameSession* findGameSessionBySessionId(const common::ID sessionId);
 	[[nodiscard]] const GameSession* findGameSessionBySessionId(const common::ID sessionId) const;
 
-	// Drop client→session membership and destroy bound figure in that session.
 	void removeClient(const common::ID clientId);
 
-	// Clients currently mapped to this session (for WorldState fan-out).
 	[[nodiscard]] std::vector<common::ID> getSessionClients(const common::ID sessionId) const;
 
 	[[nodiscard]] std::size_t size() const;

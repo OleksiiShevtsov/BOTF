@@ -1,14 +1,20 @@
 #include "engine/game_session.h"
 
 #include "common/log.hpp"
+#include "utils/random.hpp"
 
+#include <numeric>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
 	: m_id{id}, m_gameMap{std::move(gameMap)} {
 	if (!m_gameMap) {
 		throw std::runtime_error("GameSession: gameMap is null");
+	}
+	if (m_gameMap->getSpawns().empty()) {
+		throw std::runtime_error("GameSession: gameMap has no spawns");
 	}
 }
 
@@ -20,47 +26,57 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 	return *m_gameMap;
 }
 
-std::optional<std::size_t> botf::GameSession::placeInFirstAvailableSpawnPoint(
-	const common::ID clientId) {
-	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
-	for (std::size_t candidate = 0; candidate < spawns.size(); ++candidate) {
-		bool taken = false;
-		for (const std::pair<const common::ID, std::size_t>& entry : m_clientSpawnIndex) {
-			if (entry.second == candidate) {
-				taken = true;
-				break;
-			}
-		}
-		if (taken) {
-			continue;
-		}
-		m_clientSpawnIndex.emplace(clientId, candidate);
-		return candidate;
-	}
-	return std::nullopt;
+botf::SessionPhase botf::GameSession::phase() const {
+	return m_phase;
 }
 
-std::optional<botf::common::ID> botf::GameSession::bindOrSpawnClient(const common::ID clientId) {
-	if (const auto existing = m_gameLogic.entityForClient(clientId)) {
-		return *existing;
-	}
+std::size_t botf::GameSession::seatCapacity() const {
+	return m_gameMap->getSpawns().size();
+}
 
-	const auto spawnIndex = placeInFirstAvailableSpawnPoint(clientId);
-	if (!spawnIndex) {
-		// TODO(card 47): single-session scaffold — later open a new session and seat there.
+bool botf::GameSession::hasFreeSeats(const std::size_t occupied) const {
+	return m_phase == SessionPhase::Forming && occupied < seatCapacity();
+}
+
+bool botf::GameSession::beginPlaying(const std::vector<common::ID>& clients) {
+	if (m_phase != SessionPhase::Forming) {
+		botf::log::warn("[server] beginPlaying refused: session {} phase != Forming", m_id);
+		return false;
+	}
+	if (clients.size() != seatCapacity()) {
 		botf::log::warn(
-			"[server] TODO(card 47): session {} full (spawns={}); refuse client {} (only one "
-			"session for now)",
-			m_id, m_gameMap->getSpawns().size(), clientId);
-		return std::nullopt;
+			"[server] beginPlaying refused: session {} clients={} capacity={}", m_id,
+			clients.size(), seatCapacity());
+		return false;
+	}
+	if (!m_clientSpawnIndex.empty() || !m_gameLogic.figures().empty()) {
+		botf::log::error("[server] beginPlaying: session {} already has figures", m_id);
+		return false;
 	}
 
-	const common::Point at = m_gameMap->getSpawns()[*spawnIndex];
-	const common::ID entity = m_gameLogic.spawnPlayer(at);
-	m_gameLogic.bindClient(clientId, entity);
-	botf::log::info("[server] client {} bound to entity {} (sessionId={}, mapId={}, spawn={})",
-					clientId, entity, m_id, m_gameMap->getId(), *spawnIndex);
-	return entity;
+	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
+	std::vector<std::size_t> seatOrder(spawns.size());
+	std::iota(seatOrder.begin(), seatOrder.end(), 0);
+	// Fisher–Yates via shared utils RNG.
+	for (std::size_t i = seatOrder.size(); i > 1; --i) {
+		const std::size_t j = utils::randomIndex(i);
+		std::swap(seatOrder[i - 1], seatOrder[j]);
+	}
+
+	for (std::size_t i = 0; i < clients.size(); ++i) {
+		const common::ID clientId = clients[i];
+		const std::size_t spawnIndex = seatOrder[i];
+		m_clientSpawnIndex.emplace(clientId, spawnIndex);
+		const common::ID entity = m_gameLogic.spawnPlayer(spawns[spawnIndex]);
+		m_gameLogic.bindClient(clientId, entity);
+		botf::log::info(
+			"[server] session {} seated client {} → entity {} spawn={}", m_id, clientId, entity,
+			spawnIndex);
+	}
+
+	m_phase = SessionPhase::Playing;
+	botf::log::info("[server] session {} Forming → Playing ({} players)", m_id, clients.size());
+	return true;
 }
 
 void botf::GameSession::removeClient(const common::ID clientId) {
@@ -70,6 +86,9 @@ void botf::GameSession::removeClient(const common::ID clientId) {
 
 void botf::GameSession::applyClientInput(const common::ID clientId,
 										const common::ClientInput& clientInput) {
+	if (m_phase != SessionPhase::Playing) {
+		return;
+	}
 	m_gameLogic.setClientInput(clientId, clientInput.dx, clientInput.dy);
 	m_gameLogic.setClientAim(clientId, clientInput.aim);
 	if (clientInput.fire) {
@@ -77,11 +96,14 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 	}
 }
 
-void botf::GameSession::tick(float dt) {
+void botf::GameSession::tick(const float dt) {
+	if (m_phase != SessionPhase::Playing) {
+		return;
+	}
 	m_gameLogic.tick(dt);
 }
 
-botf::common::WorldSnapshot botf::GameSession::buildWorldSnapshot(std::uint32_t tick) const {
+botf::common::WorldSnapshot botf::GameSession::buildWorldSnapshot(const std::uint32_t tick) const {
 	common::WorldSnapshot snapshot;
 	snapshot.tick = tick;
 	snapshot.figures.reserve(m_gameLogic.figures().size());

@@ -30,9 +30,9 @@ public:
 	bool startListen(std::uint16_t port);
 	void shutdown();
 	void pollNetwork();
-	// ClientConnect (spawn/bind + ack), ClientInput (own entity only).
+	// ClientConnect (login ack), JoinSession (Forming/Playing), ClientInput (Playing only).
 	void applyInbound();
-	// tick all sessions + enqueue WorldState for the new sim tick.
+	// tick Playing sessions + enqueue WorldState.
 	void advanceSim(float dt);
 
 	[[nodiscard]] std::uint16_t port() const;
@@ -57,9 +57,11 @@ private:
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::uint64_t sequence);
+	void handleJoinSession(const common::ID clientId, std::uint64_t sequence);
 	void handleClientInput(const common::ID clientId,
 						   const common::ClientInput& clientInput,
 						   std::uint64_t sequence);
+	void tryStartSessionIfFull(const common::ID sessionId, std::uint64_t sequence);
 	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 

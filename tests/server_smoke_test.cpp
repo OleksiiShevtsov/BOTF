@@ -1,3 +1,4 @@
+#include "engine/game_session.h"
 #include "engine/server_engine.h"
 #include "helpers/test_env.h"
 #include "net/packet_framing.hpp"
@@ -47,14 +48,15 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-std::optional<botf::common::ID> clientConnectBind(botf::ServerEngine& engine,
-														sf::TcpSocket& client,
-														std::vector<std::uint8_t>& recvBuffer,
-														botf::common::ID expectedClientId,
-														std::uint64_t sequence) {
-	EXPECT_TRUE(sendFramed(
-		client, botf::protocol::encodeClientConnect(botf::common::ClientConnectMessage{}, sequence)));
+bool sendJoinSession(sf::TcpSocket& client, std::uint64_t sequence) {
+	return sendFramed(client,
+					  botf::protocol::encodeJoinSession(botf::common::JoinSessionMessage{}, sequence));
+}
 
+// Pump engine until this socket receives SessionStart; returns bound entity id.
+std::optional<botf::common::ID> awaitSessionStart(botf::ServerEngine& engine,
+												  sf::TcpSocket& client,
+												  std::vector<std::uint8_t>& recvBuffer) {
 	for (int i = 0; i < 200; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
@@ -70,15 +72,66 @@ std::optional<botf::common::ID> clientConnectBind(botf::ServerEngine& engine,
 		if (!decoded) {
 			continue;
 		}
-		const auto* connect = std::get_if<botf::common::ClientConnectMessage>(&decoded->body);
-		if (!connect || connect->boundId == 0) {
+		const auto* start = std::get_if<botf::common::SessionStartMessage>(&decoded->body);
+		if (!start || start->boundId == 0) {
 			continue;
 		}
-
-		EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(expectedClientId)->entityForClient(expectedClientId), connect->boundId);
-		return connect->boundId;
+		return start->boundId;
 	}
 	return std::nullopt;
+}
+
+// Map has 2 seats: two JoinSessions fill Forming → Playing + SessionStart to both.
+struct TwoPlayerMatch {
+	botf::common::ID entityA{};
+	botf::common::ID entityB{};
+};
+
+std::optional<TwoPlayerMatch> startTwoPlayerMatch(botf::ServerEngine& engine,
+												  sf::TcpSocket& clientA,
+												  sf::TcpSocket& clientB,
+												  std::vector<std::uint8_t>& bufferA,
+												  std::vector<std::uint8_t>& bufferB) {
+	if (!engine.getGameSessionsPool().empty()) {
+		return std::nullopt;
+	}
+
+	clientA.setBlocking(false);
+	clientB.setBlocking(false);
+
+	if (!sendJoinSession(clientA, 1)) {
+		return std::nullopt;
+	}
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	botf::GameSession* forming = engine.getGameSessionsPool().findGameSessionByClientId(1);
+	if (engine.getGameSessionsPool().size() != 1u || !forming ||
+		forming->phase() != botf::SessionPhase::Forming || !forming->figures().empty()) {
+		return std::nullopt;
+	}
+
+	if (!sendJoinSession(clientB, 1)) {
+		return std::nullopt;
+	}
+
+	const auto idA = awaitSessionStart(engine, clientA, bufferA);
+	const auto idB = awaitSessionStart(engine, clientB, bufferB);
+	if (!idA || !idB || *idA == *idB) {
+		return std::nullopt;
+	}
+
+	botf::GameSession* playing = engine.getGameSessionsPool().findGameSessionByClientId(1);
+	if (engine.getGameSessionsPool().size() != 1u || !playing ||
+		playing->phase() != botf::SessionPhase::Playing ||
+		playing != engine.getGameSessionsPool().findGameSessionByClientId(2) ||
+		playing->figures().size() != 2u) {
+		return std::nullopt;
+	}
+
+	return TwoPlayerMatch{*idA, *idB};
 }
 
 const botf::common::FigurePose* findFigure(const botf::common::WorldSnapshot& snapshot,
@@ -100,28 +153,33 @@ botf::common::ClientInput makeInput(int dx,
 
 }  // namespace
 
-TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
+TEST(ServerSmoke, JoinSessionFullStartsPlayingThenClientInputWorldState) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
-	EXPECT_TRUE(engine.getGameSessionsPool().empty());
 
-	sf::TcpSocket client;
-	client.setBlocking(true);
-	ASSERT_EQ(client.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+	sf::TcpSocket clientA;
+	sf::TcpSocket clientB;
+	clientA.setBlocking(true);
+	clientB.setBlocking(true);
+	ASSERT_EQ(clientA.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+	ASSERT_EQ(clientB.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
 			  sf::Socket::Status::Done);
 
-	std::vector<std::uint8_t> recvBuffer;
-	client.setBlocking(false);
-	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
-	ASSERT_TRUE(selfId.has_value());
-	ASSERT_EQ(engine.getGameSessionsPool().size(), 1u);
-	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().size(), 1u);
-	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().front().getId(), *selfId);
+	std::vector<std::uint8_t> bufferA;
+	std::vector<std::uint8_t> bufferB;
+	const auto match = startTwoPlayerMatch(engine, clientA, clientB, bufferA, bufferB);
+	ASSERT_TRUE(match.has_value());
 
-	const auto start = engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().front().getPosition();
+	botf::common::Point startA{};
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
+		if (obj.getId() == match->entityA) {
+			startA = obj.getPosition();
+		}
+	}
 
 	struct Sample {
 		int dx;
@@ -136,11 +194,11 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 		{0, 0, 4, 5},
 	};
 
-	client.setBlocking(true);
+	clientA.setBlocking(true);
 	for (const auto& sample : samples) {
 		ASSERT_TRUE(
-			sendFramed(client, botf::protocol::encodeClientInput(
-								   makeInput(sample.dx, sample.dy, sample.tick), sample.seq)));
+			sendFramed(clientA, botf::protocol::encodeClientInput(
+									makeInput(sample.dx, sample.dy, sample.tick), sample.seq)));
 
 		bool got = false;
 		for (int i = 0; i < 100 && !got; ++i) {
@@ -165,14 +223,14 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
 
-	client.setBlocking(false);
+	clientA.setBlocking(false);
 
 	botf::common::WorldSnapshot lastSnapshot;
 	bool gotWorld = false;
 	for (int i = 0; i < 500; ++i) {
 		engine.pollNetwork();
 		std::string payload;
-		if (!recvOneFrame(client, recvBuffer, payload, 1)) {
+		if (!recvOneFrame(clientA, bufferA, payload, 1)) {
 			if (gotWorld && i > 50) {
 				break;
 			}
@@ -191,27 +249,32 @@ TEST(ServerSmoke, ClientConnectBindThenClientInputWorldState) {
 		gotWorld = true;
 	}
 
-	client.disconnect();
-
 	const auto last = engine.lastClientInput(1);
 	ASSERT_TRUE(last.has_value());
 	EXPECT_EQ(last->tick, 4u);
 	EXPECT_TRUE(botf::protocol::isIdle(*last));
 
-	const auto end = engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().front().getPosition();
-	EXPECT_FALSE(end.x == start.x && end.y == start.y) << "FigureObject did not move";
+	botf::common::Point endA{};
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
+		if (obj.getId() == match->entityA) {
+			endA = obj.getPosition();
+		}
+	}
+	EXPECT_FALSE(endA.x == startA.x && endA.y == startA.y) << "FigureObject did not move";
 
 	ASSERT_TRUE(gotWorld);
-	const auto* pose = findFigure(lastSnapshot, *selfId);
+	const auto* pose = findFigure(lastSnapshot, match->entityA);
 	ASSERT_NE(pose, nullptr);
-	const float dx = pose->position.x - end.x;
-	const float dy = pose->position.y - end.y;
+	const float dx = pose->position.x - endA.x;
+	const float dy = pose->position.y - endA.y;
 	EXPECT_LE(dx * dx + dy * dy, 0.01f);
 
+	clientA.disconnect();
+	clientB.disconnect();
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
+TEST(ServerSmoke, TwoClientsInputIsolationAndThirdOpensNewForming) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
@@ -229,25 +292,16 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 
 	std::vector<std::uint8_t> bufferA;
 	std::vector<std::uint8_t> bufferB;
-	clientA.setBlocking(false);
-	clientB.setBlocking(false);
-
-	const auto idA = clientConnectBind(engine, clientA, bufferA, 1, 1);
-	const auto idB = clientConnectBind(engine, clientB, bufferB, 2, 1);
-	ASSERT_TRUE(idA.has_value());
-	ASSERT_TRUE(idB.has_value());
-	EXPECT_NE(*idA, *idB);
-	ASSERT_EQ(engine.getGameSessionsPool().size(), 1u);
-	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().size(), 2u);
-	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1), engine.getGameSessionsPool().findGameSessionByClientId(2));
+	const auto match = startTwoPlayerMatch(engine, clientA, clientB, bufferA, bufferB);
+	ASSERT_TRUE(match.has_value());
 
 	botf::common::Point startA{};
 	botf::common::Point startB{};
 	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
-		if (obj.getId() == *idA) {
+		if (obj.getId() == match->entityA) {
 			startA = obj.getPosition();
 		}
-		if (obj.getId() == *idB) {
+		if (obj.getId() == match->entityB) {
 			startB = obj.getPosition();
 		}
 	}
@@ -275,10 +329,10 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	botf::common::Point endA{};
 	botf::common::Point endB{};
 	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
-		if (obj.getId() == *idA) {
+		if (obj.getId() == match->entityA) {
 			endA = obj.getPosition();
 		}
-		if (obj.getId() == *idB) {
+		if (obj.getId() == match->entityB) {
 			endB = obj.getPosition();
 		}
 	}
@@ -287,7 +341,7 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	EXPECT_FLOAT_EQ(endB.x, startB.x);
 	EXPECT_FLOAT_EQ(endB.y, startB.y);
 
-	// Unbound ClientInput (no ClientConnect) must not spawn a third entity.
+	// Unbound ClientInput (no JoinSession) must not create a session/entity.
 	sf::TcpSocket clientC;
 	clientC.setBlocking(true);
 	ASSERT_EQ(clientC.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
@@ -299,7 +353,23 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
 	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().size(), 2u);
-	EXPECT_FALSE(engine.getGameSessionsPool().findGameSessionByClientId(1)->entityForClient(3).has_value());
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(3), nullptr);
+
+	// Third JoinSession opens a new Forming session (Playing is full).
+	clientC.setBlocking(false);
+	std::vector<std::uint8_t> bufferC;
+	ASSERT_TRUE(sendJoinSession(clientC, 1));
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	ASSERT_EQ(engine.getGameSessionsPool().size(), 2u);
+	ASSERT_NE(engine.getGameSessionsPool().findGameSessionByClientId(3), nullptr);
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(3)->phase(),
+			  botf::SessionPhase::Forming);
+	EXPECT_NE(engine.getGameSessionsPool().findGameSessionByClientId(3),
+			  engine.getGameSessionsPool().findGameSessionByClientId(1));
 
 	clientA.disconnect();
 	clientB.disconnect();
@@ -307,29 +377,71 @@ TEST(ServerSmoke, TwoClientsClientConnectOwnEntityAndInputIsolation) {
 	engine.shutdown();
 }
 
-TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
+TEST(ServerSmoke, FormingIgnoresClientInputUntilPlaying) {
 	const auto port = botf::test::ephemeralPort();
 	ASSERT_TRUE(port.has_value());
 
 	botf::ServerEngine engine;
 	ASSERT_TRUE(engine.startListen(*port));
 
-	sf::TcpSocket client;
-	client.setBlocking(true);
-	ASSERT_EQ(client.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+	sf::TcpSocket clientA;
+	clientA.setBlocking(true);
+	ASSERT_EQ(clientA.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
 			  sf::Socket::Status::Done);
 
-	std::vector<std::uint8_t> recvBuffer;
-	client.setBlocking(false);
-	const auto selfId = clientConnectBind(engine, client, recvBuffer, 1, 1);
-	ASSERT_TRUE(selfId.has_value());
+	ASSERT_TRUE(sendJoinSession(clientA, 1));
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->phase(),
+			  botf::SessionPhase::Forming);
 
-	const auto pos = engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().front().getPosition();
-	// Aim due +X from entity → expected angle 0.
+	ASSERT_TRUE(sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(1, 0, 1), 2)));
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+	EXPECT_FALSE(engine.lastClientInput(1).has_value());
+	EXPECT_TRUE(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().empty());
+
+	clientA.disconnect();
+	engine.shutdown();
+}
+
+TEST(ServerSmoke, PlayingAimUpdatesEntityAngleInWorldState) {
+	const auto port = botf::test::ephemeralPort();
+	ASSERT_TRUE(port.has_value());
+
+	botf::ServerEngine engine;
+	ASSERT_TRUE(engine.startListen(*port));
+
+	sf::TcpSocket clientA;
+	sf::TcpSocket clientB;
+	clientA.setBlocking(true);
+	clientB.setBlocking(true);
+	ASSERT_EQ(clientA.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+	ASSERT_EQ(clientB.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+
+	std::vector<std::uint8_t> bufferA;
+	std::vector<std::uint8_t> bufferB;
+	const auto match = startTwoPlayerMatch(engine, clientA, clientB, bufferA, bufferB);
+	ASSERT_TRUE(match.has_value());
+
+	botf::common::Point pos{};
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
+		if (obj.getId() == match->entityA) {
+			pos = obj.getPosition();
+		}
+	}
 	const botf::common::Point aimPoint{pos.x + 100.f, pos.y};
-	client.setBlocking(true);
+	clientA.setBlocking(true);
 	ASSERT_TRUE(
-		sendFramed(client, botf::protocol::encodeClientInput(makeInput(0, 0, 7, aimPoint), 2)));
+		sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(0, 0, 7, aimPoint), 2)));
 
 	bool gotInput = false;
 	for (int i = 0; i < 100 && !gotInput; ++i) {
@@ -345,18 +457,24 @@ TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 	}
 	ASSERT_TRUE(gotInput);
 
-	EXPECT_NEAR(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().front().getAngle(), 0.f, 1e-4f);
+	float angle = 0.f;
+	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
+		if (obj.getId() == match->entityA) {
+			angle = obj.getAngle();
+		}
+	}
+	EXPECT_NEAR(angle, 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();
 
-	client.setBlocking(false);
+	clientA.setBlocking(false);
 	bool gotWorld = false;
 	float worldAngle = 0.f;
 	for (int i = 0; i < 200 && !gotWorld; ++i) {
 		engine.pollNetwork();
 		std::string payload;
-		if (!recvOneFrame(client, recvBuffer, payload, 1)) {
+		if (!recvOneFrame(clientA, bufferA, payload, 1)) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 			continue;
 		}
@@ -368,7 +486,7 @@ TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 		if (!world) {
 			continue;
 		}
-		const auto* pose = findFigure(*world, *selfId);
+		const auto* pose = findFigure(*world, match->entityA);
 		if (!pose) {
 			continue;
 		}
@@ -379,6 +497,7 @@ TEST(ServerSmoke, ClientConnectClientInputAimUpdatesEntityAngleInWorldState) {
 	ASSERT_TRUE(gotWorld);
 	EXPECT_NEAR(worldAngle, 0.f, 1e-4f);
 
-	client.disconnect();
+	clientA.disconnect();
+	clientB.disconnect();
 	engine.shutdown();
 }

@@ -54,12 +54,14 @@ namespace {
 	return common::JoinSessionMessage{};
 }
 
-[[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage&) {
-	return botf::SessionStart{};
+[[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage& start) {
+	botf::SessionStart message;
+	message.set_object_id(start.boundId);
+	return message;
 }
 
-[[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart&) {
-	return common::SessionStartMessage{};
+[[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart& start) {
+	return common::SessionStartMessage{start.object_id()};
 }
 
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {

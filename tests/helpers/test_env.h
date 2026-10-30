@@ -57,8 +57,8 @@ struct TestSessionPool {
 		}
 	}
 
-	common::ID ensureClient(const common::ID clientId) {
-		return pool.ensureDefaultFor(clientId);
+	common::ID joinClient(const common::ID clientId) {
+		return pool.joinFormingOrCreate(clientId);
 	}
 
 	[[nodiscard]] GameSession* sessionById(const common::ID sessionId) {

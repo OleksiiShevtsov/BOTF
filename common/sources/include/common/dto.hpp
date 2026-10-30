@@ -27,8 +27,11 @@ struct ClientConnectMessage {
 // Client → server: join / find GameSession (card 45). Empty for now; server → 47.
 struct JoinSessionMessage {};
 
-// Server → client: match may begin (Waiting → Playing). Empty for now; fields → 47.
-struct SessionStartMessage {};
+// Server → client: match may begin (client Waiting → Playing).
+// boundId = entity for this recipient after random seating.
+struct SessionStartMessage {
+	ID boundId{};
+};
 
 // Pose of a controllable actor in a world snapshot.
 struct FigurePose {
