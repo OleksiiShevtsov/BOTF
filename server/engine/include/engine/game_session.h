@@ -13,9 +13,15 @@
 
 namespace botf {
 
-// One live match: id + shared GameMap template + authoritative GameLogic facade.
-// Client membership lives in GameSessionsPool (card 46).
-// Phases Waiting/Playing — card 47.
+// Live match phase (card 47). Client UI uses ClientState::Waiting while Forming.
+enum class SessionPhase {
+	Forming,
+	Playing,
+	Finished,
+};
+
+// One live match: id + shared GameMap + phase + GameLogic facade.
+// Client→session membership lives only in GameSessionsPool (no duplicate roster here).
 class GameSession {
 public:
 	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
@@ -25,11 +31,15 @@ public:
 
 	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
+	[[nodiscard]] SessionPhase phase() const;
+	[[nodiscard]] std::size_t seatCapacity() const;
 
-	// Bind existing client or spawn on first free seat. nullopt if session is full.
-	// TODO(card 47): on full session, open another session instead of refusing forever
-	// (scaffold still has a single shared session).
-	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
+	// Forming and occupied < capacity. occupied = pool membership count (source of truth).
+	[[nodiscard]] bool hasFreeSeats(std::size_t occupied) const;
+
+	// Forming → Playing: random seat assignment, spawn+bind, then phase Playing.
+	// Requires clients.size() == seatCapacity(). Returns false if refused.
+	[[nodiscard]] bool beginPlaying(const std::vector<common::ID>& clients);
 
 	void removeClient(const common::ID clientId);
 
@@ -43,12 +53,11 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] std::optional<std::size_t> placeInFirstAvailableSpawnPoint(
-		const common::ID clientId);
-
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;
+	SessionPhase m_phase{SessionPhase::Forming};
 	GameLogic m_gameLogic;
+	// Filled only in beginPlaying (Playing). Not used as membership during Forming.
 	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
 };
 

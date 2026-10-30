@@ -140,8 +140,8 @@ void botf::app::ClientApp::applyInbound() {
 		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
+				// boundId == 0: login ack only (no entity). Entity comes with SessionStart.
 				if (body.boundId == 0) {
-					botf::log::warn("[client] ClientConnect ack without object_id");
 					return;
 				}
 				m_selfId = body.boundId;
@@ -154,9 +154,15 @@ void botf::app::ClientApp::applyInbound() {
 					botf::log::warn("[client] SessionStart ignored (not Waiting)");
 					return;
 				}
+				if (body.boundId == 0) {
+					botf::log::warn("[client] SessionStart without object_id");
+					return;
+				}
+				m_selfId = body.boundId;
+				m_rendering.getPlayer().setId(*m_selfId);
 				m_rendering.getMatch().start();
 				m_clientState = common::ClientState::Playing;
-				botf::log::info("[client] SessionStart → Playing");
+				botf::log::info("[client] SessionStart → Playing (entity {})", *m_selfId);
 			}
 			// ClientInput / JoinSession from server are ignored.
 		});

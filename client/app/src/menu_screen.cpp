@@ -14,10 +14,22 @@ constexpr float kButtonHeight = 56.f;
 // Slightly above geometric center of the window.
 constexpr float kButtonCenterYOffset = -40.f;
 constexpr unsigned int kLabelCharacterSize = 22;
+constexpr unsigned int kWaitingCharacterSize = 28;
 
 const sf::Color kButtonFill{55, 55, 55};
 const sf::Color kButtonHoverFill{70, 70, 70};
 const sf::Color kLabelFill{255, 255, 255};
+
+void centerText(sf::Text& text, const float centerX, const float centerY) {
+	const sf::FloatRect bounds = text.getLocalBounds();
+#if SFML_VERSION_MAJOR >= 3
+	text.setOrigin({bounds.size.x * 0.5f, bounds.size.y * 0.5f});
+	text.setPosition({centerX, centerY});
+#else
+	text.setOrigin(bounds.left + bounds.width * 0.5f, bounds.top + bounds.height * 0.5f);
+	text.setPosition(centerX, centerY);
+#endif
+}
 
 }  // namespace
 
@@ -45,15 +57,13 @@ botf::app::MenuScreen::MenuScreen() {
 	m_label.setString("START GAME");
 	m_label.setCharacterSize(kLabelCharacterSize);
 	m_label.setFillColor(kLabelFill);
+	centerText(m_label, buttonX + kButtonWidth * 0.5f, buttonY + kButtonHeight * 0.5f);
 
-	const sf::FloatRect bounds = m_label.getLocalBounds();
-#if SFML_VERSION_MAJOR >= 3
-	m_label.setOrigin({bounds.size.x * 0.5f, bounds.size.y * 0.5f});
-	m_label.setPosition({buttonX + kButtonWidth * 0.5f, buttonY + kButtonHeight * 0.5f});
-#else
-	m_label.setOrigin(bounds.left + bounds.width * 0.5f, bounds.top + bounds.height * 0.5f);
-	m_label.setPosition(buttonX + kButtonWidth * 0.5f, buttonY + kButtonHeight * 0.5f);
-#endif
+	m_waitingLabel.setFont(m_font);
+	m_waitingLabel.setString("WAITING...");
+	m_waitingLabel.setCharacterSize(kWaitingCharacterSize);
+	m_waitingLabel.setFillColor(kLabelFill);
+	centerText(m_waitingLabel, windowW * 0.5f, windowH * 0.5f + kButtonCenterYOffset);
 }
 
 bool botf::app::MenuScreen::isReady() const {
@@ -80,4 +90,11 @@ void botf::app::MenuScreen::draw(sf::RenderTarget& target) const {
 	}
 	target.draw(m_button);
 	target.draw(m_label);
+}
+
+void botf::app::MenuScreen::drawWaiting(sf::RenderTarget& target) const {
+	if (!m_fontLoaded) {
+		return;
+	}
+	target.draw(m_waitingLabel);
 }

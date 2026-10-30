@@ -104,40 +104,63 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::uint64_t sequence) {
-	// Card 46 scaffold: TCP login still enters the sole GameSession.
-	// Later (45/47): ClientConnect = server login only; JoinSession notification joins match.
-	const common::ID sessionId = m_gameSessionsPool.ensureDefaultFor(clientId);
-	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
-	if (!gameSession) {
-		botf::log::error("[server] connect: missing session {} for client {}", sessionId, clientId);
-		return;
-	}
-	const auto entityId = gameSession->bindOrSpawnClient(clientId);
-	if (!entityId) {
-		// TODO(card 47): create/join another session instead of dropping connect.
-		botf::log::warn(
-			"[server] TODO(card 47): client {} refused (session full; single-session scaffold)",
-			clientId);
-		return;
-	}
-	const common::ClientConnectMessage ack{connect.playerName, *entityId};
+	// Login only — no GameSession, no spawn. Match join is JoinSession (card 47).
+	botf::log::info("[server] ClientConnect login client {} name='{}'", clientId,
+					connect.playerName);
+	const common::ClientConnectMessage ack{connect.playerName, 0};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
 		protocol::encodeClientConnect(ack, sequence),
 	});
 }
 
-void botf::ServerEngine::handleClientInput(const common::ID clientId,
-										   const common::ClientInput& clientInput,
-										   std::uint64_t sequence) {
-	m_inputStates[clientId] = ClientInputState{clientInput, sequence};
-
-	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
-	if (!gameSession) {
-		// Unbound ClientInput (no ClientConnect) — no-op.
+void botf::ServerEngine::tryStartSessionIfFull(const common::ID sessionId,
+											  const std::uint64_t sequence) {
+	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
+	if (!gameSession || gameSession->phase() != SessionPhase::Forming) {
 		return;
 	}
 
+	const std::vector<common::ID> clients = m_gameSessionsPool.getSessionClients(sessionId);
+	if (clients.size() != gameSession->seatCapacity()) {
+		return;
+	}
+
+	if (!gameSession->beginPlaying(clients)) {
+		botf::log::error("[server] session {} failed to beginPlaying", sessionId);
+		return;
+	}
+
+	for (const common::ID memberId : clients) {
+		const auto entityId = gameSession->entityForClient(memberId);
+		if (!entityId) {
+			botf::log::error("[server] session {} missing entity for client {}", sessionId,
+							 memberId);
+			continue;
+		}
+		m_outbound.push(net::OutboundNotification{
+			memberId,
+			protocol::encodeSessionStart(common::SessionStartMessage{*entityId}, sequence),
+		});
+	}
+}
+
+void botf::ServerEngine::handleJoinSession(const common::ID clientId,
+										   const std::uint64_t sequence) {
+	const common::ID sessionId = m_gameSessionsPool.joinFormingOrCreate(clientId);
+	tryStartSessionIfFull(sessionId, sequence);
+}
+
+void botf::ServerEngine::handleClientInput(const common::ID clientId,
+										   const common::ClientInput& clientInput,
+										   std::uint64_t sequence) {
+	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
+	if (!gameSession || gameSession->phase() != SessionPhase::Playing) {
+		// No session / still Forming — ignore Move/Fire.
+		return;
+	}
+
+	m_inputStates[clientId] = ClientInputState{clientInput, sequence};
 	gameSession->applyClientInput(clientId, clientInput);
 }
 
@@ -154,10 +177,12 @@ void botf::ServerEngine::applyInbound() {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
 				handleClientConnect(clientId, body, sequence);
+			} else if constexpr (std::is_same_v<Body, common::JoinSessionMessage>) {
+				handleJoinSession(clientId, sequence);
 			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
 				handleClientInput(clientId, body, sequence);
 			}
-			// WorldSnapshot / JoinSession from a client are ignored (JoinSession → card 47).
+			// WorldSnapshot / SessionStart from a client are ignored.
 		});
 	}
 }
@@ -179,6 +204,9 @@ void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 void botf::ServerEngine::advanceSim(float dt) {
 	++m_simTick;
 	for (auto& [sessionId, gameSession] : m_gameSessionsPool.sessions()) {
+		if (gameSession->phase() != SessionPhase::Playing) {
+			continue;
+		}
 		gameSession->tick(dt);
 		enqueueWorldState(sessionId, m_simTick, m_simTick);
 	}

@@ -6,7 +6,7 @@
 
 namespace botf::app {
 
-// Full-screen menu: solid background + centered "START GAME" button (card 45).
+// Menu button + Waiting label (shared font). Card 45/47.
 class MenuScreen {
 public:
 	MenuScreen();
@@ -18,11 +18,13 @@ public:
 	[[nodiscard]] bool containsPoint(common::Point point) const;
 	void setHovered(bool hovered);
 	void draw(sf::RenderTarget& target) const;
+	void drawWaiting(sf::RenderTarget& target) const;
 
 private:
 	sf::Font m_font{};
 	sf::RectangleShape m_button{};
 	sf::Text m_label{};
+	sf::Text m_waitingLabel{};
 	bool m_fontLoaded = false;
 	bool m_hovered = false;
 };
