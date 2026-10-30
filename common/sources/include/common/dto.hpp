@@ -18,11 +18,17 @@ struct ClientInput {
 };
 
 // ClientConnect / ack (login to server). boundId == 0 on client request.
-// Not a GameSession join — mapId comes with future JoinSession notification (45/47).
+// Not a GameSession join — that is JoinSession (45/47).
 struct ClientConnectMessage {
 	std::string playerName;
 	ID boundId{};
 };
+
+// Client → server: join / find GameSession (card 45). Empty for now; server → 47.
+struct JoinSessionMessage {};
+
+// Server → client: match may begin (Waiting → Playing). Empty for now; fields → 47.
+struct SessionStartMessage {};
 
 // Pose of a controllable actor in a world snapshot.
 struct FigurePose {

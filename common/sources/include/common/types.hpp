@@ -22,4 +22,11 @@ enum class LifeStatus : std::uint8_t {
 	Waiting = 2,
 };
 
+// Client UI / session flow (card 45). Playing entered from Waiting → card 47.
+enum class ClientState {
+	Menu,
+	Waiting,
+	Playing,
+};
+
 }  // namespace botf::common

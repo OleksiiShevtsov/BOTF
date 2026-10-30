@@ -10,7 +10,7 @@
 
 namespace botf::app {
 
-// Client runtime: window + input + TcpClient + WorldSnapshot → Match.
+// Client runtime: Menu → JoinSession → Waiting → (card 47) Playing.
 class ClientApp {
 public:
 	ClientApp();
@@ -18,21 +18,27 @@ public:
 	ClientApp(const ClientApp&) = delete;
 	ClientApp& operator=(const ClientApp&) = delete;
 
-	// Open window and run until closed. Tries localhost:port.
+	// Open window and run until closed. Tries localhost:port on "START GAME".
 	int run(std::uint16_t port = 54545);
 
 private:
-	void sendClientConnect();
+	void sendJoinSession();
+	void onStartGamePressed(std::uint16_t port);
+	void returnToMenu();
+	void pollNetwork();
 	void applyInbound();
+	void tickPlaying(bool fire, std::uint32_t& tick);
 	void maybeSendInput(const MoveInput& move, bool fire, std::uint32_t tick);
+	void present();
 
 	net::ClientInboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
 	net::TcpClient m_net;
 	AppRendering m_rendering;
+	common::ClientState m_clientState{common::ClientState::Menu};
 
 	std::uint64_t m_sequence = 1;
-	bool m_clientConnectSent = false;
+	bool m_joinSessionSent = false;
 	bool m_forceInputSend = true;
 	bool m_prevLmbDown = false;
 	std::optional<common::ClientInput> m_lastInputSent;

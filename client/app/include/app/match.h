@@ -12,7 +12,7 @@
 
 namespace botf::app {
 
-// Client-side match: owns map + scene, lifecycle hooks for GameState later.
+// Client-side match: owns map + scene, lifecycle hooks for ClientState later.
 class Match {
 public:
 	void start();

@@ -157,7 +157,7 @@ void botf::ServerEngine::applyInbound() {
 			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
 				handleClientInput(clientId, body, sequence);
 			}
-			// WorldSnapshot from a client is ignored.
+			// WorldSnapshot / JoinSession from a client are ignored (JoinSession → card 47).
 		});
 	}
 }
