@@ -14,16 +14,22 @@ botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(const common::ID cl
 	}
 
 	for (auto& [sessionId, gameSession] : m_sessions) {
-		const std::size_t occupied = getSessionClients(sessionId).size();
-		if (gameSession->hasFreeSeats(occupied)) {
-			m_clientToSessionId[clientId] = sessionId;
-			botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId,
-							sessionId, occupied + 1, gameSession->seatCapacity());
-			return sessionId;
+		if (!gameSession->hasFreeSeats()) {
+			continue;
 		}
+		if (!gameSession->addClient(clientId)) {
+			continue;
+		}
+		m_clientToSessionId[clientId] = sessionId;
+		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId, sessionId,
+						gameSession->clientCount(), gameSession->seatCapacity());
+		return sessionId;
 	}
 
 	GameSession& created = createSession();
+	if (!created.addClient(clientId)) {
+		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: new session rejected client");
+	}
 	m_clientToSessionId[clientId] = created.getId();
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
 					created.getId(), created.seatCapacity(), created.getGameMap().getId());
@@ -78,13 +84,11 @@ void botf::GameSessionsPool::removeClient(const common::ID clientId) {
 
 std::vector<botf::common::ID> botf::GameSessionsPool::getSessionClients(
 	const common::ID sessionId) const {
-	std::vector<common::ID> clients;
-	for (const auto& [clientId, mappedId] : m_clientToSessionId) {
-		if (mappedId == sessionId) {
-			clients.push_back(clientId);
-		}
+	const GameSession* gameSession = findGameSessionBySessionId(sessionId);
+	if (!gameSession) {
+		return {};
 	}
-	return clients;
+	return gameSession->clients();
 }
 
 std::size_t botf::GameSessionsPool::size() const {

@@ -121,17 +121,16 @@ void botf::ServerEngine::tryStartSessionIfFull(const common::ID sessionId,
 		return;
 	}
 
-	const std::vector<common::ID> clients = m_gameSessionsPool.getSessionClients(sessionId);
-	if (clients.size() != gameSession->seatCapacity()) {
+	if (gameSession->clientCount() != gameSession->seatCapacity()) {
 		return;
 	}
 
-	if (!gameSession->beginPlaying(clients)) {
+	if (!gameSession->beginPlaying()) {
 		botf::log::error("[server] session {} failed to beginPlaying", sessionId);
 		return;
 	}
 
-	for (const common::ID memberId : clients) {
+	for (const common::ID memberId : gameSession->clients()) {
 		const auto entityId = gameSession->entityForClient(memberId);
 		if (!entityId) {
 			botf::log::error("[server] session {} missing entity for client {}", sessionId,

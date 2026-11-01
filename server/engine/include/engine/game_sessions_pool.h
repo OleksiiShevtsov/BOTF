@@ -12,8 +12,7 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Membership clientId → sessionId lives only here (card 46/47).
-// Map templates: GameMapPool ref for createSession().
+// Roster lives on GameSession; this pool keeps clientId → sessionId routing only.
 class GameSessionsPool {
 public:
 	explicit GameSessionsPool(GameMapPool& gameMapPool);
@@ -21,7 +20,7 @@ public:
 	GameSessionsPool(const GameSessionsPool&) = delete;
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
-	// JoinSession path: first Forming with free seats, else create (map picked now).
+	// JoinSession: first Forming with free seats, else create (map picked now).
 	// Idempotent if client already mapped. Does not spawn figures (Forming).
 	common::ID joinFormingOrCreate(const common::ID clientId);
 
@@ -33,6 +32,7 @@ public:
 
 	void removeClient(const common::ID clientId);
 
+	// Convenience: session roster (empty if session missing).
 	[[nodiscard]] std::vector<common::ID> getSessionClients(const common::ID sessionId) const;
 
 	[[nodiscard]] std::size_t size() const;
