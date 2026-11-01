@@ -4,9 +4,11 @@
 #include "common/log.hpp"
 #include "protocol/protocol.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <memory>
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
@@ -55,12 +57,32 @@ void botf::ServerEngine::shutdown() {
 	m_server.stop();
 }
 
+std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID clientId) {
+	for (const std::shared_ptr<Player>& player : m_players) {
+		if (player && player->getId() == clientId) {
+			return player;
+		}
+	}
+	auto player = std::make_shared<Player>(clientId);
+	m_players.push_back(player);
+	return player;
+}
+
+void botf::ServerEngine::removePlayer(const common::ID clientId) {
+	m_gameSessionsPool.removePlayer(clientId);
+	m_inputStates.erase(clientId);
+	m_players.erase(std::remove_if(m_players.begin(), m_players.end(),
+								   [clientId](const std::shared_ptr<Player>& player) {
+									   return player && player->getId() == clientId;
+								   }),
+					m_players.end());
+}
+
 void botf::ServerEngine::pollNetwork() {
 	m_server.poll();
 	for (const common::ID clientId : m_server.takeDisconnected()) {
-		m_gameSessionsPool.removeClient(clientId);
-		m_inputStates.erase(clientId);
-		botf::log::info("[server] removed entity for disconnected client {}", clientId);
+		removePlayer(clientId);
+		botf::log::info("[server] disconnected client {} (engine + seats cleared)", clientId);
 	}
 }
 
@@ -104,7 +126,9 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::uint64_t sequence) {
-	// Login only — no GameSession, no spawn. Match join is JoinSession (card 47).
+	// Login only — register Player, no GameSession. Match join is JoinSession.
+	const std::shared_ptr<Player> player = ensurePlayer(clientId);
+	player->setName(connect.playerName);
 	botf::log::info("[server] ClientConnect login client {} name='{}'", clientId,
 					connect.playerName);
 	const common::ClientConnectMessage ack{connect.playerName, 0};
@@ -146,7 +170,8 @@ void botf::ServerEngine::tryStartSessionIfFull(const common::ID sessionId,
 
 void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 										   const std::uint64_t sequence) {
-	const common::ID sessionId = m_gameSessionsPool.joinFormingOrCreate(clientId);
+	const std::shared_ptr<Player> player = ensurePlayer(clientId);
+	const common::ID sessionId = m_gameSessionsPool.joinFormingOrCreate(player);
 	tryStartSessionIfFull(sessionId, sequence);
 }
 

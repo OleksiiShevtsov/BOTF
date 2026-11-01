@@ -4,11 +4,16 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
 	: m_gameMapPool(gameMapPool) {}
 
-botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(const common::ID clientId) {
+botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(std::shared_ptr<Player> player) {
+	if (!player) {
+		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: player is null");
+	}
+	const common::ID clientId = player->getId();
 	if (GameSession* existing = findGameSessionByClientId(clientId)) {
 		return existing->getId();
 	}
@@ -17,7 +22,7 @@ botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(const common::ID cl
 		if (!gameSession->hasFreeSeats()) {
 			continue;
 		}
-		if (!gameSession->addClient(clientId)) {
+		if (!gameSession->addPlayer(player)) {
 			continue;
 		}
 		m_clientToSessionId[clientId] = sessionId;
@@ -27,8 +32,8 @@ botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(const common::ID cl
 	}
 
 	GameSession& created = createSession();
-	if (!created.addClient(clientId)) {
-		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: new session rejected client");
+	if (!created.addPlayer(std::move(player))) {
+		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: new session rejected player");
 	}
 	m_clientToSessionId[clientId] = created.getId();
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
@@ -70,7 +75,7 @@ const botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(
 	return it->second.get();
 }
 
-void botf::GameSessionsPool::removeClient(const common::ID clientId) {
+void botf::GameSessionsPool::removePlayer(const common::ID clientId) {
 	const auto it = m_clientToSessionId.find(clientId);
 	if (it == m_clientToSessionId.end()) {
 		return;
@@ -78,7 +83,7 @@ void botf::GameSessionsPool::removeClient(const common::ID clientId) {
 	const common::ID sessionId = it->second;
 	m_clientToSessionId.erase(it);
 	if (GameSession* gameSession = findGameSessionBySessionId(sessionId)) {
-		gameSession->removeClient(clientId);
+		gameSession->removePlayer(clientId);
 	}
 }
 

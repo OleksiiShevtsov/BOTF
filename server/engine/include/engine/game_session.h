@@ -2,13 +2,14 @@
 
 #include "common/dto.hpp"
 #include "common/types.hpp"
+#include "engine/player.h"
 #include "logic/game_logic.h"
 #include "logic/game_map.h"
+#include "logic/seat.h"
 
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
@@ -20,8 +21,8 @@ enum class SessionPhase {
 	Finished,
 };
 
-// One live match: roster + shared GameMap + phase + GameLogic facade.
-// Roster (who is in this match) lives here. Pool keeps clientId→sessionId routing only.
+// One live match: seats + shared GameMap + phase + GameLogic facade.
+// Roster = occupied seats (shared_ptr<Player> from ServerEngine).
 class GameSession {
 public:
 	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
@@ -34,18 +35,18 @@ public:
 	[[nodiscard]] SessionPhase phase() const;
 	[[nodiscard]] std::size_t seatCapacity() const;
 	[[nodiscard]] std::size_t clientCount() const;
-	[[nodiscard]] const std::vector<common::ID>& clients() const;
+	[[nodiscard]] std::vector<common::ID> clients() const;
+	[[nodiscard]] const std::vector<Seat>& seats() const;
 
-	// Forming and clientCount() < capacity.
 	[[nodiscard]] bool hasFreeSeats() const;
 
 	// Forming only. Idempotent if already seated. false if full / wrong phase.
-	[[nodiscard]] bool addClient(const common::ID clientId);
+	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player);
 
-	// Forming → Playing: random seats over clients(), spawn+bind. false if refused.
+	// Forming → Playing: shuffle players across seats, spawn+bind. false if refused.
 	[[nodiscard]] bool beginPlaying();
 
-	void removeClient(const common::ID clientId);
+	void removePlayer(const common::ID clientId);
 
 	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
 	void tick(float dt);
@@ -57,15 +58,15 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] bool containsClient(const common::ID clientId) const;
+	[[nodiscard]] Seat* findFreeSeat();
+	[[nodiscard]] Seat* findSeatByPlayerId(common::ID clientId);
+	[[nodiscard]] const Seat* findSeatByPlayerId(common::ID clientId) const;
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;
 	SessionPhase m_phase{SessionPhase::Forming};
-	std::vector<common::ID> m_clients;
+	std::vector<Seat> m_seats;
 	GameLogic m_gameLogic;
-	// Spawn index per client — filled only in beginPlaying.
-	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
 };
 
 }  // namespace botf

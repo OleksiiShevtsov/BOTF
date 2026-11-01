@@ -3,6 +3,7 @@
 #include "common/types.hpp"
 #include "engine/game_map_pool.h"
 #include "engine/game_session.h"
+#include "engine/player.h"
 
 #include <cstddef>
 #include <memory>
@@ -12,7 +13,7 @@
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Roster lives on GameSession; this pool keeps clientId → sessionId routing only.
+// Seats hold shared_ptr<Player>; this pool keeps clientId → sessionId routing.
 class GameSessionsPool {
 public:
 	explicit GameSessionsPool(GameMapPool& gameMapPool);
@@ -21,8 +22,7 @@ public:
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
 	// JoinSession: first Forming with free seats, else create (map picked now).
-	// Idempotent if client already mapped. Does not spawn figures (Forming).
-	common::ID joinFormingOrCreate(const common::ID clientId);
+	common::ID joinFormingOrCreate(std::shared_ptr<Player> player);
 
 	[[nodiscard]] GameSession* findGameSessionByClientId(const common::ID clientId);
 	[[nodiscard]] const GameSession* findGameSessionByClientId(const common::ID clientId) const;
@@ -30,9 +30,8 @@ public:
 	[[nodiscard]] GameSession* findGameSessionBySessionId(const common::ID sessionId);
 	[[nodiscard]] const GameSession* findGameSessionBySessionId(const common::ID sessionId) const;
 
-	void removeClient(const common::ID clientId);
+	void removePlayer(const common::ID clientId);
 
-	// Convenience: session roster (empty if session missing).
 	[[nodiscard]] std::vector<common::ID> getSessionClients(const common::ID sessionId) const;
 
 	[[nodiscard]] std::size_t size() const;
@@ -48,7 +47,6 @@ private:
 	GameMapPool& m_gameMapPool;
 	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
 	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
-	// TODO: нет БД — инкремент id сессии должен выдаваться из БД, не локальный счётчик.
 	common::ID m_nextId{1};
 };
 

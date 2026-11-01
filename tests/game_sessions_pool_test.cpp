@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <unordered_set>
 
 TEST(GameSessionsPool, JoinFormingCreatesSessionAndSharesMap) {
@@ -39,11 +40,11 @@ TEST(GameSessionsPool, TwoClientsShareOneFormingSession) {
 	EXPECT_EQ(env.sessionByClient(1)->clientCount(), 2u);
 }
 
-TEST(GameSessionsPool, RemoveClientDropsMembership) {
+TEST(GameSessionsPool, RemovePlayerDropsMembership) {
 	botf::test::TestSessionPool env;
 	env.joinClient(1);
 	env.joinClient(2);
-	env.pool.removeClient(1);
+	env.pool.removePlayer(1);
 
 	EXPECT_EQ(env.sessionByClient(1), nullptr);
 	ASSERT_NE(env.sessionByClient(2), nullptr);
@@ -62,14 +63,14 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 	EXPECT_FALSE(env.session.beginPlaying());
 	EXPECT_EQ(env.session.phase(), botf::SessionPhase::Forming);
 
-	ASSERT_TRUE(env.session.addClient(1));
+	ASSERT_TRUE(env.session.addPlayer(std::make_shared<botf::Player>(1)));
 	EXPECT_TRUE(env.session.hasFreeSeats());
 	EXPECT_FALSE(env.session.beginPlaying());
 	EXPECT_TRUE(env.session.figures().empty());
 
-	ASSERT_TRUE(env.session.addClient(2));
+	ASSERT_TRUE(env.session.addPlayer(std::make_shared<botf::Player>(2)));
 	EXPECT_FALSE(env.session.hasFreeSeats());
-	EXPECT_FALSE(env.session.addClient(3));
+	EXPECT_FALSE(env.session.addPlayer(std::make_shared<botf::Player>(3)));
 
 	ASSERT_TRUE(env.session.beginPlaying());
 	EXPECT_EQ(env.session.phase(), botf::SessionPhase::Playing);
