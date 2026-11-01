@@ -3,9 +3,9 @@
 #include "common/dto.hpp"
 #include "common/types.hpp"
 #include "engine/player.h"
+#include "engine/seat.h"
 #include "logic/game_logic.h"
 #include "logic/game_map.h"
-#include "logic/seat.h"
 
 #include <cstddef>
 #include <memory>

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "engine/player.h"
+
 #include <cstddef>
 #include <memory>
 
 namespace botf {
-
-class Player;
 
 // One match slot. Index maps to GameMap spawn after Playing starts.
 // Holds a non-owning share of ServerEngine's Player (cleared on disconnect).

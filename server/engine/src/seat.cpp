@@ -1,6 +1,4 @@
-#include "logic/seat.h"
-
-#include "engine/player.h"
+#include "engine/seat.h"
 
 #include <utility>
 

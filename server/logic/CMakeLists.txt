@@ -10,13 +10,7 @@ file(GLOB logic_SRC CONFIGURE_DEPENDS
 
 if(logic_SRC)
     add_library(${PROJECT_NAME} STATIC ${logic_SRC})
-    target_include_directories(${PROJECT_NAME}
-        PUBLIC
-            include
-        PRIVATE
-            # Seat holds shared_ptr<Player>; Player header lives under engine/.
-            "${CMAKE_SOURCE_DIR}/server/engine/include"
-    )
+    target_include_directories(${PROJECT_NAME} PUBLIC include)
     target_link_libraries(${PROJECT_NAME} PUBLIC common utils)
 else()
     add_library(${PROJECT_NAME} INTERFACE)
