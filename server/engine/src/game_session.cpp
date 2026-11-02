@@ -157,13 +157,9 @@ bool botf::GameSession::beginPlaying() {
 }
 
 void botf::GameSession::randomShuffleIndex() {
-	// Players stay in their seats; only spawn indices are randomized.
-	for (std::size_t i = m_seats.size(); i > 1; --i) {
-		const std::size_t j = utils::randomIndex(i);
-		const std::size_t indexA = m_seats[i - 1].getIndex();
-		const std::size_t indexB = m_seats[j].getIndex();
-		m_seats[i - 1].setIndex(indexB);
-		m_seats[j].setIndex(indexA);
+	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
+	for (std::size_t i = 0; i < m_seats.size(); ++i) {
+		m_seats[i].setIndex(indices[i]);
 	}
 }
 
