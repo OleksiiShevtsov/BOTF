@@ -43,7 +43,7 @@ public:
 	// Forming only. Idempotent if already seated. false if full / wrong phase.
 	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player);
 
-	// Forming → Playing: shuffle players across seats, spawn+bind. false if refused.
+	// Forming → Playing: shuffle seat indices (spawn slots), spawn+bind. false if refused.
 	[[nodiscard]] bool beginPlaying();
 
 	void removePlayer(const common::ID clientId);

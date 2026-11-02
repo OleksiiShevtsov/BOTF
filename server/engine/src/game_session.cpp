@@ -138,18 +138,13 @@ bool botf::GameSession::beginPlaying() {
 		return false;
 	}
 
-	std::vector<std::shared_ptr<Player>> players;
-	players.reserve(m_seats.size());
-	for (Seat& seat : m_seats) {
-		players.push_back(seat.getPlayer());
-		seat.clearPlayer();
-	}
-	for (std::size_t i = players.size(); i > 1; --i) {
+	// Players stay in their seats; only spawn indices are randomized.
+	for (std::size_t i = m_seats.size(); i > 1; --i) {
 		const std::size_t j = utils::randomIndex(i);
-		std::swap(players[i - 1], players[j]);
-	}
-	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i].setPlayer(std::move(players[i]));
+		const std::size_t indexA = m_seats[i - 1].getIndex();
+		const std::size_t indexB = m_seats[j].getIndex();
+		m_seats[i - 1].setIndex(indexB);
+		m_seats[j].setIndex(indexA);
 	}
 
 	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
