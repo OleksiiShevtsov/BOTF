@@ -138,14 +138,7 @@ bool botf::GameSession::beginPlaying() {
 		return false;
 	}
 
-	// Players stay in their seats; only spawn indices are randomized.
-	for (std::size_t i = m_seats.size(); i > 1; --i) {
-		const std::size_t j = utils::randomIndex(i);
-		const std::size_t indexA = m_seats[i - 1].getIndex();
-		const std::size_t indexB = m_seats[j].getIndex();
-		m_seats[i - 1].setIndex(indexB);
-		m_seats[j].setIndex(indexA);
-	}
+	randomShuffleIndex();
 
 	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
 	for (Seat& seat : m_seats) {
@@ -161,6 +154,17 @@ bool botf::GameSession::beginPlaying() {
 	m_phase = SessionPhase::Playing;
 	botf::log::info("[server] session {} Forming → Playing ({} players)", m_id, seatCapacity());
 	return true;
+}
+
+void botf::GameSession::randomShuffleIndex() {
+	// Players stay in their seats; only spawn indices are randomized.
+	for (std::size_t i = m_seats.size(); i > 1; --i) {
+		const std::size_t j = utils::randomIndex(i);
+		const std::size_t indexA = m_seats[i - 1].getIndex();
+		const std::size_t indexB = m_seats[j].getIndex();
+		m_seats[i - 1].setIndex(indexB);
+		m_seats[j].setIndex(indexA);
+	}
 }
 
 void botf::GameSession::removePlayer(const common::ID clientId) {
