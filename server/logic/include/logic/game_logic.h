@@ -25,10 +25,10 @@ public:
 	void destroyFigure(common::ID entityId);
 
 	// Apply input by entity id. No-op if missing or dead.
-	void setPlayerInput(common::ID entityId, int dx, int dy);
+	void setFigureInput(common::ID entityId, int dx, int dy);
 
 	// Aim world point on the figure (retarget now + each move tick). No-op if missing.
-	void setPlayerAim(common::ID entityId, common::Point aimWorld);
+	void setFigureAim(common::ID entityId, common::Point aimWorld);
 
 	// Rising-edge fire; figure enforces cooldown. false if missing / dead / cooling down.
 	[[nodiscard]] bool tryFire(common::ID entityId);

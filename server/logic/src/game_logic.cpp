@@ -29,13 +29,13 @@ void botf::GameLogic::destroyFigure(const common::ID entityId) {
 					m_figures.end());
 }
 
-void botf::GameLogic::setPlayerInput(const common::ID entityId, const int dx, const int dy) {
+void botf::GameLogic::setFigureInput(const common::ID entityId, const int dx, const int dy) {
 	if (FigureObject* obj = findFigureMutable(entityId)) {
 		obj->setInput(dx, dy);
 	}
 }
 
-void botf::GameLogic::setPlayerAim(const common::ID entityId, const common::Point aimWorld) {
+void botf::GameLogic::setFigureAim(const common::ID entityId, const common::Point aimWorld) {
 	if (FigureObject* obj = findFigureMutable(entityId)) {
 		obj->setAimWorld(aimWorld);
 	}

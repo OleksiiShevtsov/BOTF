@@ -73,10 +73,10 @@ std::optional<botf::common::ID> awaitSessionStart(botf::ServerEngine& engine,
 			continue;
 		}
 		const auto* start = std::get_if<botf::common::SessionStartMessage>(&decoded->body);
-		if (!start || start->boundId == 0) {
+		if (!start || !start->boundId.has_value()) {
 			continue;
 		}
-		return start->boundId;
+		return *start->boundId;
 	}
 	return std::nullopt;
 }

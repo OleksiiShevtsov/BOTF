@@ -90,7 +90,7 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 			if (figure.getId() == *entityId) {
 				found = true;
 				EXPECT_FLOAT_EQ(figure.getPosition().x,
-								env.session.getGameMap().getSpawns()[seat.getIndex() - 1].x);
+								env.session.getGameMap().getSpawns()[seat.getIndex()].x);
 				break;
 			}
 		}

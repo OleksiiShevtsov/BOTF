@@ -3,6 +3,7 @@
 #include "common/types.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -17,20 +18,20 @@ struct ClientInput {
 	std::uint32_t tick{};
 };
 
-// ClientConnect / ack (login to server). boundId == 0 on client request.
+// ClientConnect / ack (login to server). boundId unset = no entity yet.
 // Not a GameSession join — that is JoinSession (45/47).
 struct ClientConnectMessage {
 	std::string playerName;
-	ID boundId{};
+	std::optional<ID> boundId{};
 };
 
 // Client → server: join / find GameSession (card 45). Empty for now; server → 47.
 struct JoinSessionMessage {};
 
 // Server → client: match may begin (client Waiting → Playing).
-// boundId = entity for this recipient after random seating.
+// boundId = entity for this recipient after random seating (0 is valid).
 struct SessionStartMessage {
-	ID boundId{};
+	std::optional<ID> boundId{};
 };
 
 // Pose of a controllable actor in a world snapshot.

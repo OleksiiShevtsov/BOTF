@@ -16,11 +16,10 @@ botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMa
 	if (capacity == 0) {
 		throw std::runtime_error("GameSession: gameMap has no spawns");
 	}
-	// Seat index == figure entity id. 0 is reserved on the wire as "no object",
-	// so seats use 1..capacity; spawn point is spawns[index - 1].
+	// Seat index == figure entity id == spawn slot (0..capacity-1).
 	m_seats.reserve(capacity);
 	for (std::size_t i = 0; i < capacity; ++i) {
-		m_seats.emplace_back(i + 1);
+		m_seats.emplace_back(i);
 	}
 }
 
@@ -146,8 +145,7 @@ bool botf::GameSession::beginPlaying() {
 	for (Seat& seat : m_seats) {
 		const std::shared_ptr<Player> player = seat.getPlayer();
 		const common::ID entityId = static_cast<common::ID>(seat.getIndex());
-		const std::size_t spawnSlot = seat.getIndex() - 1;
-		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlot])) {
+		if (!m_gameLogic.spawnFigure(entityId, spawns[seat.getIndex()])) {
 			botf::log::error(
 				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
 			for (Seat& spawned : m_seats) {
@@ -156,8 +154,8 @@ bool botf::GameSession::beginPlaying() {
 			return false;
 		}
 		botf::log::info(
-			"[server] session {} seated client {} → entity {} spawnSlot={}", m_id, player->getId(),
-			entityId, spawnSlot);
+			"[server] session {} seated client {} → entity/spawn {}", m_id, player->getId(),
+			entityId);
 	}
 
 	m_phase = SessionPhase::Playing;
@@ -166,10 +164,9 @@ bool botf::GameSession::beginPlaying() {
 }
 
 void botf::GameSession::randomShuffleIndex() {
-	// Permutation of 0..n-1 → seat indices 1..n (entity ids; 0 reserved).
 	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
 	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i].setIndex(indices[i] + 1);
+		m_seats[i].setIndex(indices[i]);
 	}
 }
 
@@ -195,8 +192,8 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 		return;
 	}
 	const common::ID entityId = static_cast<common::ID>(seat->getIndex());
-	m_gameLogic.setPlayerInput(entityId, clientInput.dx, clientInput.dy);
-	m_gameLogic.setPlayerAim(entityId, clientInput.aim);
+	m_gameLogic.setFigureInput(entityId, clientInput.dx, clientInput.dy);
+	m_gameLogic.setFigureAim(entityId, clientInput.aim);
 	if (clientInput.fire) {
 		(void)m_gameLogic.tryFire(entityId);
 	}

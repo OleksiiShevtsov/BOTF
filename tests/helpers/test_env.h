@@ -74,8 +74,8 @@ struct TestSessionPool {
 inline void applyEntityInput(GameLogic& logic,
 							 const common::ID entityId,
 							 const common::ClientInput& clientInput) {
-	logic.setPlayerInput(entityId, clientInput.dx, clientInput.dy);
-	logic.setPlayerAim(entityId, clientInput.aim);
+	logic.setFigureInput(entityId, clientInput.dx, clientInput.dy);
+	logic.setFigureAim(entityId, clientInput.aim);
 	if (clientInput.fire) {
 		(void)logic.tryFire(entityId);
 	}

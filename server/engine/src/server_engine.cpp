@@ -131,7 +131,7 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 	player->setName(connect.playerName);
 	botf::log::info("[server] ClientConnect login client {} name='{}'", clientId,
 					connect.playerName);
-	const common::ClientConnectMessage ack{connect.playerName, 0};
+	const common::ClientConnectMessage ack{connect.playerName, std::nullopt};
 	m_outbound.push(net::OutboundNotification{
 		clientId,
 		protocol::encodeClientConnect(ack, sequence),
