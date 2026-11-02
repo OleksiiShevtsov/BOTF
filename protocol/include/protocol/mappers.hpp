@@ -5,6 +5,9 @@
 #include "input.pb.h"
 #include "world_state.pb.h"
 
+#include <cstdint>
+#include <optional>
+
 namespace botf::protocol {
 namespace {
 
@@ -39,17 +42,15 @@ namespace {
 	message.set_player_name(connect.playerName);
 	// Wire field stays object_id; DTO name is boundId. Unset = no entity (0 is valid).
 	if (connect.boundId.has_value()) {
-		message.set_object_id(*connect.boundId);
+		message.set_object_id(static_cast<std::uint32_t>(*connect.boundId));
 	}
 	return message;
 }
 
 [[nodiscard]] inline common::ClientConnectMessage fromProto(const botf::ClientConnect& connect) {
-	std::optional<common::ID> boundId;
-	if (connect.has_object_id()) {
-		boundId = connect.object_id();
-	}
-	return common::ClientConnectMessage{connect.player_name(), boundId};
+	return common::ClientConnectMessage{
+		connect.player_name(),
+		connect.has_object_id() ? std::optional<common::ID>{connect.object_id()} : std::nullopt};
 }
 
 [[nodiscard]] inline botf::JoinSession toProto(const common::JoinSessionMessage&) {
@@ -63,17 +64,14 @@ namespace {
 [[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage& start) {
 	botf::SessionStart message;
 	if (start.boundId.has_value()) {
-		message.set_object_id(*start.boundId);
+		message.set_object_id(static_cast<std::uint32_t>(*start.boundId));
 	}
 	return message;
 }
 
 [[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart& start) {
-	std::optional<common::ID> boundId;
-	if (start.has_object_id()) {
-		boundId = start.object_id();
-	}
-	return common::SessionStartMessage{boundId};
+	return common::SessionStartMessage{
+		start.has_object_id() ? std::optional<common::ID>{start.object_id()} : std::nullopt};
 }
 
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {
@@ -99,7 +97,7 @@ namespace {
 	state.set_tick(snapshot.tick);
 	for (const auto& pose : snapshot.figures) {
 		FigureState* figure = state.add_figures();
-		figure->set_object_id(pose.id);
+		figure->set_object_id(static_cast<std::uint32_t>(pose.id));
 		auto* position = figure->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);
@@ -109,8 +107,8 @@ namespace {
 	}
 	for (const auto& pose : snapshot.bullets) {
 		BulletState* bullet = state.add_bullets();
-		bullet->set_object_id(pose.id);
-		bullet->set_owner_object_id(pose.ownerId);
+		bullet->set_object_id(static_cast<std::uint32_t>(pose.id));
+		bullet->set_owner_object_id(static_cast<std::uint32_t>(pose.ownerId));
 		auto* position = bullet->mutable_position();
 		position->set_x(pose.position.x);
 		position->set_y(pose.position.y);

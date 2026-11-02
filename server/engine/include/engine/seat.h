@@ -1,8 +1,8 @@
 #pragma once
 
+#include "common/types.hpp"
 #include "engine/player.h"
 
-#include <cstddef>
 #include <memory>
 
 namespace botf {
@@ -13,7 +13,7 @@ namespace botf {
 // Seat is the only bridge between client and the world figure.
 class Seat {
 public:
-	explicit Seat(std::size_t index);
+	explicit Seat(common::IDX index);
 
 	Seat(const Seat&) = delete;
 	Seat& operator=(const Seat&) = delete;
@@ -21,8 +21,8 @@ public:
 	Seat(Seat&&) noexcept = default;
 	Seat& operator=(Seat&&) noexcept = default;
 
-	[[nodiscard]] std::size_t getIndex() const;
-	void setIndex(std::size_t index);
+	[[nodiscard]] common::IDX getIndex() const;
+	void setIndex(common::IDX index);
 
 	[[nodiscard]] bool isFree() const;
 
@@ -31,7 +31,7 @@ public:
 	void clearPlayer();
 
 private:
-	std::size_t m_index{};
+	common::IDX m_index{};
 	std::shared_ptr<Player> m_player{};
 };
 

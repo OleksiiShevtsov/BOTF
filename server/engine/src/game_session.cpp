@@ -12,14 +12,13 @@ botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMa
 	if (!m_gameMap) {
 		throw std::runtime_error("GameSession: gameMap is null");
 	}
-	const std::size_t capacity = m_gameMap->getSpawns().size();
-	if (capacity == 0) {
+	if (m_gameMap->getSpawns().size() == 0) {
 		throw std::runtime_error("GameSession: gameMap has no spawns");
 	}
 	// Seat index == figure entity id == spawn slot (0..capacity-1).
-	m_seats.reserve(capacity);
-	for (std::size_t i = 0; i < capacity; ++i) {
-		m_seats.emplace_back(i);
+	m_seats.reserve(m_gameMap->getSpawns().size());
+	for (common::IDX i = 0; i < static_cast<common::IDX>(m_gameMap->getSpawns().size()); ++i) {
+		m_seats.push_back(std::make_shared<Seat>(i));
 	}
 }
 
@@ -31,8 +30,8 @@ const botf::GameMap& botf::GameSession::getGameMap() const {
 	return *m_gameMap;
 }
 
-botf::SessionPhase botf::GameSession::phase() const {
-	return m_phase;
+botf::SessionState botf::GameSession::getSessionState() const {
+	return m_sessionState;
 }
 
 std::size_t botf::GameSession::seatCapacity() const {
@@ -41,8 +40,8 @@ std::size_t botf::GameSession::seatCapacity() const {
 
 std::size_t botf::GameSession::clientCount() const {
 	std::size_t count = 0;
-	for (const Seat& seat : m_seats) {
-		if (!seat.isFree()) {
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		if (!seat->isFree()) {
 			++count;
 		}
 	}
@@ -50,56 +49,54 @@ std::size_t botf::GameSession::clientCount() const {
 }
 
 std::vector<botf::common::ID> botf::GameSession::clients() const {
-	std::vector<common::ID> ids;
-	ids.reserve(m_seats.size());
-	for (const Seat& seat : m_seats) {
-		if (const std::shared_ptr<Player> player = seat.getPlayer()) {
-			ids.push_back(player->getId());
+	std::vector<common::ID> clientIDs;
+	clientIDs.reserve(m_seats.size());
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		if (seat->getPlayer()) {
+			clientIDs.push_back(seat->getPlayer()->getId());
 		}
 	}
-	return ids;
+	return clientIDs;
 }
 
-const std::vector<botf::Seat>& botf::GameSession::seats() const {
+const std::vector<std::shared_ptr<botf::Seat>>& botf::GameSession::seats() const {
 	return m_seats;
 }
 
 bool botf::GameSession::hasFreeSeats() const {
-	if (m_phase != SessionPhase::Forming) {
+	if (m_sessionState != SessionState::Forming) {
 		return false;
 	}
-	for (const Seat& seat : m_seats) {
-		if (seat.isFree()) {
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		if (seat->isFree()) {
 			return true;
 		}
 	}
 	return false;
 }
 
-botf::Seat* botf::GameSession::findFreeSeat() {
-	for (Seat& seat : m_seats) {
-		if (seat.isFree()) {
-			return &seat;
+std::shared_ptr<botf::Seat> botf::GameSession::findFreeSeat() {
+	for (std::shared_ptr<Seat>& seat : m_seats) {
+		if (seat->isFree()) {
+			return seat;
 		}
 	}
 	return nullptr;
 }
 
-botf::Seat* botf::GameSession::findSeatByPlayerId(const common::ID clientId) {
-	for (Seat& seat : m_seats) {
-		const std::shared_ptr<Player> player = seat.getPlayer();
-		if (player && player->getId() == clientId) {
-			return &seat;
+std::shared_ptr<botf::Seat> botf::GameSession::findSeatByPlayerId(const common::ID clientId) {
+	for (std::shared_ptr<Seat>& seat : m_seats) {
+		if (seat->getPlayer() && seat->getPlayer()->getId() == clientId) {
+			return seat;
 		}
 	}
 	return nullptr;
 }
 
-const botf::Seat* botf::GameSession::findSeatByPlayerId(const common::ID clientId) const {
-	for (const Seat& seat : m_seats) {
-		const std::shared_ptr<Player> player = seat.getPlayer();
-		if (player && player->getId() == clientId) {
-			return &seat;
+std::shared_ptr<botf::Seat> botf::GameSession::findSeatByPlayerId(const common::ID clientId) const {
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		if (seat->getPlayer() && seat->getPlayer()->getId() == clientId) {
+			return seat;
 		}
 	}
 	return nullptr;
@@ -112,10 +109,10 @@ bool botf::GameSession::addPlayer(std::shared_ptr<Player> player) {
 	if (findSeatByPlayerId(player->getId()) != nullptr) {
 		return true;
 	}
-	if (m_phase != SessionPhase::Forming) {
+	if (m_sessionState != SessionState::Forming) {
 		return false;
 	}
-	Seat* seat = findFreeSeat();
+	const std::shared_ptr<Seat> seat = findFreeSeat();
 	if (!seat) {
 		return false;
 	}
@@ -124,8 +121,8 @@ bool botf::GameSession::addPlayer(std::shared_ptr<Player> player) {
 }
 
 bool botf::GameSession::beginPlaying() {
-	if (m_phase != SessionPhase::Forming) {
-		botf::log::warn("[server] beginPlaying refused: session {} phase != Forming", m_id);
+	if (m_sessionState != SessionState::Forming) {
+		botf::log::warn("[server] beginPlaying refused: session {} state != Forming", m_id);
 		return false;
 	}
 	if (clientCount() != seatCapacity()) {
@@ -142,23 +139,23 @@ bool botf::GameSession::beginPlaying() {
 	randomShuffleIndex();
 
 	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
-	for (Seat& seat : m_seats) {
-		const std::shared_ptr<Player> player = seat.getPlayer();
-		const common::ID entityId = static_cast<common::ID>(seat.getIndex());
-		if (!m_gameLogic.spawnFigure(entityId, spawns[seat.getIndex()])) {
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		if (!m_gameLogic.spawnFigure(static_cast<common::ID>(seat->getIndex()),
+									 spawns[static_cast<std::size_t>(seat->getIndex())])) {
 			botf::log::error(
-				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
-			for (Seat& spawned : m_seats) {
-				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned.getIndex()));
+				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id,
+				static_cast<common::ID>(seat->getIndex()));
+			for (const std::shared_ptr<Seat>& spawned : m_seats) {
+				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned->getIndex()));
 			}
 			return false;
 		}
 		botf::log::info(
-			"[server] session {} seated client {} → entity/spawn {}", m_id, player->getId(),
-			entityId);
+			"[server] session {} seated client {} → entity/spawn {}", m_id,
+			seat->getPlayer()->getId(), static_cast<common::ID>(seat->getIndex()));
 	}
 
-	m_phase = SessionPhase::Playing;
+	m_sessionState = SessionState::Playing;
 	botf::log::info("[server] session {} Forming → Playing ({} players)", m_id, seatCapacity());
 	return true;
 }
@@ -166,28 +163,27 @@ bool botf::GameSession::beginPlaying() {
 void botf::GameSession::randomShuffleIndex() {
 	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
 	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i].setIndex(indices[i]);
+		m_seats[i]->setIndex(static_cast<common::IDX>(indices[i]));
 	}
 }
 
 void botf::GameSession::removePlayer(const common::ID clientId) {
-	Seat* seat = findSeatByPlayerId(clientId);
+	const std::shared_ptr<Seat> seat = findSeatByPlayerId(clientId);
 	if (!seat) {
 		return;
 	}
-	const common::ID entityId = static_cast<common::ID>(seat->getIndex());
 	seat->clearPlayer();
-	if (m_phase == SessionPhase::Playing) {
-		m_gameLogic.destroyFigure(entityId);
+	if (m_sessionState == SessionState::Playing) {
+		m_gameLogic.destroyFigure(static_cast<common::ID>(seat->getIndex()));
 	}
 }
 
 void botf::GameSession::applyClientInput(const common::ID clientId,
 										const common::ClientInput& clientInput) {
-	if (m_phase != SessionPhase::Playing) {
+	if (m_sessionState != SessionState::Playing) {
 		return;
 	}
-	const Seat* seat = findSeatByPlayerId(clientId);
+	const std::shared_ptr<Seat> seat = findSeatByPlayerId(clientId);
 	if (!seat) {
 		return;
 	}
@@ -200,7 +196,7 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 }
 
 void botf::GameSession::tick(const float dt) {
-	if (m_phase != SessionPhase::Playing) {
+	if (m_sessionState != SessionState::Playing) {
 		return;
 	}
 	m_gameLogic.tick(dt);
@@ -240,7 +236,7 @@ const std::vector<botf::BulletObject>& botf::GameSession::bullets() const {
 }
 
 std::optional<botf::common::ID> botf::GameSession::entityForClient(const common::ID clientId) const {
-	const Seat* seat = findSeatByPlayerId(clientId);
+	const std::shared_ptr<Seat> seat = findSeatByPlayerId(clientId);
 	if (!seat) {
 		return std::nullopt;
 	}

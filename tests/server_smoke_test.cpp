@@ -109,7 +109,7 @@ std::optional<TwoPlayerMatch> startTwoPlayerMatch(botf::ServerEngine& engine,
 	}
 	botf::GameSession* forming = engine.getGameSessionsPool().findGameSessionByClientId(1);
 	if (engine.getGameSessionsPool().size() != 1u || !forming ||
-		forming->phase() != botf::SessionPhase::Forming || !forming->figures().empty()) {
+		forming->getSessionState() != botf::SessionState::Forming || !forming->figures().empty()) {
 		return std::nullopt;
 	}
 
@@ -125,7 +125,7 @@ std::optional<TwoPlayerMatch> startTwoPlayerMatch(botf::ServerEngine& engine,
 
 	botf::GameSession* playing = engine.getGameSessionsPool().findGameSessionByClientId(1);
 	if (engine.getGameSessionsPool().size() != 1u || !playing ||
-		playing->phase() != botf::SessionPhase::Playing ||
+		playing->getSessionState() != botf::SessionState::Playing ||
 		playing != engine.getGameSessionsPool().findGameSessionByClientId(2) ||
 		playing->figures().size() != 2u) {
 		return std::nullopt;
@@ -366,8 +366,8 @@ TEST(ServerSmoke, TwoClientsInputIsolationAndThirdOpensNewForming) {
 	}
 	ASSERT_EQ(engine.getGameSessionsPool().size(), 2u);
 	ASSERT_NE(engine.getGameSessionsPool().findGameSessionByClientId(3), nullptr);
-	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(3)->phase(),
-			  botf::SessionPhase::Forming);
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(3)->getSessionState(),
+			  botf::SessionState::Forming);
 	EXPECT_NE(engine.getGameSessionsPool().findGameSessionByClientId(3),
 			  engine.getGameSessionsPool().findGameSessionByClientId(1));
 
@@ -395,8 +395,8 @@ TEST(ServerSmoke, FormingIgnoresClientInputUntilPlaying) {
 		engine.applyInbound();
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->phase(),
-			  botf::SessionPhase::Forming);
+	ASSERT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1)->getSessionState(),
+			  botf::SessionState::Forming);
 
 	ASSERT_TRUE(sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(1, 0, 1), 2)));
 	for (int i = 0; i < 50; ++i) {

@@ -56,7 +56,7 @@ struct TestSessionPool {
 
 	common::ID joinClient(const common::ID clientId) {
 		auto player = std::make_shared<Player>(clientId);
-		return pool.joinFormingOrCreate(std::move(player));
+		return pool.attachPlayerToSession(std::move(player));
 	}
 
 	[[nodiscard]] GameSession* sessionById(const common::ID sessionId) {

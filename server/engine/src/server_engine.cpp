@@ -68,7 +68,7 @@ std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID 
 	return player;
 }
 
-void botf::ServerEngine::removePlayer(const common::ID clientId) {
+void botf::ServerEngine::removePlayerById(const common::ID clientId) {
 	m_gameSessionsPool.removePlayer(clientId);
 	m_inputStates.erase(clientId);
 	m_players.erase(std::remove_if(m_players.begin(), m_players.end(),
@@ -81,7 +81,7 @@ void botf::ServerEngine::removePlayer(const common::ID clientId) {
 void botf::ServerEngine::pollNetwork() {
 	m_server.poll();
 	for (const common::ID clientId : m_server.takeDisconnected()) {
-		removePlayer(clientId);
+		removePlayerById(clientId);
 		botf::log::info("[server] disconnected client {} (engine + seats cleared)", clientId);
 	}
 }
@@ -138,10 +138,10 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 	});
 }
 
-void botf::ServerEngine::tryStartSessionIfFull(const common::ID sessionId,
-											  const std::uint64_t sequence) {
+void botf::ServerEngine::tryStartSession(const common::ID sessionId,
+										 const std::uint64_t sequence) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
-	if (!gameSession || gameSession->phase() != SessionPhase::Forming) {
+	if (!gameSession || gameSession->getSessionState() != SessionState::Forming) {
 		return;
 	}
 
@@ -170,16 +170,16 @@ void botf::ServerEngine::tryStartSessionIfFull(const common::ID sessionId,
 
 void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 										   const std::uint64_t sequence) {
-	const std::shared_ptr<Player> player = ensurePlayer(clientId);
-	const common::ID sessionId = m_gameSessionsPool.joinFormingOrCreate(player);
-	tryStartSessionIfFull(sessionId, sequence);
+	const common::ID sessionId =
+		m_gameSessionsPool.attachPlayerToSession(ensurePlayer(clientId));
+	tryStartSession(sessionId, sequence);
 }
 
 void botf::ServerEngine::handleClientInput(const common::ID clientId,
 										   const common::ClientInput& clientInput,
 										   std::uint64_t sequence) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
-	if (!gameSession || gameSession->phase() != SessionPhase::Playing) {
+	if (!gameSession || gameSession->getSessionState() != SessionState::Playing) {
 		// No session / still Forming — ignore Move/Fire.
 		return;
 	}
@@ -228,7 +228,7 @@ void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 void botf::ServerEngine::advanceSim(float dt) {
 	++m_simTick;
 	for (auto& [sessionId, gameSession] : m_gameSessionsPool.sessions()) {
-		if (gameSession->phase() != SessionPhase::Playing) {
+		if (gameSession->getSessionState() != SessionState::Playing) {
 			continue;
 		}
 		gameSession->tick(dt);

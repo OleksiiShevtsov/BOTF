@@ -14,7 +14,7 @@ TEST(GameSessionsPool, JoinFormingCreatesSessionAndSharesMap) {
 	EXPECT_EQ(env.pool.size(), 1u);
 	EXPECT_EQ(idA, 1u);
 	ASSERT_NE(env.sessionByClient(1), nullptr);
-	EXPECT_EQ(env.sessionByClient(1)->phase(), botf::SessionPhase::Forming);
+	EXPECT_EQ(env.sessionByClient(1)->getSessionState(), botf::SessionState::Forming);
 	EXPECT_EQ(env.sessionByClient(1)->clientCount(), 1u);
 	EXPECT_EQ(env.sessionByClient(1)->getGameMap().getId(), 1u);
 	EXPECT_EQ(&env.sessionByClient(1)->getGameMap(), env.mapPool.getGameMapById(1).get());
@@ -36,7 +36,7 @@ TEST(GameSessionsPool, TwoClientsShareOneFormingSession) {
 	EXPECT_EQ(idA, idB);
 	EXPECT_EQ(env.pool.size(), 1u);
 	EXPECT_EQ(env.sessionByClient(1), env.sessionByClient(2));
-	EXPECT_EQ(env.sessionByClient(1)->phase(), botf::SessionPhase::Forming);
+	EXPECT_EQ(env.sessionByClient(1)->getSessionState(), botf::SessionState::Forming);
 	EXPECT_EQ(env.sessionByClient(1)->clientCount(), 2u);
 }
 
@@ -57,11 +57,11 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 	botf::utils::seedRandom(1);
 	botf::test::TestSession env;
 	ASSERT_EQ(env.session.seatCapacity(), 2u);
-	EXPECT_EQ(env.session.phase(), botf::SessionPhase::Forming);
+	EXPECT_EQ(env.session.getSessionState(), botf::SessionState::Forming);
 	EXPECT_TRUE(env.session.hasFreeSeats());
 
 	EXPECT_FALSE(env.session.beginPlaying());
-	EXPECT_EQ(env.session.phase(), botf::SessionPhase::Forming);
+	EXPECT_EQ(env.session.getSessionState(), botf::SessionState::Forming);
 
 	ASSERT_TRUE(env.session.addPlayer(std::make_shared<botf::Player>(1)));
 	EXPECT_TRUE(env.session.hasFreeSeats());
@@ -73,7 +73,7 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 	EXPECT_FALSE(env.session.addPlayer(std::make_shared<botf::Player>(3)));
 
 	ASSERT_TRUE(env.session.beginPlaying());
-	EXPECT_EQ(env.session.phase(), botf::SessionPhase::Playing);
+	EXPECT_EQ(env.session.getSessionState(), botf::SessionState::Playing);
 	ASSERT_EQ(env.session.figures().size(), 2u);
 	ASSERT_TRUE(env.session.entityForClient(1).has_value());
 	ASSERT_TRUE(env.session.entityForClient(2).has_value());
@@ -81,16 +81,18 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 
 	// Seat.index is the figure id and spawn slot.
 	for (const auto& seat : env.session.seats()) {
-		ASSERT_TRUE(seat.getPlayer());
-		const auto entityId = env.session.entityForClient(seat.getPlayer()->getId());
+		ASSERT_TRUE(seat->getPlayer());
+		const auto entityId = env.session.entityForClient(seat->getPlayer()->getId());
 		ASSERT_TRUE(entityId.has_value());
-		EXPECT_EQ(*entityId, static_cast<botf::common::ID>(seat.getIndex()));
+		EXPECT_EQ(*entityId, static_cast<botf::common::ID>(seat->getIndex()));
 		bool found = false;
 		for (const auto& figure : env.session.figures()) {
 			if (figure.getId() == *entityId) {
 				found = true;
-				EXPECT_FLOAT_EQ(figure.getPosition().x,
-								env.session.getGameMap().getSpawns()[seat.getIndex()].x);
+				EXPECT_FLOAT_EQ(
+					figure.getPosition().x,
+					env.session.getGameMap().getSpawns()[static_cast<std::size_t>(seat->getIndex())]
+						.x);
 				break;
 			}
 		}
@@ -119,13 +121,13 @@ TEST(GameSessionsPool, ThirdClientOpensNewFormingAfterFullSessionStarted) {
 	botf::GameSession* session = env.sessionById(first);
 	ASSERT_NE(session, nullptr);
 	ASSERT_TRUE(session->beginPlaying());
-	EXPECT_EQ(session->phase(), botf::SessionPhase::Playing);
+	EXPECT_EQ(session->getSessionState(), botf::SessionState::Playing);
 	EXPECT_FALSE(session->hasFreeSeats());
 
 	const botf::common::ID second = env.joinClient(3);
 	EXPECT_NE(second, first);
 	EXPECT_EQ(env.pool.size(), 2u);
 	ASSERT_NE(env.sessionByClient(3), nullptr);
-	EXPECT_EQ(env.sessionByClient(3)->phase(), botf::SessionPhase::Forming);
+	EXPECT_EQ(env.sessionByClient(3)->getSessionState(), botf::SessionState::Forming);
 	EXPECT_EQ(env.sessionByClient(3)->clientCount(), 1u);
 }

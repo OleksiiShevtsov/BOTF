@@ -2,13 +2,13 @@
 
 #include <utility>
 
-botf::Seat::Seat(const std::size_t index) : m_index{index} {}
+botf::Seat::Seat(const common::IDX index) : m_index{index} {}
 
-std::size_t botf::Seat::getIndex() const {
+botf::common::IDX botf::Seat::getIndex() const {
 	return m_index;
 }
 
-void botf::Seat::setIndex(const std::size_t index) {
+void botf::Seat::setIndex(const common::IDX index) {
 	m_index = index;
 }
 

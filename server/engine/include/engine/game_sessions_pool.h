@@ -22,7 +22,7 @@ public:
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
 	// JoinSession: first Forming with free seats, else create (map picked now).
-	common::ID joinFormingOrCreate(std::shared_ptr<Player> player);
+	common::ID attachPlayerToSession(std::shared_ptr<Player> player);
 
 	[[nodiscard]] GameSession* findGameSessionByClientId(const common::ID clientId);
 	[[nodiscard]] const GameSession* findGameSessionByClientId(const common::ID clientId) const;

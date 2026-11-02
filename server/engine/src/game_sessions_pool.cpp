@@ -9,15 +9,15 @@
 botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
 	: m_gameMapPool(gameMapPool) {}
 
-botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(std::shared_ptr<Player> player) {
+botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<Player> player) {
 	if (!player) {
-		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: player is null");
+		throw std::runtime_error("GameSessionsPool::attachPlayerToSession: player is null");
 	}
-	const common::ID clientId = player->getId();
-	if (GameSession* existing = findGameSessionByClientId(clientId)) {
+	if (GameSession* existing = findGameSessionByClientId(player->getId())) {
 		return existing->getId();
 	}
 
+	const common::ID clientId = player->getId();
 	for (auto& [sessionId, gameSession] : m_sessions) {
 		if (!gameSession->hasFreeSeats()) {
 			continue;
@@ -33,7 +33,8 @@ botf::common::ID botf::GameSessionsPool::joinFormingOrCreate(std::shared_ptr<Pla
 
 	GameSession& created = createSession();
 	if (!created.addPlayer(std::move(player))) {
-		throw std::runtime_error("GameSessionsPool::joinFormingOrCreate: new session rejected player");
+		throw std::runtime_error(
+			"GameSessionsPool::attachPlayerToSession: new session rejected player");
 	}
 	m_clientToSessionId[clientId] = created.getId();
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,

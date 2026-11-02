@@ -14,14 +14,14 @@
 
 namespace botf {
 
-// Live match phase (card 47). Client UI uses ClientState::Waiting while Forming.
-enum class SessionPhase {
+// Live match state (card 47). Client UI uses ClientState::Waiting while Forming.
+enum class SessionState {
 	Forming,
 	Playing,
 	Finished,
 };
 
-// One live match: seats + shared GameMap + phase + GameLogic facade.
+// One live match: seats + shared GameMap + state + GameLogic facade.
 // Roster = occupied seats (shared_ptr<Player> from ServerEngine).
 class GameSession {
 public:
@@ -32,11 +32,11 @@ public:
 
 	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
-	[[nodiscard]] SessionPhase phase() const;
+	[[nodiscard]] SessionState getSessionState() const;
 	[[nodiscard]] std::size_t seatCapacity() const;
 	[[nodiscard]] std::size_t clientCount() const;
 	[[nodiscard]] std::vector<common::ID> clients() const;
-	[[nodiscard]] const std::vector<Seat>& seats() const;
+	[[nodiscard]] const std::vector<std::shared_ptr<Seat>>& seats() const;
 
 	[[nodiscard]] bool hasFreeSeats() const;
 
@@ -59,15 +59,15 @@ public:
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] Seat* findFreeSeat();
-	[[nodiscard]] Seat* findSeatByPlayerId(common::ID clientId);
-	[[nodiscard]] const Seat* findSeatByPlayerId(common::ID clientId) const;
+	[[nodiscard]] std::shared_ptr<Seat> findFreeSeat();
+	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId);
+	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId) const;
 	void randomShuffleIndex();
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;
-	SessionPhase m_phase{SessionPhase::Forming};
-	std::vector<Seat> m_seats;
+	SessionState m_sessionState{SessionState::Forming};
+	std::vector<std::shared_ptr<Seat>> m_seats;
 	GameLogic m_gameLogic;
 };
 

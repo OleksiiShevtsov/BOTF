@@ -52,7 +52,7 @@ private:
 	void loadObjectData();
 
 	[[nodiscard]] std::shared_ptr<Player> ensurePlayer(common::ID clientId);
-	void removePlayer(common::ID clientId);
+	void removePlayerById(common::ID clientId);
 
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
@@ -61,7 +61,7 @@ private:
 	void handleClientInput(const common::ID clientId,
 						   const common::ClientInput& clientInput,
 						   std::uint64_t sequence);
-	void tryStartSessionIfFull(const common::ID sessionId, std::uint64_t sequence);
+	void tryStartSession(const common::ID sessionId, std::uint64_t sequence);
 	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
 	int runLoop();
 
