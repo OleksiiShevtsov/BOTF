@@ -84,6 +84,28 @@ void botf::FigureObject::setInput(int dx, int dy) {
 	m_inputDy = clampAxis(dy);
 }
 
+void botf::FigureObject::setAimWorld(const common::Point aimWorld) {
+	if (isDead()) {
+		return;
+	}
+	m_aimWorld = aimWorld;
+	m_hasAimWorld = true;
+	retargetFromAim();
+}
+
+bool botf::FigureObject::tryFire(const float worldTime) {
+	if (isDead()) {
+		return false;
+	}
+	if (m_hasLastFire &&
+		worldTime - m_lastFireTime < common::GlobalSettings::fireCooldownSeconds) {
+		return false;
+	}
+	m_lastFireTime = worldTime;
+	m_hasLastFire = true;
+	return true;
+}
+
 bool botf::FigureObject::applyDamage(int damage) {
 	if (isDead() || damage <= 0) {
 		return false;
@@ -95,6 +117,7 @@ bool botf::FigureObject::applyDamage(int damage) {
 		m_inputDy = 0;
 		m_speedX = 0.f;
 		m_speedY = 0.f;
+		m_hasAimWorld = false;
 		return true;
 	}
 	return false;
@@ -149,4 +172,19 @@ void botf::FigureObject::update(float dt) {
 
 	m_position.x += m_speedX * dt;
 	m_position.y += m_speedY * dt;
+
+	retargetFromAim();
+}
+
+void botf::FigureObject::retargetFromAim() {
+	if (!m_hasAimWorld || isDead()) {
+		return;
+	}
+	const float dx = m_aimWorld.x - m_position.x;
+	const float dy = m_aimWorld.y - m_position.y;
+	if (dx * dx + dy * dy <
+		common::GlobalSettings::aimEpsilon * common::GlobalSettings::aimEpsilon) {
+		return;
+	}
+	m_angle = std::atan2(dy, dx);
 }

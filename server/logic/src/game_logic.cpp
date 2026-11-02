@@ -4,7 +4,6 @@
 #include "logic/hitbox.h"
 
 #include <algorithm>
-#include <cmath>
 
 botf::GameLogic::GameLogic() = default;
 
@@ -28,8 +27,6 @@ void botf::GameLogic::destroyFigure(const common::ID entityId) {
 	m_figures.erase(std::remove_if(m_figures.begin(), m_figures.end(),
 								   [entityId](const FigureObject& f) { return f.getId() == entityId; }),
 					m_figures.end());
-	m_entityAimWorld.erase(entityId);
-	m_lastFireTime.erase(entityId);
 }
 
 void botf::GameLogic::setPlayerInput(const common::ID entityId, const int dx, const int dy) {
@@ -39,29 +36,20 @@ void botf::GameLogic::setPlayerInput(const common::ID entityId, const int dx, co
 }
 
 void botf::GameLogic::setPlayerAim(const common::ID entityId, const common::Point aimWorld) {
-	if (findFigureMutable(entityId) == nullptr) {
-		return;
+	if (FigureObject* obj = findFigureMutable(entityId)) {
+		obj->setAimWorld(aimWorld);
 	}
-	m_entityAimWorld[entityId] = aimWorld;
-	applyAimForEntity(entityId);
 }
 
 bool botf::GameLogic::tryFire(const common::ID entityId) {
 	FigureObject* figure = findFigureMutable(entityId);
-	if (!figure || figure->isDead()) {
-		return false;
-	}
-
-	const auto lastIt = m_lastFireTime.find(entityId);
-	if (lastIt != m_lastFireTime.end() &&
-		m_worldTime - lastIt->second < common::GlobalSettings::fireCooldownSeconds) {
+	if (!figure || !figure->tryFire(m_worldTime)) {
 		return false;
 	}
 
 	m_bullets.emplace_back(allocateBulletId(), figure->getId(), figure->getPosition(),
 						   figure->getAngle(), common::GlobalSettings::bulletSpeed,
 						   common::GlobalSettings::bulletMaxRange);
-	m_lastFireTime[entityId] = m_worldTime;
 	return true;
 }
 
@@ -79,7 +67,6 @@ void botf::GameLogic::tick(const float dt) {
 	for (auto& figure : m_figures) {
 		figure.update(dt);
 	}
-	applyStoredAims();
 	for (auto& bullet : m_bullets) {
 		bullet.update(dt);
 	}
@@ -102,32 +89,6 @@ botf::FigureObject* botf::GameLogic::findFigureMutable(const common::ID entityId
 		}
 	}
 	return nullptr;
-}
-
-void botf::GameLogic::applyAimForEntity(const common::ID entityId) {
-	const auto aimIt = m_entityAimWorld.find(entityId);
-	if (aimIt == m_entityAimWorld.end()) {
-		return;
-	}
-	FigureObject* obj = findFigureMutable(entityId);
-	if (!obj || obj->isDead()) {
-		return;
-	}
-
-	const common::Point pos = obj->getPosition();
-	const float dx = aimIt->second.x - pos.x;
-	const float dy = aimIt->second.y - pos.y;
-	if (dx * dx + dy * dy <
-		common::GlobalSettings::aimEpsilon * common::GlobalSettings::aimEpsilon) {
-		return;
-	}
-	obj->setAngle(std::atan2(dy, dx));
-}
-
-void botf::GameLogic::applyStoredAims() {
-	for (const auto& [entityId, _] : m_entityAimWorld) {
-		applyAimForEntity(entityId);
-	}
 }
 
 void botf::GameLogic::resolveBulletHits() {

@@ -4,7 +4,6 @@
 #include "logic/bullet_object.h"
 #include "logic/figure_object.h"
 
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
@@ -28,16 +27,16 @@ public:
 	// Apply input by entity id. No-op if missing or dead.
 	void setPlayerInput(common::ID entityId, int dx, int dy);
 
-	// Store aim world point; angle applied now and each tick. No-op if missing.
+	// Aim world point on the figure (retarget now + each move tick). No-op if missing.
 	void setPlayerAim(common::ID entityId, common::Point aimWorld);
 
-	// Rising-edge fire; enforces cooldown. false if missing / dead / cooling down.
+	// Rising-edge fire; figure enforces cooldown. false if missing / dead / cooling down.
 	[[nodiscard]] bool tryFire(common::ID entityId);
 
 	// Server damage API (card 32). Returns false if entity missing.
 	[[nodiscard]] bool applyDamage(common::ID entityId, int damage);
 
-	// Advance the world by dt seconds, retarget aims, resolve hits, prune bullets.
+	// Advance the world by dt seconds, resolve hits, prune bullets.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
@@ -45,8 +44,6 @@ public:
 
 private:
 	FigureObject* findFigureMutable(common::ID entityId);
-	void applyAimForEntity(common::ID entityId);
-	void applyStoredAims();
 	// Point ∩ AABB vs living non-owner figures; one hit → damage + destroy bullet.
 	void resolveBulletHits();
 	void pruneDeadBullets();
@@ -54,9 +51,6 @@ private:
 
 	std::vector<FigureObject> m_figures;
 	std::vector<BulletObject> m_bullets;
-	// Last aim world point per entity; angle = atan2(aim − pos) after each move tick.
-	std::unordered_map<common::ID, common::Point> m_entityAimWorld;
-	std::unordered_map<common::ID, float> m_lastFireTime;
 	float m_worldTime{0.f};
 	// Bullet ids stay above any spawned figure id.
 	common::ID m_nextBulletId{0};
