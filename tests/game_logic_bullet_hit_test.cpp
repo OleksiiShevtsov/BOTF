@@ -25,9 +25,9 @@ const botf::FigureObject* findFigure(const botf::GameLogic& logic, botf::common:
 
 TEST(GameLogicBulletHit, HitsForeignFigureAppliesDamageAndDestroysBullet) {
 	botf::GameLogic logic;
-	const auto shooterId = botf::test::spawnBound(logic, 1, {0.f, 0.f});
-	const auto targetId = botf::test::spawnBound(logic, 2, {50.f, 0.f});
-	botf::test::applyClientInput(logic, 1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
+	const auto shooterId = botf::test::spawnFigure(logic, {0.f, 0.f});
+	const auto targetId = botf::test::spawnFigure(logic, {50.f, 0.f});
+	botf::test::applyEntityInput(logic, shooterId, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
 
 	ASSERT_EQ(logic.bullets().size(), 1u);
 
@@ -49,9 +49,9 @@ TEST(GameLogicBulletHit, HitsForeignFigureAppliesDamageAndDestroysBullet) {
 
 TEST(GameLogicBulletHit, MissJustOutsideLeavesHpAndBulletMayExpire) {
 	botf::GameLogic logic;
-	botf::test::spawnBound(logic, 1, {0.f, 0.f});
-	const auto targetId = botf::test::spawnBound(logic, 2, {50.f, 80.f});
-	botf::test::applyClientInput(logic, 1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
+	const auto shooterId = botf::test::spawnFigure(logic, {0.f, 0.f});
+	const auto targetId = botf::test::spawnFigure(logic, {50.f, 80.f});
+	botf::test::applyEntityInput(logic, shooterId, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
 	const int hpBefore = findFigure(logic, targetId)->getHp();
 
 	const float maxRange = botf::common::GlobalSettings::bulletMaxRange;
@@ -66,8 +66,8 @@ TEST(GameLogicBulletHit, MissJustOutsideLeavesHpAndBulletMayExpire) {
 
 TEST(GameLogicBulletHit, OwnBulletDoesNotDamageShooter) {
 	botf::GameLogic logic;
-	const auto shooterId = botf::test::spawnBound(logic, 1, {0.f, 0.f});
-	botf::test::applyClientInput(logic, 1, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
+	const auto shooterId = botf::test::spawnFigure(logic, {0.f, 0.f});
+	botf::test::applyEntityInput(logic, shooterId, botf::common::ClientInput{0, 0, {100.f, 0.f}, true, 0});
 
 	for (int i = 0; i < 3; ++i) {
 		logic.tick(kDt);

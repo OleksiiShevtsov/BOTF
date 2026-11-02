@@ -79,6 +79,24 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 	ASSERT_TRUE(env.session.entityForClient(2).has_value());
 	EXPECT_NE(*env.session.entityForClient(1), *env.session.entityForClient(2));
 
+	// Seat.index is the figure id and spawn slot.
+	for (const auto& seat : env.session.seats()) {
+		ASSERT_TRUE(seat.getPlayer());
+		const auto entityId = env.session.entityForClient(seat.getPlayer()->getId());
+		ASSERT_TRUE(entityId.has_value());
+		EXPECT_EQ(*entityId, static_cast<botf::common::ID>(seat.getIndex()));
+		bool found = false;
+		for (const auto& figure : env.session.figures()) {
+			if (figure.getId() == *entityId) {
+				found = true;
+				EXPECT_FLOAT_EQ(figure.getPosition().x,
+								env.session.getGameMap().getSpawns()[seat.getIndex() - 1].x);
+				break;
+			}
+		}
+		EXPECT_TRUE(found);
+	}
+
 	const auto& spawns = env.session.getGameMap().getSpawns();
 	std::unordered_set<float> seatedX;
 	for (const auto& figure : env.session.figures()) {

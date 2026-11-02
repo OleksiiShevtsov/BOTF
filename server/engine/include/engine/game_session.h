@@ -43,7 +43,7 @@ public:
 	// Forming only. Idempotent if already seated. false if full / wrong phase.
 	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player);
 
-	// Forming → Playing: shuffle seat indices (spawn slots), spawn+bind. false if refused.
+	// Forming → Playing: shuffle seat indices, spawn figure id = index. false if refused.
 	[[nodiscard]] bool beginPlaying();
 
 	void removePlayer(const common::ID clientId);
@@ -55,6 +55,7 @@ public:
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
+	// Seat bridge: occupied seat.index (== figure id). nullopt if client not seated.
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:

@@ -71,22 +71,23 @@ struct TestSessionPool {
 	GameSessionsPool pool;
 };
 
-inline void applyClientInput(GameLogic& logic,
-							 const common::ID clientId,
+inline void applyEntityInput(GameLogic& logic,
+							 const common::ID entityId,
 							 const common::ClientInput& clientInput) {
-	logic.setClientInput(clientId, clientInput.dx, clientInput.dy);
-	logic.setClientAim(clientId, clientInput.aim);
+	logic.setPlayerInput(entityId, clientInput.dx, clientInput.dy);
+	logic.setPlayerAim(entityId, clientInput.aim);
 	if (clientInput.fire) {
-		logic.tryFire(clientId);
+		(void)logic.tryFire(entityId);
 	}
 }
 
-inline common::ID spawnBound(GameLogic& logic,
-							const common::ID clientId,
-							const common::Point at = {0.f, 0.f}) {
-	const common::ID entityId = logic.spawnPlayer(at);
-	logic.bindClient(clientId, entityId);
-	return entityId;
+// Allocate the lowest free entity id and spawn (logic unit tests; session uses seat.index).
+inline common::ID spawnFigure(GameLogic& logic, const common::Point at = {0.f, 0.f}) {
+	for (common::ID id = 0;; ++id) {
+		if (logic.spawnFigure(id, at)) {
+			return id;
+		}
+	}
 }
 
 }  // namespace botf::test

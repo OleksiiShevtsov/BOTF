@@ -16,9 +16,11 @@ botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMa
 	if (capacity == 0) {
 		throw std::runtime_error("GameSession: gameMap has no spawns");
 	}
+	// Seat index == figure entity id. 0 is reserved on the wire as "no object",
+	// so seats use 1..capacity; spawn point is spawns[index - 1].
 	m_seats.reserve(capacity);
 	for (std::size_t i = 0; i < capacity; ++i) {
-		m_seats.emplace_back(i);
+		m_seats.emplace_back(i + 1);
 	}
 }
 
@@ -143,12 +145,19 @@ bool botf::GameSession::beginPlaying() {
 	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
 	for (Seat& seat : m_seats) {
 		const std::shared_ptr<Player> player = seat.getPlayer();
-		const std::size_t spawnIndex = seat.getIndex();
-		const common::ID entity = m_gameLogic.spawnPlayer(spawns[spawnIndex]);
-		m_gameLogic.bindClient(player->getId(), entity);
+		const common::ID entityId = static_cast<common::ID>(seat.getIndex());
+		const std::size_t spawnSlot = seat.getIndex() - 1;
+		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlot])) {
+			botf::log::error(
+				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
+			for (Seat& spawned : m_seats) {
+				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned.getIndex()));
+			}
+			return false;
+		}
 		botf::log::info(
-			"[server] session {} seated client {} → entity {} spawn={}", m_id, player->getId(),
-			entity, spawnIndex);
+			"[server] session {} seated client {} → entity {} spawnSlot={}", m_id, player->getId(),
+			entityId, spawnSlot);
 	}
 
 	m_phase = SessionPhase::Playing;
@@ -157,17 +166,23 @@ bool botf::GameSession::beginPlaying() {
 }
 
 void botf::GameSession::randomShuffleIndex() {
+	// Permutation of 0..n-1 → seat indices 1..n (entity ids; 0 reserved).
 	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
 	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i].setIndex(indices[i]);
+		m_seats[i].setIndex(indices[i] + 1);
 	}
 }
 
 void botf::GameSession::removePlayer(const common::ID clientId) {
-	if (Seat* seat = findSeatByPlayerId(clientId)) {
-		seat->clearPlayer();
+	Seat* seat = findSeatByPlayerId(clientId);
+	if (!seat) {
+		return;
 	}
-	m_gameLogic.removeClient(clientId);
+	const common::ID entityId = static_cast<common::ID>(seat->getIndex());
+	seat->clearPlayer();
+	if (m_phase == SessionPhase::Playing) {
+		m_gameLogic.destroyFigure(entityId);
+	}
 }
 
 void botf::GameSession::applyClientInput(const common::ID clientId,
@@ -175,10 +190,15 @@ void botf::GameSession::applyClientInput(const common::ID clientId,
 	if (m_phase != SessionPhase::Playing) {
 		return;
 	}
-	m_gameLogic.setClientInput(clientId, clientInput.dx, clientInput.dy);
-	m_gameLogic.setClientAim(clientId, clientInput.aim);
+	const Seat* seat = findSeatByPlayerId(clientId);
+	if (!seat) {
+		return;
+	}
+	const common::ID entityId = static_cast<common::ID>(seat->getIndex());
+	m_gameLogic.setPlayerInput(entityId, clientInput.dx, clientInput.dy);
+	m_gameLogic.setPlayerAim(entityId, clientInput.aim);
 	if (clientInput.fire) {
-		m_gameLogic.tryFire(clientId);
+		(void)m_gameLogic.tryFire(entityId);
 	}
 }
 
@@ -223,5 +243,9 @@ const std::vector<botf::BulletObject>& botf::GameSession::bullets() const {
 }
 
 std::optional<botf::common::ID> botf::GameSession::entityForClient(const common::ID clientId) const {
-	return m_gameLogic.entityForClient(clientId);
+	const Seat* seat = findSeatByPlayerId(clientId);
+	if (!seat) {
+		return std::nullopt;
+	}
+	return static_cast<common::ID>(seat->getIndex());
 }
