@@ -26,7 +26,6 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 			continue;
 		}
 		const common::ID sessionId = gameSession->getId();
-		m_clientToSessionId[clientId] = sessionId;
 		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId, sessionId,
 						gameSession->clientCount(), gameSession->seatCapacity());
 		return sessionId;
@@ -37,27 +36,28 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 		throw std::runtime_error(
 			"GameSessionsPool::attachPlayerToSession: new session rejected player");
 	}
-	m_clientToSessionId[clientId] = created.getId();
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
 					created.getId(), created.seatCapacity(), created.getGameMap().getId());
 	return created.getId();
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const common::ID clientId) {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return nullptr;
+	for (auto& gameSession : m_sessions) {
+		if (gameSession->entityForClient(clientId).has_value()) {
+			return gameSession.get();
+		}
 	}
-	return findGameSessionBySessionId(it->second);
+	return nullptr;
 }
 
 const botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(
 	const common::ID clientId) const {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return nullptr;
+	for (const auto& gameSession : m_sessions) {
+		if (gameSession->entityForClient(clientId).has_value()) {
+			return gameSession.get();
+		}
 	}
-	return findGameSessionBySessionId(it->second);
+	return nullptr;
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(const common::ID sessionId) {
@@ -80,13 +80,7 @@ const botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(
 }
 
 void botf::GameSessionsPool::removePlayer(const common::ID clientId) {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return;
-	}
-	const common::ID sessionId = it->second;
-	m_clientToSessionId.erase(it);
-	if (GameSession* gameSession = findGameSessionBySessionId(sessionId)) {
+	if (GameSession* gameSession = findGameSessionByClientId(clientId)) {
 		gameSession->removePlayer(clientId);
 	}
 }
