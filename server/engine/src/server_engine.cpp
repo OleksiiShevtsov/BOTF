@@ -173,8 +173,7 @@ void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 }
 
 void botf::ServerEngine::handleClientInput(const common::ID clientId,
-										   const common::ClientInput& clientInput,
-										   std::int64_t /*sequence*/) {
+										   const common::ClientInput& clientInput) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
 	if (!gameSession || gameSession->getSessionState() != SessionState::Playing) {
 		// No session / still Forming — ignore Move/Fire.
@@ -199,7 +198,7 @@ void botf::ServerEngine::applyInbound() {
 			} else if constexpr (std::is_same_v<Body, common::JoinSessionMessage>) {
 				handleJoinSession(clientId, sequence);
 			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
-				handleClientInput(clientId, body, sequence);
+				handleClientInput(clientId, body);
 			}
 			// WorldSnapshot / SessionStart from a client are ignored.
 		});

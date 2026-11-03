@@ -25,20 +25,21 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 		if (!gameSession->addPlayer(player)) {
 			continue;
 		}
-		const common::ID sessionId = gameSession->getId();
-		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId, sessionId,
-						gameSession->clientCount(), gameSession->seatCapacity());
-		return sessionId;
+		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId,
+						gameSession->getId(), gameSession->clientCount(),
+						gameSession->seatCapacity());
+		return gameSession->getId();
 	}
 
-	GameSession& created = createSession();
-	if (!created.addPlayer(std::move(player))) {
+	GameSession& gameSession = createSession();
+	if (!gameSession.addPlayer(std::move(player))) {
 		throw std::runtime_error(
 			"GameSessionsPool::attachPlayerToSession: new session rejected player");
 	}
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
-					created.getId(), created.seatCapacity(), created.getGameMap().getId());
-	return created.getId();
+					gameSession.getId(), gameSession.seatCapacity(),
+					gameSession.getGameMap().getId());
+	return gameSession.getId();
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const common::ID clientId) {
