@@ -57,11 +57,18 @@ void botf::ServerEngine::shutdown() {
 	m_server.stop();
 }
 
-std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID clientId) {
+std::shared_ptr<botf::Player> botf::ServerEngine::findPlayer(const common::ID clientId) const {
 	for (const std::shared_ptr<Player>& player : m_players) {
 		if (player && player->getId() == clientId) {
 			return player;
 		}
+	}
+	return nullptr;
+}
+
+std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID clientId) {
+	if (std::shared_ptr<Player> existing = findPlayer(clientId)) {
+		return existing;
 	}
 	auto player = std::make_shared<Player>(clientId);
 	m_players.push_back(player);
@@ -70,7 +77,6 @@ std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID 
 
 void botf::ServerEngine::removePlayerById(const common::ID clientId) {
 	m_gameSessionsPool.removePlayer(clientId);
-	m_inputStates.erase(clientId);
 	m_players.erase(std::remove_if(m_players.begin(), m_players.end(),
 								   [clientId](const std::shared_ptr<Player>& player) {
 									   return player && player->getId() == clientId;
@@ -116,11 +122,11 @@ std::uint32_t botf::ServerEngine::simTick() const {
 
 std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	const common::ID clientId) const {
-	const auto it = m_inputStates.find(clientId);
-	if (it == m_inputStates.end()) {
+	const std::shared_ptr<Player> player = findPlayer(clientId);
+	if (!player) {
 		return std::nullopt;
 	}
-	return it->second.command;
+	return player->lastClientInput();
 }
 
 void botf::ServerEngine::handleClientConnect(const common::ID clientId,
@@ -177,14 +183,16 @@ void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 
 void botf::ServerEngine::handleClientInput(const common::ID clientId,
 										   const common::ClientInput& clientInput,
-										   std::int64_t sequence) {
+										   std::int64_t /*sequence*/) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
 	if (!gameSession || gameSession->getSessionState() != SessionState::Playing) {
 		// No session / still Forming — ignore Move/Fire.
 		return;
 	}
 
-	m_inputStates[clientId] = ClientInputState{clientInput, sequence};
+	if (const std::shared_ptr<Player> player = findPlayer(clientId)) {
+		player->setLastClientInput(clientInput);
+	}
 	gameSession->applyClientInput(clientId, clientInput);
 }
 

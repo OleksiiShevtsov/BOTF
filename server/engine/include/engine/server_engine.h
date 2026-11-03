@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
@@ -44,14 +43,10 @@ public:
 		const common::ID clientId) const;
 
 private:
-	struct ClientInputState {
-		common::ClientInput command{};
-		std::int64_t sequence = 0;
-	};
-
 	void loadObjectData();
 
 	[[nodiscard]] std::shared_ptr<Player> ensurePlayer(common::ID clientId);
+	[[nodiscard]] std::shared_ptr<Player> findPlayer(common::ID clientId) const;
 	void removePlayerById(common::ID clientId);
 
 	void handleClientConnect(const common::ID clientId,
@@ -71,7 +66,6 @@ private:
 	GameMapPool m_gameMapPool;
 	GameSessionsPool m_gameSessionsPool;
 	std::vector<std::shared_ptr<Player>> m_players;
-	std::unordered_map<common::ID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };
