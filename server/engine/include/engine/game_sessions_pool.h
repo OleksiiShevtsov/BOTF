@@ -37,15 +37,14 @@ public:
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
 
-	[[nodiscard]] const std::unordered_map<common::ID, std::unique_ptr<GameSession>>&
-	sessions() const;
-	[[nodiscard]] std::unordered_map<common::ID, std::unique_ptr<GameSession>>& sessions();
+	[[nodiscard]] const std::vector<std::unique_ptr<GameSession>>& sessions() const;
+	[[nodiscard]] std::vector<std::unique_ptr<GameSession>>& sessions();
 
 private:
 	GameSession& createSession();
 
 	GameMapPool& m_gameMapPool;
-	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
+	std::vector<std::unique_ptr<GameSession>> m_sessions;
 	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
 	common::ID m_nextId{1};
 };

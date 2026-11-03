@@ -227,12 +227,12 @@ void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 
 void botf::ServerEngine::advanceSim(float dt) {
 	++m_simTick;
-	for (auto& [sessionId, gameSession] : m_gameSessionsPool.sessions()) {
+	for (auto& gameSession : m_gameSessionsPool.sessions()) {
 		if (gameSession->getSessionState() != SessionState::Playing) {
 			continue;
 		}
 		gameSession->tick(dt);
-		enqueueWorldState(sessionId, m_simTick, m_simTick);
+		enqueueWorldState(gameSession->getId(), m_simTick, m_simTick);
 	}
 }
 
