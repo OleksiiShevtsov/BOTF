@@ -71,7 +71,7 @@ private:
 	GameMapPool m_gameMapPool;
 	GameSessionsPool m_gameSessionsPool;
 	std::vector<std::shared_ptr<Player>> m_players;
-	std::unordered_map<common::ID, ClientInputState> m_inputStates;// ???
+	std::unordered_map<common::ID, ClientInputState> m_inputStates;
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };
