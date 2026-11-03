@@ -109,7 +109,9 @@ void botf::app::AppRendering::drawMenu() {
 
 void botf::app::AppRendering::drawWaiting() {
 	beginFrame();
-	// Placeholder until card 47 (Waiting UI). Same clear color, no arena.
+	if (m_window) {
+		m_menuScreen.drawWaiting(*m_window);
+	}
 	endFrame();
 }
 

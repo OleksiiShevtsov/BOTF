@@ -2,20 +2,27 @@
 
 #include "common/dto.hpp"
 #include "common/types.hpp"
+#include "engine/player.h"
+#include "engine/seat.h"
 #include "logic/game_logic.h"
 #include "logic/game_map.h"
 
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
 
-// One live match: id + shared GameMap template + authoritative GameLogic facade.
-// Client membership lives in GameSessionsPool (card 46).
-// Phases Waiting/Playing — card 47.
+// Live match state (card 47). Client UI uses ClientState::Waiting while Forming.
+enum class SessionState {
+	Forming,
+	Playing,
+	Finished,
+};
+
+// One live match: seats + shared GameMap + state + GameLogic facade.
+// Roster = occupied seats (shared_ptr<Player> from ServerEngine).
 class GameSession {
 public:
 	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
@@ -25,13 +32,21 @@ public:
 
 	[[nodiscard]] common::ID getId() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
+	[[nodiscard]] SessionState getSessionState() const;
+	[[nodiscard]] std::size_t seatCapacity() const;
+	[[nodiscard]] std::size_t clientCount() const;
+	[[nodiscard]] std::vector<common::ID> clients() const;
+	[[nodiscard]] const std::vector<std::shared_ptr<Seat>>& seats() const;
 
-	// Bind existing client or spawn on first free seat. nullopt if session is full.
-	// TODO(card 47): on full session, open another session instead of refusing forever
-	// (scaffold still has a single shared session).
-	[[nodiscard]] std::optional<common::ID> bindOrSpawnClient(const common::ID clientId);
+	[[nodiscard]] bool hasFreeSeats() const;
 
-	void removeClient(const common::ID clientId);
+	// Forming only. Idempotent if already seated. false if full / wrong phase.
+	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player);
+
+	// Forming → Playing: shuffle seat indices, spawn figure id = index. false if refused.
+	[[nodiscard]] bool beginPlaying();
+
+	void removePlayer(const common::ID clientId);
 
 	void applyClientInput(const common::ID clientId, const common::ClientInput& clientInput);
 	void tick(float dt);
@@ -40,16 +55,20 @@ public:
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
+	// Seat bridge: occupied seat.index (== figure id). nullopt if client not seated.
 	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
 
 private:
-	[[nodiscard]] std::optional<std::size_t> placeInFirstAvailableSpawnPoint(
-		const common::ID clientId);
+	[[nodiscard]] std::shared_ptr<Seat> findFreeSeat();
+	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId);
+	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId) const;
+	void randomShuffleIndex();
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;
+	SessionState m_sessionState{SessionState::Forming};
+	std::vector<std::shared_ptr<Seat>> m_seats;
 	GameLogic m_gameLogic;
-	std::unordered_map<common::ID, std::size_t> m_clientSpawnIndex;
 };
 
 }  // namespace botf

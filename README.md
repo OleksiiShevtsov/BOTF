@@ -142,10 +142,11 @@ BOTF/
 `main` тонкий: только runtime (`ServerEngine` / `ClientApp`). Smoke живёт в `tests/`.
 
 ```
-ClientConnect → (card 46 scaffold) ensureDefaultFor → spawn/bind → ack (object_id)
-  // later: ClientConnect = server login only; JoinSession carries map_id (45/47)
-ClientInput → session GameLogic → WorldState
-  → tick (figures, aims, bullets; prune dead) → WorldSnapshot → Scene (FigureView / BulletView)
+ClientConnect → login ack only (no session / no spawn)
+JoinSession → joinFormingOrCreate (map at create)
+  → seats full → beginPlaying (seatPlayersRandom) → SessionStart(object_id) → Playing
+ClientInput (Playing only) → session GameLogic → WorldState
+  → tick → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 
 Player hitbox (server): `ObjectHitbox` on `FigureObject` (default stub = `hitboxSize`×`hitboxSize`

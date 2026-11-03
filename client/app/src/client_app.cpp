@@ -137,14 +137,14 @@ void botf::app::ClientApp::applyInbound() {
 			continue;
 		}
 
-		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
+		protocol::dispatch(*decoded, [this](const auto& body, std::int64_t) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
-				if (body.boundId == 0) {
-					botf::log::warn("[client] ClientConnect ack without object_id");
+				// No boundId: login ack only. Entity comes with SessionStart.
+				if (!body.boundId.has_value()) {
 					return;
 				}
-				m_selfId = body.boundId;
+				m_selfId = *body.boundId;
 				m_rendering.getPlayer().setId(*m_selfId);
 				botf::log::info("[client] bound to entity {}", *m_selfId);
 			} else if constexpr (std::is_same_v<Body, common::WorldSnapshot>) {
@@ -154,9 +154,15 @@ void botf::app::ClientApp::applyInbound() {
 					botf::log::warn("[client] SessionStart ignored (not Waiting)");
 					return;
 				}
+				if (!body.boundId.has_value()) {
+					botf::log::warn("[client] SessionStart without object_id");
+					return;
+				}
+				m_selfId = *body.boundId;
+				m_rendering.getPlayer().setId(*m_selfId);
 				m_rendering.getMatch().start();
 				m_clientState = common::ClientState::Playing;
-				botf::log::info("[client] SessionStart → Playing");
+				botf::log::info("[client] SessionStart → Playing (entity {})", *m_selfId);
 			}
 			// ClientInput / JoinSession from server are ignored.
 		});

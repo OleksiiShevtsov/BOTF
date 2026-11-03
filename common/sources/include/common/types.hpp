@@ -4,8 +4,11 @@
 
 namespace botf::common {
 
-// Single id type: TCP client, entity, map, game session, … 
-using ID = std::uint32_t;
+// Single id type: TCP client, entity, map, game session, …
+using ID = std::int64_t;
+
+// Seat / spawn / array-style indices (not network entity ids).
+using IDX = std::int32_t;
 
 using Coordinate = float;
 using Angle = float;

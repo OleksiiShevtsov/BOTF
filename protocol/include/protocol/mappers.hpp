@@ -5,6 +5,8 @@
 #include "input.pb.h"
 #include "world_state.pb.h"
 
+#include <optional>
+
 namespace botf::protocol {
 namespace {
 
@@ -37,13 +39,19 @@ namespace {
 [[nodiscard]] inline botf::ClientConnect toProto(const common::ClientConnectMessage& connect) {
 	botf::ClientConnect message;
 	message.set_player_name(connect.playerName);
-	// Wire field stays object_id; DTO name is boundId.
-	message.set_object_id(connect.boundId);
+	// Wire field stays object_id; DTO name is boundId. Unset = no entity (0 is valid).
+	if (connect.boundId.has_value()) {
+		message.set_object_id(*connect.boundId);
+	}
 	return message;
 }
 
 [[nodiscard]] inline common::ClientConnectMessage fromProto(const botf::ClientConnect& connect) {
-	return common::ClientConnectMessage{connect.player_name(), connect.object_id()};
+	common::ClientConnectMessage result{connect.player_name(), std::nullopt};
+	if (connect.has_object_id()) {
+		result.boundId = connect.object_id();
+	}
+	return result;
 }
 
 [[nodiscard]] inline botf::JoinSession toProto(const common::JoinSessionMessage&) {
@@ -54,12 +62,20 @@ namespace {
 	return common::JoinSessionMessage{};
 }
 
-[[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage&) {
-	return botf::SessionStart{};
+[[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage& start) {
+	botf::SessionStart message;
+	if (start.boundId.has_value()) {
+		message.set_object_id(*start.boundId);
+	}
+	return message;
 }
 
-[[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart&) {
-	return common::SessionStartMessage{};
+[[nodiscard]] inline common::SessionStartMessage fromProto(const botf::SessionStart& start) {
+	common::SessionStartMessage result{};
+	if (start.has_object_id()) {
+		result.boundId = start.object_id();
+	}
+	return result;
 }
 
 [[nodiscard]] inline botf::ClientInput toProto(const common::ClientInput& input) {

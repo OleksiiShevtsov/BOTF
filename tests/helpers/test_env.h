@@ -4,6 +4,7 @@
 #include "engine/game_map_pool.h"
 #include "engine/game_session.h"
 #include "engine/game_sessions_pool.h"
+#include "engine/player.h"
 #include "logic/game_logic.h"
 #include "logic/game_map.h"
 
@@ -16,8 +17,6 @@
 
 namespace botf::test {
 
-// Bind an ephemeral TCP port and return it (listener is closed afterward).
-// Returns nullopt if no free port could be reserved.
 [[nodiscard]] inline std::optional<std::uint16_t> ephemeralPort() {
 	sf::TcpListener listener;
 	listener.setBlocking(true);
@@ -41,7 +40,6 @@ namespace botf::test {
 	return mapPool.getGameMapById(mapId);
 }
 
-// Stack-owned GameSession for session/map tests (no test-only GameSession API).
 struct TestSession {
 	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
 		: session{sessionId, loadSharedGameMap(mapId)} {}
@@ -49,7 +47,6 @@ struct TestSession {
 	GameSession session;
 };
 
-// Map catalog + sessions pool for membership tests (mirrors ServerEngine ownership).
 struct TestSessionPool {
 	TestSessionPool() : pool{mapPool} {
 		if (!mapPool.load()) {
@@ -57,8 +54,9 @@ struct TestSessionPool {
 		}
 	}
 
-	common::ID ensureClient(const common::ID clientId) {
-		return pool.ensureDefaultFor(clientId);
+	common::ID joinClient(const common::ID clientId) {
+		auto player = std::make_shared<Player>(clientId);
+		return pool.attachPlayerToSession(std::move(player));
 	}
 
 	[[nodiscard]] GameSession* sessionById(const common::ID sessionId) {
@@ -73,23 +71,23 @@ struct TestSessionPool {
 	GameSessionsPool pool;
 };
 
-// Apply ClientInput shape to GameLogic (tests of logic — not GameSession).
-inline void applyClientInput(GameLogic& logic,
-							 const common::ID clientId,
+inline void applyEntityInput(GameLogic& logic,
+							 const common::ID entityId,
 							 const common::ClientInput& clientInput) {
-	logic.setClientInput(clientId, clientInput.dx, clientInput.dy);
-	logic.setClientAim(clientId, clientInput.aim);
+	logic.setFigureInput(entityId, clientInput.dx, clientInput.dy);
+	logic.setFigureAim(entityId, clientInput.aim);
 	if (clientInput.fire) {
-		logic.tryFire(clientId);
+		(void)logic.tryFire(entityId);
 	}
 }
 
-inline common::ID spawnBound(GameLogic& logic,
-							const common::ID clientId,
-							const common::Point at = {0.f, 0.f}) {
-	const common::ID entityId = logic.spawnPlayer(at);
-	logic.bindClient(clientId, entityId);
-	return entityId;
+// Allocate the lowest free entity id and spawn (logic unit tests; session uses seat.index).
+inline common::ID spawnFigure(GameLogic& logic, const common::Point at = {0.f, 0.f}) {
+	for (common::ID id = 0;; ++id) {
+		if (logic.spawnFigure(id, at)) {
+			return id;
+		}
+	}
 }
 
 }  // namespace botf::test

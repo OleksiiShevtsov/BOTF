@@ -67,9 +67,9 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 
 TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 	botf::GameLogic logic;
-	const auto id = logic.spawnPlayer(botf::common::Point{100.f, 100.f});
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{100.f, 100.f}));
 	ASSERT_EQ(logic.figures().size(), 1u);
-	EXPECT_EQ(logic.figures().front().getId(), id);
+	EXPECT_EQ(logic.figures().front().getId(), 0u);
 
 	const auto& figure = logic.figures().front();
 	EXPECT_FLOAT_EQ(figure.getHitbox().getWidth(), botf::common::GlobalSettings::hitboxSize);

@@ -4,14 +4,12 @@
 #include "logic/bullet_object.h"
 #include "logic/figure_object.h"
 
-#include <cstddef>
-#include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
 
-// Server-side world simulation. No SFML / no networking.
+// Server-side world simulation. No SFML / no networking / no clientId.
+// Controllable figures are addressed only by entity id (GameSession seat index).
 class GameLogic {
 public:
 	GameLogic();
@@ -19,57 +17,43 @@ public:
 	GameLogic(const GameLogic&) = delete;
 	GameLogic& operator=(const GameLogic&) = delete;
 
-	// Spawn a controllable figure; returns its logic id.
+	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
 	// Speed limit from GlobalSettings stub until character catalog / DB.
-	common::ID spawnPlayer(common::Point at);
+	[[nodiscard]] bool spawnFigure(common::ID entityId, common::Point at);
 
-	// Bind a network client to a logic entity (one entity per client).
-	void bindClient(const common::ID clientId, const common::ID entityId);
+	// Destroy figure and its bullets. No-op if missing.
+	void destroyFigure(common::ID entityId);
 
-	// Drop session mapping and destroy the bound figure (and its bullets).
-	void removeClient(const common::ID clientId);
+	// Apply input by entity id. No-op if missing or dead.
+	void setFigureInput(common::ID entityId, int dx, int dy);
 
-	// Apply move input for a network client (no-op if unbound or dead).
-	void setClientInput(const common::ID clientId, int dx, int dy);
+	// Aim world point on the figure (retarget now + each move tick). No-op if missing.
+	void setFigureAim(common::ID entityId, common::Point aimWorld);
 
-	// Store aim world point for the bound entity; angle applied now and each tick.
-	void setClientAim(const common::ID clientId, common::Point aimWorld);
-
-	// Rising-edge fire from ClientInput; enforces cooldown. Returns true if spawned.
-	// No-op (false) if unbound or figure is dead.
-	bool tryFire(const common::ID clientId);
-
-	// Apply input directly by entity id. No-op if missing or dead.
-	void setPlayerInput(const common::ID entityId, int dx, int dy);
+	// Rising-edge fire; figure enforces cooldown. false if missing / dead / cooling down.
+	[[nodiscard]] bool tryFire(common::ID entityId);
 
 	// Server damage API (card 32). Returns false if entity missing.
-	bool applyDamage(const common::ID entityId, int damage);
+	[[nodiscard]] bool applyDamage(common::ID entityId, int damage);
 
-	// Advance the world by dt seconds, retarget aims, resolve hits, prune bullets.
+	// Advance the world by dt seconds, resolve hits, prune bullets.
 	void tick(float dt);
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
-	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
-	[[nodiscard]] std::size_t boundClientCount() const;
 
 private:
-	FigureObject* findFigureMutable(const common::ID entityId);
-	void destroyFigure(const common::ID entityId);
-	void applyAimForClient(const common::ID clientId);
-	void applyStoredAims();
+	FigureObject* findFigureMutable(common::ID entityId);
 	// Point ∩ AABB vs living non-owner figures; one hit → damage + destroy bullet.
 	void resolveBulletHits();
 	void pruneDeadBullets();
+	[[nodiscard]] common::ID allocateBulletId();
 
 	std::vector<FigureObject> m_figures;
 	std::vector<BulletObject> m_bullets;
-	std::unordered_map<common::ID, common::ID> m_clientToEntity;
-	// Last aim world point per client; angle = atan2(aim − pos) after each move tick.
-	std::unordered_map<common::ID, common::Point> m_clientAimWorld;
-	std::unordered_map<common::ID, float> m_lastFireTime;
 	float m_worldTime{0.f};
-	common::ID m_nextId{1};
+	// Bullet ids stay above any spawned figure id.
+	common::ID m_nextBulletId{0};
 };
 
 }  // namespace botf

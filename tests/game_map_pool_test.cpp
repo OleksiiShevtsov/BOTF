@@ -54,7 +54,7 @@ TEST(GameMapPool, LoadPickRandomAndShare) {
 
 TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
 	botf::test::TestSessionPool env;
-	const botf::common::ID sessionId = env.ensureClient(1);
+	const botf::common::ID sessionId = env.joinClient(1);
 	botf::GameSession* gameSession = env.sessionById(sessionId);
 	ASSERT_NE(gameSession, nullptr);
 	EXPECT_EQ(gameSession->getGameMap().getId(), 1u);
@@ -64,25 +64,4 @@ TEST(GameSessionsPool, CreateSessionSharesMapFromPool) {
 	const auto fromPool = env.mapPool.getGameMapById(1);
 	ASSERT_NE(fromPool, nullptr);
 	EXPECT_EQ(&gameSession->getGameMap(), fromPool.get());
-}
-
-TEST(GameSession, BindOrSpawnUsesFirstFreeSpawnsAndRefusesWhenFull) {
-	botf::test::TestSession env;
-	const auto& spawns = env.session.getGameMap().getSpawns();
-	ASSERT_EQ(spawns.size(), 2u);
-
-	const auto a = env.session.bindOrSpawnClient(1);
-	ASSERT_TRUE(a.has_value());
-	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().x, spawns[0].x);
-	EXPECT_FLOAT_EQ(env.session.figures()[0].getPosition().y, spawns[0].y);
-
-	const auto b = env.session.bindOrSpawnClient(2);
-	ASSERT_TRUE(b.has_value());
-	EXPECT_NE(*a, *b);
-	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().x, spawns[1].x);
-	EXPECT_FLOAT_EQ(env.session.figures()[1].getPosition().y, spawns[1].y);
-
-	const auto refused = env.session.bindOrSpawnClient(3);
-	EXPECT_FALSE(refused.has_value());
-	EXPECT_EQ(env.session.figures().size(), 2u);
 }

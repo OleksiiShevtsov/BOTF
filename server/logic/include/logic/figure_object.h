@@ -26,6 +26,10 @@ public:
 	void setAngle(common::Angle alpha);
 	// Movement intent for this tick: each axis in {-1, 0, 1}. No-op if dead.
 	void setInput(int dx, int dy);
+	// Store aim world point and retarget angle now. No-op if dead.
+	void setAimWorld(common::Point aimWorld);
+	// Fire cooldown gate. true → caller may spawn a bullet. No-op/false if dead.
+	[[nodiscard]] bool tryFire(float worldTime);
 	// Subtract damage, clamp hp >= 0. Returns true if this call reached Dead.
 	bool applyDamage(int damage);
 
@@ -33,6 +37,7 @@ public:
 
 private:
 	void clampSpeed();
+	void retargetFromAim();
 
 	common::Angle m_angle{0.0f};
 	float m_speedLimit{};
@@ -45,6 +50,11 @@ private:
 
 	float m_speedX{0.f};
 	float m_speedY{0.f};
+
+	common::Point m_aimWorld{};
+	bool m_hasAimWorld{false};
+	float m_lastFireTime{0.f};
+	bool m_hasLastFire{false};
 };
 
 }  // namespace botf

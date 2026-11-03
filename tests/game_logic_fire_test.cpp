@@ -19,12 +19,11 @@ botf::common::ClientInput aimFire(botf::common::Point aim, bool fire) {
 
 TEST(GameLogicFire, SpawnBulletFliesAndDiesAtMaxRange) {
 	botf::GameLogic logic;
-	const botf::common::ID clientId = 1;
-	const auto entityId = botf::test::spawnBound(logic, clientId, {100.f, 100.f});
-	botf::test::applyClientInput(logic, clientId, aimFire({200.f, 100.f}, false));
+	const auto entityId = botf::test::spawnFigure(logic, {100.f, 100.f});
+	botf::test::applyEntityInput(logic, entityId, aimFire({200.f, 100.f}, false));
 	EXPECT_NEAR(logic.figures().front().getAngle(), 0.f, 1e-4f);
 
-	botf::test::applyClientInput(logic, clientId, aimFire({200.f, 100.f}, true));
+	botf::test::applyEntityInput(logic, entityId, aimFire({200.f, 100.f}, true));
 	ASSERT_EQ(logic.bullets().size(), 1u);
 	EXPECT_EQ(logic.bullets().front().getOwnerId(), entityId);
 
@@ -39,13 +38,12 @@ TEST(GameLogicFire, SpawnBulletFliesAndDiesAtMaxRange) {
 
 TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 	botf::GameLogic logic;
-	const botf::common::ID clientId = 1;
-	botf::test::spawnBound(logic, clientId, {0.f, 0.f});
-	botf::test::applyClientInput(logic, clientId, aimFire({50.f, 0.f}, false));
+	const auto entityId = botf::test::spawnFigure(logic, {0.f, 0.f});
+	botf::test::applyEntityInput(logic, entityId, aimFire({50.f, 0.f}, false));
 
-	botf::test::applyClientInput(logic, clientId, aimFire({50.f, 0.f}, true));
+	botf::test::applyEntityInput(logic, entityId, aimFire({50.f, 0.f}, true));
 	EXPECT_EQ(logic.bullets().size(), 1u);
-	botf::test::applyClientInput(logic, clientId, aimFire({50.f, 0.f}, true));
+	botf::test::applyEntityInput(logic, entityId, aimFire({50.f, 0.f}, true));
 	EXPECT_EQ(logic.bullets().size(), 1u);
 
 	const float cooldown = botf::common::GlobalSettings::fireCooldownSeconds;
@@ -54,13 +52,13 @@ TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 		logic.tick(kDt);
 	}
 	const auto bulletsBefore = logic.bullets().size();
-	botf::test::applyClientInput(logic, clientId, aimFire({50.f, 0.f}, true));
+	botf::test::applyEntityInput(logic, entityId, aimFire({50.f, 0.f}, true));
 	EXPECT_EQ(logic.bullets().size(), bulletsBefore + 1u);
 }
 
-TEST(GameLogicFire, UnboundClientCannotFire) {
+TEST(GameLogicFire, MissingEntityCannotFire) {
 	botf::GameLogic logic;
-	logic.spawnPlayer(botf::common::Point{0.f, 0.f});
-	botf::test::applyClientInput(logic, 99, aimFire({50.f, 0.f}, true));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}));
+	botf::test::applyEntityInput(logic, 99, aimFire({50.f, 0.f}, true));
 	EXPECT_TRUE(logic.bullets().empty());
 }

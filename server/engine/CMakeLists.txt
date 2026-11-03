@@ -4,6 +4,8 @@ add_library(${PROJECT_NAME} STATIC
     src/game_map_pool.cpp
     src/game_session.cpp
     src/game_sessions_pool.cpp
+    src/player.cpp
+    src/seat.cpp
     src/server_engine.cpp
 )
 
