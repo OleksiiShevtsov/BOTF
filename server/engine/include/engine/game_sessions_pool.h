@@ -45,8 +45,8 @@ private:
 	GameSession& createSession();
 
 	GameMapPool& m_gameMapPool;
-	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;
-	std::unordered_map<common::ID, common::ID> m_clientToSessionId;
+	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;// ???
+	std::unordered_map<common::ID, common::ID> m_clientToSessionId;// ???
 	common::ID m_nextId{1};
 };
 
