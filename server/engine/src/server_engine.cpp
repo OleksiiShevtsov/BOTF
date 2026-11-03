@@ -120,15 +120,6 @@ std::uint32_t botf::ServerEngine::simTick() const {
 	return m_simTick;
 }
 
-std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
-	const common::ID clientId) const {
-	const std::shared_ptr<Player> player = findPlayerById(clientId);
-	if (!player) {
-		return std::nullopt;
-	}
-	return player->lastClientInput();
-}
-
 void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 											 const common::ClientConnectMessage& connect,
 											 std::int64_t sequence) {
@@ -161,15 +152,15 @@ void botf::ServerEngine::tryStartSession(const common::ID sessionId,
 	}
 
 	for (const common::ID memberId : gameSession->clients()) {
-		const auto entityId = gameSession->entityForClient(memberId);
-		if (!entityId) {
-			botf::log::error("[server] session {} missing entity for client {}", sessionId,
+		const auto figureId = gameSession->figureIdForClient(memberId);
+		if (!figureId) {
+			botf::log::error("[server] session {} missing figure for client {}", sessionId,
 							 memberId);
 			continue;
 		}
 		m_outbound.push(net::OutboundNotification{
 			memberId,
-			protocol::encodeSessionStart(common::SessionStartMessage{*entityId}, sequence),
+			protocol::encodeSessionStart(common::SessionStartMessage{*figureId}, sequence),
 		});
 	}
 }
@@ -188,10 +179,6 @@ void botf::ServerEngine::handleClientInput(const common::ID clientId,
 	if (!gameSession || gameSession->getSessionState() != SessionState::Playing) {
 		// No session / still Forming — ignore Move/Fire.
 		return;
-	}
-
-	if (const std::shared_ptr<Player> player = findPlayerById(clientId)) {
-		player->setLastClientInput(clientInput);
 	}
 	gameSession->applyClientInput(clientId, clientInput);
 }

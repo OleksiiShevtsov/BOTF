@@ -55,8 +55,9 @@ public:
 
 	[[nodiscard]] const std::vector<FigureObject>& figures() const;
 	[[nodiscard]] const std::vector<BulletObject>& bullets() const;
-	// Seat bridge: occupied seat.index (== figure id). nullopt if client not seated.
-	[[nodiscard]] std::optional<common::ID> entityForClient(const common::ID clientId) const;
+	[[nodiscard]] bool hasClient(const common::ID clientId) const;
+	// Occupied seat.index (== figure id). nullopt if client not seated.
+	[[nodiscard]] std::optional<common::ID> figureIdForClient(const common::ID clientId) const;
 
 private:
 	[[nodiscard]] std::shared_ptr<Seat> findFreeSeat();

@@ -43,7 +43,7 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const common::ID clientId) {
 	for (auto& gameSession : m_sessions) {
-		if (gameSession->entityForClient(clientId).has_value()) {
+		if (gameSession->hasClient(clientId)) {
 			return gameSession.get();
 		}
 	}
@@ -53,7 +53,7 @@ botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const commo
 const botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(
 	const common::ID clientId) const {
 	for (const auto& gameSession : m_sessions) {
-		if (gameSession->entityForClient(clientId).has_value()) {
+		if (gameSession->hasClient(clientId)) {
 			return gameSession.get();
 		}
 	}

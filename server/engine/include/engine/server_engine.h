@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace botf {
@@ -39,8 +38,6 @@ public:
 	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
 	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
-	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
-		const common::ID clientId) const;
 
 private:
 	void loadObjectData();

@@ -19,11 +19,3 @@ const std::string& botf::Player::getName() const {
 void botf::Player::setName(std::string name) {
 	m_name = std::move(name);
 }
-
-const std::optional<botf::common::ClientInput>& botf::Player::lastClientInput() const {
-	return m_lastClientInput;
-}
-
-void botf::Player::setLastClientInput(common::ClientInput input) {
-	m_lastClientInput = std::move(input);
-}
