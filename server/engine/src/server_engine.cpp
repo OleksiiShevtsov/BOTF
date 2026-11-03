@@ -57,7 +57,7 @@ void botf::ServerEngine::shutdown() {
 	m_server.stop();
 }
 
-std::shared_ptr<botf::Player> botf::ServerEngine::findPlayer(const common::ID clientId) const {
+std::shared_ptr<botf::Player> botf::ServerEngine::findPlayerById(const common::ID clientId) const {
 	for (const std::shared_ptr<Player>& player : m_players) {
 		if (player && player->getId() == clientId) {
 			return player;
@@ -67,7 +67,7 @@ std::shared_ptr<botf::Player> botf::ServerEngine::findPlayer(const common::ID cl
 }
 
 std::shared_ptr<botf::Player> botf::ServerEngine::ensurePlayer(const common::ID clientId) {
-	if (std::shared_ptr<Player> existing = findPlayer(clientId)) {
+	if (std::shared_ptr<Player> existing = findPlayerById(clientId)) {
 		return existing;
 	}
 	auto player = std::make_shared<Player>(clientId);
@@ -122,7 +122,7 @@ std::uint32_t botf::ServerEngine::simTick() const {
 
 std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 	const common::ID clientId) const {
-	const std::shared_ptr<Player> player = findPlayer(clientId);
+	const std::shared_ptr<Player> player = findPlayerById(clientId);
 	if (!player) {
 		return std::nullopt;
 	}
@@ -190,7 +190,7 @@ void botf::ServerEngine::handleClientInput(const common::ID clientId,
 		return;
 	}
 
-	if (const std::shared_ptr<Player> player = findPlayer(clientId)) {
+	if (const std::shared_ptr<Player> player = findPlayerById(clientId)) {
 		player->setLastClientInput(clientInput);
 	}
 	gameSession->applyClientInput(clientId, clientInput);

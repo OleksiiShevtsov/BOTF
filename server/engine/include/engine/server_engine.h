@@ -46,7 +46,7 @@ private:
 	void loadObjectData();
 
 	[[nodiscard]] std::shared_ptr<Player> ensurePlayer(common::ID clientId);
-	[[nodiscard]] std::shared_ptr<Player> findPlayer(common::ID clientId) const;
+	[[nodiscard]] std::shared_ptr<Player> findPlayerById(common::ID clientId) const;
 	void removePlayerById(common::ID clientId);
 
 	void handleClientConnect(const common::ID clientId,
