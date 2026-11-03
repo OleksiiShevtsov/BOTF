@@ -37,7 +37,7 @@ private:
 	AppRendering m_rendering;
 	common::ClientState m_clientState{common::ClientState::Menu};
 
-	std::uint64_t m_sequence = 1;
+	std::int64_t m_sequence = 1;
 	bool m_joinSessionSent = false;
 	bool m_forceInputSend = true;
 	bool m_prevLmbDown = false;

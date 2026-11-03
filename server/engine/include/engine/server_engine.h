@@ -46,7 +46,7 @@ public:
 private:
 	struct ClientInputState {
 		common::ClientInput command{};
-		std::uint64_t sequence = 0;
+		std::int64_t sequence = 0;
 	};
 
 	void loadObjectData();
@@ -56,13 +56,13 @@ private:
 
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
-							 std::uint64_t sequence);
-	void handleJoinSession(const common::ID clientId, std::uint64_t sequence);
+							 std::int64_t sequence);
+	void handleJoinSession(const common::ID clientId, std::int64_t sequence);
 	void handleClientInput(const common::ID clientId,
 						   const common::ClientInput& clientInput,
-						   std::uint64_t sequence);
-	void tryStartSession(const common::ID sessionId, std::uint64_t sequence);
-	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::uint64_t sequence);
+						   std::int64_t sequence);
+	void tryStartSession(const common::ID sessionId, std::int64_t sequence);
+	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::int64_t sequence);
 	int runLoop();
 
 	net::InboundQueue m_inbound;

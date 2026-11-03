@@ -15,7 +15,7 @@ void dispatch(const DecodedEnvelope& envelope, Visitor&& visitor) {
 	std::visit(
 		[&](const auto& body) {
 			using Body = std::decay_t<decltype(body)>;
-			if constexpr (std::is_invocable_v<Visitor&, const Body&, std::uint64_t>) {
+			if constexpr (std::is_invocable_v<Visitor&, const Body&, std::int64_t>) {
 				visitor(body, envelope.sequence);
 			}
 		},

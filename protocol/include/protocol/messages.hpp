@@ -17,7 +17,7 @@ using MessageBody = std::variant<common::ClientConnectMessage,
 // decode() result: DTO + envelope sequence.
 struct DecodedEnvelope {
 	MessageBody body{};
-	std::uint64_t sequence{};
+	std::int64_t sequence{};
 };
 
 }  // namespace botf::protocol

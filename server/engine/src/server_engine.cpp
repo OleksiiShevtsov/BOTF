@@ -125,7 +125,7 @@ std::optional<botf::common::ClientInput> botf::ServerEngine::lastClientInput(
 
 void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 											 const common::ClientConnectMessage& connect,
-											 std::uint64_t sequence) {
+											 std::int64_t sequence) {
 	// Login only — register Player, no GameSession. Match join is JoinSession.
 	const std::shared_ptr<Player> player = ensurePlayer(clientId);
 	player->setName(connect.playerName);
@@ -139,7 +139,7 @@ void botf::ServerEngine::handleClientConnect(const common::ID clientId,
 }
 
 void botf::ServerEngine::tryStartSession(const common::ID sessionId,
-										 const std::uint64_t sequence) {
+										 const std::int64_t sequence) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
 	if (!gameSession || gameSession->getSessionState() != SessionState::Forming) {
 		return;
@@ -169,7 +169,7 @@ void botf::ServerEngine::tryStartSession(const common::ID sessionId,
 }
 
 void botf::ServerEngine::handleJoinSession(const common::ID clientId,
-										   const std::uint64_t sequence) {
+										   const std::int64_t sequence) {
 	const common::ID sessionId =
 		m_gameSessionsPool.attachPlayerToSession(ensurePlayer(clientId));
 	tryStartSession(sessionId, sequence);
@@ -177,7 +177,7 @@ void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 
 void botf::ServerEngine::handleClientInput(const common::ID clientId,
 										   const common::ClientInput& clientInput,
-										   std::uint64_t sequence) {
+										   std::int64_t sequence) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionByClientId(clientId);
 	if (!gameSession || gameSession->getSessionState() != SessionState::Playing) {
 		// No session / still Forming — ignore Move/Fire.
@@ -197,7 +197,7 @@ void botf::ServerEngine::applyInbound() {
 		}
 
 		const common::ID clientId = note->clientId;
-		protocol::dispatch(*decoded, [this, clientId](const auto& body, std::uint64_t sequence) {
+		protocol::dispatch(*decoded, [this, clientId](const auto& body, std::int64_t sequence) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
 				handleClientConnect(clientId, body, sequence);
@@ -213,7 +213,7 @@ void botf::ServerEngine::applyInbound() {
 
 void botf::ServerEngine::enqueueWorldState(const common::ID sessionId,
 										   std::uint32_t tick,
-										   std::uint64_t sequence) {
+										   std::int64_t sequence) {
 	GameSession* gameSession = m_gameSessionsPool.findGameSessionBySessionId(sessionId);
 	if (!gameSession) {
 		return;

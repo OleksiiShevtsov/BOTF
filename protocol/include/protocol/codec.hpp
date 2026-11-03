@@ -54,14 +54,14 @@ inline std::string toString(const common::ClientInput& input) {
 }
 
 inline std::string encodeClientConnect(const common::ClientConnectMessage& connect,
-									   std::uint64_t sequence) {
+									   std::int64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
 	*envelope.mutable_client_connect() = toProto(connect);
 	return envelope.SerializeAsString();
 }
 
-inline std::string encodeClientInput(const common::ClientInput& input, std::uint64_t sequence) {
+inline std::string encodeClientInput(const common::ClientInput& input, std::int64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
 	*envelope.mutable_client_input() = toProto(normalizeInput(input));
@@ -69,7 +69,7 @@ inline std::string encodeClientInput(const common::ClientInput& input, std::uint
 }
 
 inline std::string encodeWorldSnapshot(const common::WorldSnapshot& snapshot,
-									   std::uint64_t sequence) {
+									   std::int64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
 	*envelope.mutable_world_state() = toProto(snapshot);
@@ -77,7 +77,7 @@ inline std::string encodeWorldSnapshot(const common::WorldSnapshot& snapshot,
 }
 
 inline std::string encodeJoinSession(const common::JoinSessionMessage& join,
-									 std::uint64_t sequence) {
+									 std::int64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
 	*envelope.mutable_join_session() = toProto(join);
@@ -85,7 +85,7 @@ inline std::string encodeJoinSession(const common::JoinSessionMessage& join,
 }
 
 inline std::string encodeSessionStart(const common::SessionStartMessage& start,
-									  std::uint64_t sequence) {
+									  std::int64_t sequence) {
 	botf::Envelope envelope;
 	envelope.set_sequence(sequence);
 	*envelope.mutable_session_start() = toProto(start);

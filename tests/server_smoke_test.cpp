@@ -48,7 +48,7 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-bool sendJoinSession(sf::TcpSocket& client, std::uint64_t sequence) {
+bool sendJoinSession(sf::TcpSocket& client, std::int64_t sequence) {
 	return sendFramed(client,
 					  botf::protocol::encodeJoinSession(botf::common::JoinSessionMessage{}, sequence));
 }
@@ -185,7 +185,7 @@ TEST(ServerSmoke, JoinSessionFullStartsPlayingThenClientInputWorldState) {
 		int dx;
 		int dy;
 		std::uint32_t tick;
-		std::uint64_t seq;
+		std::int64_t seq;
 	};
 	const Sample samples[] = {
 		{0, 1, 1, 2},

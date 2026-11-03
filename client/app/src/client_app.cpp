@@ -137,7 +137,7 @@ void botf::app::ClientApp::applyInbound() {
 			continue;
 		}
 
-		protocol::dispatch(*decoded, [this](const auto& body, std::uint64_t) {
+		protocol::dispatch(*decoded, [this](const auto& body, std::int64_t) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
 				// No boundId: login ack only. Entity comes with SessionStart.
