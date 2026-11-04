@@ -235,7 +235,12 @@ const std::vector<botf::BulletObject>& botf::GameSession::bullets() const {
 	return m_gameLogic.bullets();
 }
 
-std::optional<botf::common::ID> botf::GameSession::entityForClient(const common::ID clientId) const {
+bool botf::GameSession::hasClient(const common::ID clientId) const {
+	return findSeatByPlayerId(clientId) != nullptr;
+}
+
+std::optional<botf::common::ID> botf::GameSession::figureIdForClient(
+	const common::ID clientId) const {
 	const std::shared_ptr<Seat> seat = findSeatByPlayerId(clientId);
 	if (!seat) {
 		return std::nullopt;

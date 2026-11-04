@@ -7,13 +7,12 @@
 
 #include <cstddef>
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
 
 // Pool of live GameSession instances. Owned by ServerEngine.
-// Seats hold shared_ptr<Player>; this pool keeps clientId → sessionId routing.
+// Client → session is resolved via seats (Player id), not a side index.
 class GameSessionsPool {
 public:
 	explicit GameSessionsPool(GameMapPool& gameMapPool);
@@ -37,16 +36,14 @@ public:
 	[[nodiscard]] std::size_t size() const;
 	[[nodiscard]] bool empty() const;
 
-	[[nodiscard]] const std::unordered_map<common::ID, std::unique_ptr<GameSession>>&
-	sessions() const;
-	[[nodiscard]] std::unordered_map<common::ID, std::unique_ptr<GameSession>>& sessions();
+	[[nodiscard]] const std::vector<std::unique_ptr<GameSession>>& sessions() const;
+	[[nodiscard]] std::vector<std::unique_ptr<GameSession>>& sessions();
 
 private:
 	GameSession& createSession();
 
 	GameMapPool& m_gameMapPool;
-	std::unordered_map<common::ID, std::unique_ptr<GameSession>> m_sessions;// ???
-	std::unordered_map<common::ID, common::ID> m_clientToSessionId;// ???
+	std::vector<std::unique_ptr<GameSession>> m_sessions;
 	common::ID m_nextId{1};
 };
 

@@ -18,72 +18,70 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 	}
 
 	const common::ID clientId = player->getId();
-	for (auto& [sessionId, gameSession] : m_sessions) {
+	for (auto& gameSession : m_sessions) {
 		if (!gameSession->hasFreeSeats()) {
 			continue;
 		}
 		if (!gameSession->addPlayer(player)) {
 			continue;
 		}
-		m_clientToSessionId[clientId] = sessionId;
-		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId, sessionId,
-						gameSession->clientCount(), gameSession->seatCapacity());
-		return sessionId;
+		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId,
+						gameSession->getId(), gameSession->clientCount(),
+						gameSession->seatCapacity());
+		return gameSession->getId();
 	}
 
-	GameSession& created = createSession();
-	if (!created.addPlayer(std::move(player))) {
+	GameSession& gameSession = createSession();
+	if (!gameSession.addPlayer(std::move(player))) {
 		throw std::runtime_error(
 			"GameSessionsPool::attachPlayerToSession: new session rejected player");
 	}
-	m_clientToSessionId[clientId] = created.getId();
 	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
-					created.getId(), created.seatCapacity(), created.getGameMap().getId());
-	return created.getId();
+					gameSession.getId(), gameSession.seatCapacity(),
+					gameSession.getGameMap().getId());
+	return gameSession.getId();
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(const common::ID clientId) {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return nullptr;
+	for (auto& gameSession : m_sessions) {
+		if (gameSession->hasClient(clientId)) {
+			return gameSession.get();
+		}
 	}
-	return findGameSessionBySessionId(it->second);
+	return nullptr;
 }
 
 const botf::GameSession* botf::GameSessionsPool::findGameSessionByClientId(
 	const common::ID clientId) const {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return nullptr;
+	for (const auto& gameSession : m_sessions) {
+		if (gameSession->hasClient(clientId)) {
+			return gameSession.get();
+		}
 	}
-	return findGameSessionBySessionId(it->second);
+	return nullptr;
 }
 
 botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(const common::ID sessionId) {
-	const auto it = m_sessions.find(sessionId);
-	if (it == m_sessions.end()) {
-		return nullptr;
+	for (auto& gameSession : m_sessions) {
+		if (gameSession->getId() == sessionId) {
+			return gameSession.get();
+		}
 	}
-	return it->second.get();
+	return nullptr;
 }
 
 const botf::GameSession* botf::GameSessionsPool::findGameSessionBySessionId(
 	const common::ID sessionId) const {
-	const auto it = m_sessions.find(sessionId);
-	if (it == m_sessions.end()) {
-		return nullptr;
+	for (const auto& gameSession : m_sessions) {
+		if (gameSession->getId() == sessionId) {
+			return gameSession.get();
+		}
 	}
-	return it->second.get();
+	return nullptr;
 }
 
 void botf::GameSessionsPool::removePlayer(const common::ID clientId) {
-	const auto it = m_clientToSessionId.find(clientId);
-	if (it == m_clientToSessionId.end()) {
-		return;
-	}
-	const common::ID sessionId = it->second;
-	m_clientToSessionId.erase(it);
-	if (GameSession* gameSession = findGameSessionBySessionId(sessionId)) {
+	if (GameSession* gameSession = findGameSessionByClientId(clientId)) {
 		gameSession->removePlayer(clientId);
 	}
 }
@@ -105,13 +103,11 @@ bool botf::GameSessionsPool::empty() const {
 	return m_sessions.empty();
 }
 
-const std::unordered_map<botf::common::ID, std::unique_ptr<botf::GameSession>>&
-botf::GameSessionsPool::sessions() const {
+const std::vector<std::unique_ptr<botf::GameSession>>& botf::GameSessionsPool::sessions() const {
 	return m_sessions;
 }
 
-std::unordered_map<botf::common::ID, std::unique_ptr<botf::GameSession>>&
-botf::GameSessionsPool::sessions() {
+std::vector<std::unique_ptr<botf::GameSession>>& botf::GameSessionsPool::sessions() {
 	return m_sessions;
 }
 
@@ -124,8 +120,6 @@ botf::GameSession& botf::GameSessionsPool::createSession() {
 
 	const common::ID id = m_nextId;
 	++m_nextId;
-	auto [it, inserted] =
-		m_sessions.emplace(id, std::make_unique<GameSession>(id, gameMap));
-	(void)inserted;
-	return *it->second;
+	m_sessions.push_back(std::make_unique<GameSession>(id, gameMap));
+	return *m_sessions.back();
 }

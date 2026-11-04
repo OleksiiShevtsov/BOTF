@@ -200,17 +200,11 @@ TEST(ServerSmoke, JoinSessionFullStartsPlayingThenClientInputWorldState) {
 			sendFramed(clientA, botf::protocol::encodeClientInput(
 									makeInput(sample.dx, sample.dy, sample.tick), sample.seq)));
 
-		bool got = false;
-		for (int i = 0; i < 100 && !got; ++i) {
+		for (int i = 0; i < 100; ++i) {
 			engine.pollNetwork();
 			engine.applyInbound();
-			const auto input = engine.lastClientInput(1);
-			if (input && input->tick == sample.tick) {
-				got = true;
-			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 		}
-		ASSERT_TRUE(got) << "waiting for ClientInput tick=" << sample.tick;
 
 		for (int j = 0; j < 15; ++j) {
 			engine.advanceSim(kDt);
@@ -248,11 +242,6 @@ TEST(ServerSmoke, JoinSessionFullStartsPlayingThenClientInputWorldState) {
 		lastSnapshot = *world;
 		gotWorld = true;
 	}
-
-	const auto last = engine.lastClientInput(1);
-	ASSERT_TRUE(last.has_value());
-	EXPECT_EQ(last->tick, 4u);
-	EXPECT_TRUE(botf::protocol::isIdle(*last));
 
 	botf::common::Point endA{};
 	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
@@ -309,17 +298,11 @@ TEST(ServerSmoke, TwoClientsInputIsolationAndThirdOpensNewForming) {
 	clientA.setBlocking(true);
 	ASSERT_TRUE(sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(1, 0, 10), 2)));
 
-	bool gotInput = false;
-	for (int i = 0; i < 100 && !gotInput; ++i) {
+	for (int i = 0; i < 100; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
-		const auto input = engine.lastClientInput(1);
-		if (input && input->tick == 10) {
-			gotInput = true;
-		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	ASSERT_TRUE(gotInput);
 
 	for (int j = 0; j < 20; ++j) {
 		engine.advanceSim(kDt);
@@ -404,7 +387,6 @@ TEST(ServerSmoke, FormingIgnoresClientInputUntilPlaying) {
 		engine.applyInbound();
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	EXPECT_FALSE(engine.lastClientInput(1).has_value());
 	EXPECT_TRUE(engine.getGameSessionsPool().findGameSessionByClientId(1)->figures().empty());
 
 	clientA.disconnect();
@@ -443,27 +425,19 @@ TEST(ServerSmoke, PlayingAimUpdatesEntityAngleInWorldState) {
 	ASSERT_TRUE(
 		sendFramed(clientA, botf::protocol::encodeClientInput(makeInput(0, 0, 7, aimPoint), 2)));
 
-	bool gotInput = false;
-	for (int i = 0; i < 100 && !gotInput; ++i) {
+	for (int i = 0; i < 100; ++i) {
 		engine.pollNetwork();
 		engine.applyInbound();
-		const auto input = engine.lastClientInput(1);
-		if (input && input->tick == 7) {
-			gotInput = true;
-			EXPECT_FLOAT_EQ(input->aim.x, aimPoint.x);
-			EXPECT_FLOAT_EQ(input->aim.y, aimPoint.y);
-		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
-	ASSERT_TRUE(gotInput);
 
-	float angle = 0.f;
+	float angleBeforeTick = 0.f;
 	for (const auto& obj : engine.getGameSessionsPool().findGameSessionByClientId(1)->figures()) {
 		if (obj.getId() == match->entityA) {
-			angle = obj.getAngle();
+			angleBeforeTick = obj.getAngle();
 		}
 	}
-	EXPECT_NEAR(angle, 0.f, 1e-4f);
+	EXPECT_NEAR(angleBeforeTick, 0.f, 1e-4f);
 
 	engine.advanceSim(kDt);
 	engine.pollNetwork();

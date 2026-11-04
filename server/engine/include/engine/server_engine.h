@@ -8,8 +8,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <optional>
-#include <unordered_map>
 #include <vector>
 
 namespace botf {
@@ -40,27 +38,19 @@ public:
 	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
 	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;
-	[[nodiscard]] std::optional<common::ClientInput> lastClientInput(
-		const common::ID clientId) const;
 
 private:
-	struct ClientInputState {
-		common::ClientInput command{};
-		std::int64_t sequence = 0;
-	};
-
 	void loadObjectData();
 
 	[[nodiscard]] std::shared_ptr<Player> ensurePlayer(common::ID clientId);
+	[[nodiscard]] std::shared_ptr<Player> findPlayerById(common::ID clientId) const;
 	void removePlayerById(common::ID clientId);
 
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::int64_t sequence);
 	void handleJoinSession(const common::ID clientId, std::int64_t sequence);
-	void handleClientInput(const common::ID clientId,
-						   const common::ClientInput& clientInput,
-						   std::int64_t sequence);
+	void handleClientInput(const common::ID clientId, const common::ClientInput& clientInput);
 	void tryStartSession(const common::ID sessionId, std::int64_t sequence);
 	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::int64_t sequence);
 	int runLoop();
@@ -71,7 +61,6 @@ private:
 	GameMapPool m_gameMapPool;
 	GameSessionsPool m_gameSessionsPool;
 	std::vector<std::shared_ptr<Player>> m_players;
-	std::unordered_map<common::ID, ClientInputState> m_inputStates;// ???
 	std::uint32_t m_simTick = 0;
 	bool m_running = false;
 };

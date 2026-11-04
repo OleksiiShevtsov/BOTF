@@ -75,19 +75,21 @@ TEST(GameSession, BeginPlayingSeatsAllClientsAndRefusesWrongCount) {
 	ASSERT_TRUE(env.session.beginPlaying());
 	EXPECT_EQ(env.session.getSessionState(), botf::SessionState::Playing);
 	ASSERT_EQ(env.session.figures().size(), 2u);
-	ASSERT_TRUE(env.session.entityForClient(1).has_value());
-	ASSERT_TRUE(env.session.entityForClient(2).has_value());
-	EXPECT_NE(*env.session.entityForClient(1), *env.session.entityForClient(2));
+	ASSERT_TRUE(env.session.hasClient(1));
+	ASSERT_TRUE(env.session.hasClient(2));
+	ASSERT_TRUE(env.session.figureIdForClient(1).has_value());
+	ASSERT_TRUE(env.session.figureIdForClient(2).has_value());
+	EXPECT_NE(*env.session.figureIdForClient(1), *env.session.figureIdForClient(2));
 
 	// Seat.index is the figure id and spawn slot.
 	for (const auto& seat : env.session.seats()) {
 		ASSERT_TRUE(seat->getPlayer());
-		const auto entityId = env.session.entityForClient(seat->getPlayer()->getId());
-		ASSERT_TRUE(entityId.has_value());
-		EXPECT_EQ(*entityId, static_cast<botf::common::ID>(seat->getIndex()));
+		const auto figureId = env.session.figureIdForClient(seat->getPlayer()->getId());
+		ASSERT_TRUE(figureId.has_value());
+		EXPECT_EQ(*figureId, static_cast<botf::common::ID>(seat->getIndex()));
 		bool found = false;
 		for (const auto& figure : env.session.figures()) {
-			if (figure.getId() == *entityId) {
+			if (figure.getId() == *figureId) {
 				found = true;
 				EXPECT_FLOAT_EQ(
 					figure.getPosition().x,
