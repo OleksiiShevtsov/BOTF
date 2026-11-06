@@ -71,6 +71,20 @@ namespace {
 
 botf::app::ClientApp::ClientApp() : m_net(m_inbound, m_outbound) {}
 
+void botf::app::ClientApp::sendClientConnect() {
+	if (!m_net.isConnected()) {
+		return;
+	}
+
+	m_outbound.push(net::OutboundNotification{
+		std::nullopt,
+		protocol::encodeClientConnect(common::ClientConnectMessage{"Player", std::nullopt},
+									  m_sequence),
+	});
+	++m_sequence;
+	botf::log::info("[client] ClientConnect sent");
+}
+
 void botf::app::ClientApp::sendJoinSession() {
 	if (!m_net.isConnected() || m_joinSessionSent) {
 		return;
@@ -85,21 +99,15 @@ void botf::app::ClientApp::sendJoinSession() {
 	botf::log::info("[client] JoinSession sent");
 }
 
-void botf::app::ClientApp::onStartGamePressed(const std::uint16_t port) {
+void botf::app::ClientApp::onStartGamePressed() {
 	if (m_clientState != common::ClientState::Menu) {
 		return;
 	}
-
 	if (!m_net.isConnected()) {
-		if (!m_net.connect(sf::IpAddress::LocalHost, port, sf::seconds(1))) {
-			botf::log::warn("[client] server not available on {} — JoinSession not sent", port);
-			return;
-		}
-		botf::log::info("[client] connected to server");
+		botf::log::warn("[client] not connected — JoinSession not sent");
+		return;
 	}
 
-	// Card 45: do not send ClientConnect (login/spawn). JoinSession only — server ignores
-	// until card 47; match path is intentionally broken until then.
 	sendJoinSession();
 	m_clientState = common::ClientState::Waiting;
 }
@@ -140,8 +148,9 @@ void botf::app::ClientApp::applyInbound() {
 		protocol::dispatch(*decoded, [this](const auto& body, std::int64_t) {
 			using Body = std::decay_t<decltype(body)>;
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
-				// No boundId: login ack only. Entity comes with SessionStart.
+				// Login ack only. Entity comes with SessionStart.
 				if (!body.boundId.has_value()) {
+					botf::log::info("[client] ClientConnect ack (logged in)");
 					return;
 				}
 				m_selfId = *body.boundId;
@@ -234,6 +243,13 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 		botf::log::error("[client] menu font missing (content/ui/DejaVuSans.ttf)");
 	}
 
+	if (!m_net.connect(sf::IpAddress::LocalHost, port, sf::seconds(1))) {
+		botf::log::warn("[client] server not available on {}", port);
+	} else {
+		botf::log::info("[client] connected to server");
+		sendClientConnect();
+	}
+
 	std::uint32_t tick = 1;
 	while (m_rendering.isWindowOpen()) {
 		const bool lmbDown = isLeftMouseDown();
@@ -242,16 +258,16 @@ int botf::app::ClientApp::run(std::uint16_t port) {
 
 		switch (m_clientState) {
 		case common::ClientState::Menu: {
+			pollNetwork();
 			MenuScreen& menu = m_rendering.getMenuScreen();
 			const common::Point mouse = m_rendering.mouseWorldPosition();
 			menu.setHovered(menu.containsPoint(mouse));
 			if (lmbPressed && menu.containsPoint(mouse)) {
-				onStartGamePressed(port);
+				onStartGamePressed();
 			}
 			break;
 		}
 		case common::ClientState::Waiting:
-			// Hold TCP + listen only. No Match / combat input until Playing (card 47).
 			pollNetwork();
 			break;
 		case common::ClientState::Playing:

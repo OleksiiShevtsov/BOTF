@@ -10,7 +10,7 @@
 
 namespace botf::app {
 
-// Client runtime: Menu → JoinSession → Waiting → (card 47) Playing.
+// Client runtime: launch TCP+ClientConnect → Menu → JoinSession → Waiting → Playing.
 class ClientApp {
 public:
 	ClientApp();
@@ -18,12 +18,13 @@ public:
 	ClientApp(const ClientApp&) = delete;
 	ClientApp& operator=(const ClientApp&) = delete;
 
-	// Open window and run until closed. Tries localhost:port on "START GAME".
+	// Open window, connect+login immediately, run until closed.
 	int run(std::uint16_t port = 54545);
 
 private:
+	void sendClientConnect();
 	void sendJoinSession();
-	void onStartGamePressed(std::uint16_t port);
+	void onStartGamePressed();
 	void returnToMenu();
 	void pollNetwork();
 	void applyInbound();
