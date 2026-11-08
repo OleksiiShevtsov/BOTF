@@ -98,6 +98,12 @@ std::optional<botf::utils::FigureData> botf::utils::loadFigure(const common::ID 
 			data.hitboxOffset =
 				common::Point{offset.at(0).get<float>(), offset.at(1).get<float>()};
 		}
+
+		data.acceleration = server.at("acceleration").get<float>();
+		data.friction = server.at("friction").get<float>();
+		if (data.acceleration <= 0.f || data.friction < 0.f) {
+			return std::nullopt;
+		}
 	} catch (const nlohmann::json::exception&) {
 		return std::nullopt;
 	}

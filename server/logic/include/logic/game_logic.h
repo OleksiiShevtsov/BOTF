@@ -18,10 +18,12 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
-	// Hitbox from FigureDescription; speed limit still GlobalSettings stub.
+	// Hitbox / accel / friction from FigureDescription; speed limit still GlobalSettings stub.
 	[[nodiscard]] bool spawnFigure(common::ID entityId,
 								   common::Point at,
-								   ObjectHitbox hitbox = ObjectHitbox::installDefault());
+								   ObjectHitbox hitbox = ObjectHitbox::installDefault(),
+								   float acceleration = 600.f,
+								   float friction = 400.f);
 
 	// Destroy figure and its bullets. No-op if missing.
 	void destroyFigure(common::ID entityId);

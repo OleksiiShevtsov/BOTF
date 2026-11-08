@@ -8,11 +8,13 @@ namespace botf {
 // Controllable figure with incremental accel / friction (card 36).
 class FigureObject : public DynamicObject {
 public:
-	// hitbox: stub default from GlobalSettings until character catalog / DB (card 50).
+	// Defaults match content/figures/1 for unit tests that spawn without a catalog.
 	FigureObject(const common::ID id,
 				 common::Point dot,
 				 float speedLimit,
-				 ObjectHitbox hitbox = ObjectHitbox::installDefault());
+				 ObjectHitbox hitbox = ObjectHitbox::installDefault(),
+				 float acceleration = 600.f,
+				 float friction = 400.f);
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
@@ -41,6 +43,8 @@ private:
 
 	common::Angle m_angle{0.0f};
 	float m_speedLimit{};
+	float m_acceleration{};
+	float m_friction{};
 	int m_hp{};
 	common::LifeStatus m_lifeStatus{common::LifeStatus::Alive};
 	ObjectHitbox m_hitbox{};

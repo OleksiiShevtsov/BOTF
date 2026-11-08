@@ -40,6 +40,8 @@ TEST(UtilsFigureLoader, ListAndLoadFigureOne) {
 	EXPECT_FLOAT_EQ(data->hitboxHeight, 40.f);
 	EXPECT_FLOAT_EQ(data->hitboxOffset.x, 0.f);
 	EXPECT_FLOAT_EQ(data->hitboxOffset.y, 0.f);
+	EXPECT_FLOAT_EQ(data->acceleration, 600.f);
+	EXPECT_FLOAT_EQ(data->friction, 400.f);
 }
 
 TEST(GameMapPool, LoadLoadsGameMap) {
@@ -83,6 +85,8 @@ TEST(FigureDescriptionPool, LoadLoadsFigure) {
 	EXPECT_EQ(figure->getName(), "default");
 	EXPECT_FLOAT_EQ(figure->getHitbox().getWidth(), 40.f);
 	EXPECT_FLOAT_EQ(figure->getHitbox().getHeight(), 40.f);
+	EXPECT_FLOAT_EQ(figure->getAcceleration(), 600.f);
+	EXPECT_FLOAT_EQ(figure->getFriction(), 400.f);
 }
 
 TEST(BootstrapStorage, LoadMapsAndFigures) {

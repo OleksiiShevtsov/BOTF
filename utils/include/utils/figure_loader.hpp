@@ -15,6 +15,8 @@ struct FigureData {
 	float hitboxWidth{0.f};
 	float hitboxHeight{0.f};
 	common::Point hitboxOffset{};
+	float acceleration{0.f};  // world units / s^2
+	float friction{0.f};	  // decelerate when no input on axis / idle
 };
 
 [[nodiscard]] std::vector<common::ID> listFigureIds();

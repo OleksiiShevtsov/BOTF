@@ -159,7 +159,7 @@ Local HP bar — draft `InformationPanel` (bottom-right).
 Bullet hit (server): point ∩ AABB → `bulletDamage`, destroy bullet; no self-hit. Hit flash — 42.
 
 Movement (server): incremental `v += a·dt`, vector clamp `|v| ≤ speedLimit`, `pos += v·dt`;
-friction with zero-cross (no reverse). Constants `playerAcceleration` / `playerFriction` in GlobalSettings.
+friction with zero-cross (no reverse). `acceleration` / `friction` live in `content/figures/<id>/figure.json`.
 
 ### Новая нотификация (checklist)
 

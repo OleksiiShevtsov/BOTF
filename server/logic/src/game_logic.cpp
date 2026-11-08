@@ -10,12 +10,14 @@ botf::GameLogic::GameLogic() = default;
 
 bool botf::GameLogic::spawnFigure(const common::ID entityId,
 								  const common::Point at,
-								  ObjectHitbox hitbox) {
+								  ObjectHitbox hitbox,
+								  const float acceleration,
+								  const float friction) {
 	if (findFigureMutable(entityId) != nullptr) {
 		return false;
 	}
 	m_figures.emplace_back(entityId, at, common::GlobalSettings::defaultPlayerSpeedLimit,
-						   std::move(hitbox));
+						   std::move(hitbox), acceleration, friction);
 	if (entityId >= m_nextBulletId) {
 		m_nextBulletId = entityId + 1;
 	}

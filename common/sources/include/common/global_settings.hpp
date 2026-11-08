@@ -17,9 +17,7 @@ enum class SessionMode : std::size_t {
 // Default gameplay tuning (server logic).
 constexpr float defaultPlayerSpeedLimit{200.0f};
 // Spawns / map bounds live in content/maps/<id>/map.json (card 51), not here.
-// Movement — TODO: нет БД, load from DB later. (card 36 incremental physics)
-constexpr float playerAcceleration{600.0f};	 // world units / s^2
-constexpr float playerFriction{400};		 // decelerate when no input on axis / idle
+// Acceleration / friction live in content/figures/<id>/figure.json.
 // Ignore aim updates when the cursor is this close to the entity (world units).
 constexpr float aimEpsilon{1.0f};
 // Client Aim send: fire every frame when angle or point moves past these.
