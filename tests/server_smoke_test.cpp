@@ -48,9 +48,11 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-bool sendJoinSession(sf::TcpSocket& client, std::int64_t sequence) {
-	return sendFramed(client,
-					  botf::protocol::encodeJoinSession(botf::common::JoinSessionMessage{}, sequence));
+bool sendJoinSession(sf::TcpSocket& client,
+					 std::int64_t sequence,
+					 botf::common::ID figureTypeId = 1) {
+	return sendFramed(client, botf::protocol::encodeJoinSession(
+								  botf::common::JoinSessionMessage{figureTypeId}, sequence));
 }
 
 // Pump engine until this socket receives SessionStart; returns bound entity id.

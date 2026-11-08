@@ -4,14 +4,18 @@
 #include "logic/hitbox.h"
 
 #include <algorithm>
+#include <utility>
 
 botf::GameLogic::GameLogic() = default;
 
-bool botf::GameLogic::spawnFigure(const common::ID entityId, const common::Point at) {
+bool botf::GameLogic::spawnFigure(const common::ID entityId,
+								  const common::Point at,
+								  ObjectHitbox hitbox) {
 	if (findFigureMutable(entityId) != nullptr) {
 		return false;
 	}
-	m_figures.emplace_back(entityId, at, common::GlobalSettings::defaultPlayerSpeedLimit);
+	m_figures.emplace_back(entityId, at, common::GlobalSettings::defaultPlayerSpeedLimit,
+						   std::move(hitbox));
 	if (entityId >= m_nextBulletId) {
 		m_nextBulletId = entityId + 1;
 	}

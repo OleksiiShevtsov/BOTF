@@ -2,6 +2,7 @@
 
 #include "common/dto.hpp"
 #include "common/types.hpp"
+#include "engine/bootstrap_storage.h"
 #include "engine/player.h"
 #include "engine/seat.h"
 #include "logic/game_logic.h"
@@ -21,16 +22,17 @@ enum class SessionState {
 	Finished,
 };
 
-// One live match: seats + shared GameMap + state + GameLogic facade.
+// One live match: seats + GameMap (after beginPlaying) + GameLogic facade.
 // Roster = occupied seats (shared_ptr<Player> from ServerEngine).
 class GameSession {
 public:
-	GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap);
+	explicit GameSession(const common::ID id);
 
 	GameSession(const GameSession&) = delete;
 	GameSession& operator=(const GameSession&) = delete;
 
 	[[nodiscard]] common::ID getId() const;
+	[[nodiscard]] bool hasGameMap() const;
 	[[nodiscard]] const GameMap& getGameMap() const;
 	[[nodiscard]] SessionState getSessionState() const;
 	[[nodiscard]] std::size_t seatCapacity() const;
@@ -41,10 +43,10 @@ public:
 	[[nodiscard]] bool hasFreeSeats() const;
 
 	// Forming only. Idempotent if already seated. false if full / wrong phase.
-	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player);
+	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player, common::ID figureTypeId);
 
-	// Forming → Playing: shuffle seat indices, spawn figure id = index. false if refused.
-	[[nodiscard]] bool beginPlaying();
+	// Forming → Playing: pick map + spawn figures from BootstrapStorage.
+	[[nodiscard]] bool beginPlaying(std::shared_ptr<BootstrapStorage> storage);
 
 	void removePlayer(const common::ID clientId);
 

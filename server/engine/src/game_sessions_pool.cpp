@@ -6,14 +6,13 @@
 #include <stdexcept>
 #include <utility>
 
-botf::GameSessionsPool::GameSessionsPool(GameMapPool& gameMapPool)
-	: m_gameMapPool(gameMapPool) {}
-
-botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<Player> player) {
+botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<Player> player,
+															   const common::ID figureTypeId) {
 	if (!player) {
 		throw std::runtime_error("GameSessionsPool::attachPlayerToSession: player is null");
 	}
 	if (GameSession* existing = findGameSessionByClientId(player->getId())) {
+		(void)existing->addPlayer(player, figureTypeId);
 		return existing->getId();
 	}
 
@@ -22,23 +21,22 @@ botf::common::ID botf::GameSessionsPool::attachPlayerToSession(std::shared_ptr<P
 		if (!gameSession->hasFreeSeats()) {
 			continue;
 		}
-		if (!gameSession->addPlayer(player)) {
+		if (!gameSession->addPlayer(player, figureTypeId)) {
 			continue;
 		}
-		botf::log::info("[server] client {} joined Forming session {} ({}/{})", clientId,
-						gameSession->getId(), gameSession->clientCount(),
-						gameSession->seatCapacity());
+		botf::log::info("[server] client {} joined Forming session {} ({}/{}) figureType={}",
+						clientId, gameSession->getId(), gameSession->clientCount(),
+						gameSession->seatCapacity(), figureTypeId);
 		return gameSession->getId();
 	}
 
 	GameSession& gameSession = createSession();
-	if (!gameSession.addPlayer(std::move(player))) {
+	if (!gameSession.addPlayer(std::move(player), figureTypeId)) {
 		throw std::runtime_error(
 			"GameSessionsPool::attachPlayerToSession: new session rejected player");
 	}
-	botf::log::info("[server] client {} created Forming session {} (1/{}, mapId={})", clientId,
-					gameSession.getId(), gameSession.seatCapacity(),
-					gameSession.getGameMap().getId());
+	botf::log::info("[server] client {} created Forming session {} (1/{}) figureType={}", clientId,
+					gameSession.getId(), gameSession.seatCapacity(), figureTypeId);
 	return gameSession.getId();
 }
 
@@ -112,14 +110,8 @@ std::vector<std::unique_ptr<botf::GameSession>>& botf::GameSessionsPool::session
 }
 
 botf::GameSession& botf::GameSessionsPool::createSession() {
-	if (m_gameMapPool.empty()) {
-		throw std::runtime_error(
-			"GameSessionsPool::createSession: GameMapPool empty (ServerEngine must loadObjectData)");
-	}
-	const std::shared_ptr<const GameMap> gameMap = m_gameMapPool.pickRandomGameMap();
-
 	const common::ID id = m_nextId;
 	++m_nextId;
-	m_sessions.push_back(std::make_unique<GameSession>(id, gameMap));
+	m_sessions.push_back(std::make_unique<GameSession>(id));
 	return *m_sessions.back();
 }

@@ -18,4 +18,9 @@ void setContentRootOverride(std::filesystem::path root);
 [[nodiscard]] std::filesystem::path mapJsonPath(const std::filesystem::path& root,
 												std::uint32_t mapId);
 
+[[nodiscard]] std::filesystem::path figureDir(const std::filesystem::path& root,
+											  std::uint32_t figureId);
+[[nodiscard]] std::filesystem::path figureJsonPath(const std::filesystem::path& root,
+												   std::uint32_t figureId);
+
 }  // namespace botf::utils

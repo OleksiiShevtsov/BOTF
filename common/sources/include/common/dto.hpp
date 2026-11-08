@@ -25,8 +25,10 @@ struct ClientConnectMessage {
 	std::optional<ID> boundId{};
 };
 
-// Client → server: join / find GameSession (card 45). Empty for now; server → 47.
-struct JoinSessionMessage {};
+// Client → server: join / find GameSession. figureTypeId → content/figures/<id>.
+struct JoinSessionMessage {
+	ID figureTypeId{1};
+};
 
 // Server → client: match may begin (client Waiting → Playing).
 // boundId = entity for this recipient after random seating (0 is valid).

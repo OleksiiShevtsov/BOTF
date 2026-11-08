@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/dto.hpp"
+#include "engine/bootstrap_storage.h"
 #include "engine/game_map_pool.h"
 #include "engine/game_sessions_pool.h"
 #include "engine/player.h"
@@ -12,7 +13,7 @@
 
 namespace botf {
 
-// Server runtime: TCP + Players + catalogs + GameSessionsPool tick + WorldState.
+// Server runtime: TCP + Players + BootstrapStorage + GameSessionsPool tick + WorldState.
 class ServerEngine {
 public:
 	ServerEngine();
@@ -33,6 +34,8 @@ public:
 
 	[[nodiscard]] std::uint16_t port() const;
 	[[nodiscard]] std::size_t clientCount() const;
+	[[nodiscard]] BootstrapStorage& getBootstrapStorage();
+	[[nodiscard]] const BootstrapStorage& getBootstrapStorage() const;
 	[[nodiscard]] GameMapPool& getGameMapPool();
 	[[nodiscard]] const GameMapPool& getGameMapPool() const;
 	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
@@ -49,7 +52,9 @@ private:
 	void handleClientConnect(const common::ID clientId,
 							 const common::ClientConnectMessage& connect,
 							 std::int64_t sequence);
-	void handleJoinSession(const common::ID clientId, std::int64_t sequence);
+	void handleJoinSession(const common::ID clientId,
+						   const common::JoinSessionMessage& join,
+						   std::int64_t sequence);
 	void handleClientInput(const common::ID clientId, const common::ClientInput& clientInput);
 	void tryStartSession(const common::ID sessionId, std::int64_t sequence);
 	void enqueueWorldState(const common::ID sessionId, std::uint32_t tick, std::int64_t sequence);
@@ -58,7 +63,7 @@ private:
 	net::InboundQueue m_inbound;
 	net::OutboundQueue m_outbound;
 	net::TcpServer m_server;
-	GameMapPool m_gameMapPool;
+	std::shared_ptr<BootstrapStorage> m_bootstrapStorage;
 	GameSessionsPool m_gameSessionsPool;
 	std::vector<std::shared_ptr<Player>> m_players;
 	std::uint32_t m_simTick = 0;

@@ -9,6 +9,11 @@ constexpr std::size_t sizeWindowX{1080};
 constexpr std::size_t sizeWindowY{640};
 constexpr std::chrono::milliseconds pauseBetweenButtonPresses{50};
 
+// Temporary match capacity until map drives seat count at beginPlaying.
+enum class SessionMode : std::size_t {
+	Default = 2,
+};
+
 // Default gameplay tuning (server logic).
 constexpr float defaultPlayerSpeedLimit{200.0f};
 // Spawns / map bounds live in content/maps/<id>/map.json (card 51), not here.

@@ -27,3 +27,11 @@ void botf::Seat::setPlayer(std::shared_ptr<Player> player) {
 void botf::Seat::clearPlayer() {
 	m_player.reset();
 }
+
+botf::common::ID botf::Seat::getFigureTypeId() const {
+	return m_figureTypeId;
+}
+
+void botf::Seat::setFigureTypeId(const common::ID figureTypeId) {
+	m_figureTypeId = figureTypeId;
+}

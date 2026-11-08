@@ -26,7 +26,7 @@ void onSignal(int) {
 }  // namespace
 
 botf::ServerEngine::ServerEngine()
-	: m_server(m_inbound, m_outbound), m_gameSessionsPool(m_gameMapPool) {
+	: m_server(m_inbound, m_outbound), m_bootstrapStorage(std::make_shared<BootstrapStorage>()) {
 	loadObjectData();
 }
 
@@ -39,10 +39,13 @@ botf::ServerEngine::~ServerEngine() {
 }
 
 void botf::ServerEngine::loadObjectData() {
-	if (!m_gameMapPool.load()) {
-		throw std::runtime_error("ServerEngine: no maps in content/maps (GameMapPool empty)");
+	if (!m_bootstrapStorage->load()) {
+		throw std::runtime_error(
+			"ServerEngine: BootstrapStorage load failed (need content/maps + content/figures)");
 	}
-	botf::log::info("[server] loaded {} map template(s)", m_gameMapPool.size());
+	botf::log::info("[server] loaded {} map template(s), {} figure template(s)",
+					m_bootstrapStorage->gameMapPool().size(),
+					m_bootstrapStorage->figureDescriptionPool().size());
 }
 
 void botf::ServerEngine::requestStop() {
@@ -100,12 +103,20 @@ std::size_t botf::ServerEngine::clientCount() const {
 	return m_server.clientCount();
 }
 
+botf::BootstrapStorage& botf::ServerEngine::getBootstrapStorage() {
+	return *m_bootstrapStorage;
+}
+
+const botf::BootstrapStorage& botf::ServerEngine::getBootstrapStorage() const {
+	return *m_bootstrapStorage;
+}
+
 botf::GameMapPool& botf::ServerEngine::getGameMapPool() {
-	return m_gameMapPool;
+	return m_bootstrapStorage->gameMapPool();
 }
 
 const botf::GameMapPool& botf::ServerEngine::getGameMapPool() const {
-	return m_gameMapPool;
+	return m_bootstrapStorage->gameMapPool();
 }
 
 botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() {
@@ -146,7 +157,7 @@ void botf::ServerEngine::tryStartSession(const common::ID sessionId,
 		return;
 	}
 
-	if (!gameSession->beginPlaying()) {
+	if (!gameSession->beginPlaying(m_bootstrapStorage)) {
 		botf::log::error("[server] session {} failed to beginPlaying", sessionId);
 		return;
 	}
@@ -166,9 +177,10 @@ void botf::ServerEngine::tryStartSession(const common::ID sessionId,
 }
 
 void botf::ServerEngine::handleJoinSession(const common::ID clientId,
+										   const common::JoinSessionMessage& join,
 										   const std::int64_t sequence) {
 	const common::ID sessionId =
-		m_gameSessionsPool.attachPlayerToSession(ensurePlayer(clientId));
+		m_gameSessionsPool.attachPlayerToSession(ensurePlayer(clientId), join.figureTypeId);
 	tryStartSession(sessionId, sequence);
 }
 
@@ -196,7 +208,7 @@ void botf::ServerEngine::applyInbound() {
 			if constexpr (std::is_same_v<Body, common::ClientConnectMessage>) {
 				handleClientConnect(clientId, body, sequence);
 			} else if constexpr (std::is_same_v<Body, common::JoinSessionMessage>) {
-				handleJoinSession(clientId, sequence);
+				handleJoinSession(clientId, body, sequence);
 			} else if constexpr (std::is_same_v<Body, common::ClientInput>) {
 				handleClientInput(clientId, body);
 			}
