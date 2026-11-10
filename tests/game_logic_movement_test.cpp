@@ -1,6 +1,6 @@
 #include "common/dto.hpp"
 #include "helpers/test_env.h"
-#include "logic/figure_spawn_params.h"
+#include "logic/figure_description.h"
 #include "logic/game_logic.h"
 
 #include <cmath>
@@ -10,7 +10,7 @@
 namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
-constexpr float kSpeedLimit = botf::FigureSpawnParams::testDefault().speedLimit;
+const float kSpeedLimit = botf::FigureDescription::testDefault().getSpeedLimit();
 
 float speedOf(const botf::FigureObject& figure) {
 	const auto v = figure.getVelocity();

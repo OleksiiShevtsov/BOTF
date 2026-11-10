@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/types.hpp"
-#include "engine/figure_description.h"
+#include "logic/figure_description.h"
 
 #include <cstddef>
 #include <memory>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common/types.hpp"
-#include "logic/figure_spawn_params.h"
 #include "logic/hitbox.h"
 #include "utils/figure_loader.hpp"
 
@@ -15,9 +14,23 @@ public:
 	explicit FigureDescription(const utils::FigureData& data)
 		: m_id{data.id},
 		  m_name{data.name},
-		  m_params{ObjectHitbox{data.hitboxWidth, data.hitboxHeight, data.hitboxOffset.x,
-								data.hitboxOffset.y},
-				   data.acceleration, data.friction, data.speedLimit} {}
+		  m_hitbox{data.hitboxWidth, data.hitboxHeight, data.hitboxOffset.x, data.hitboxOffset.y},
+		  m_acceleration{data.acceleration},
+		  m_friction{data.friction},
+		  m_speedLimit{data.speedLimit} {}
+
+	// Mirrors content/figures/1 for GameLogic unit tests without catalog I/O.
+	[[nodiscard]] static FigureDescription testDefault() {
+		utils::FigureData data;
+		data.id = 1;
+		data.name = "default";
+		data.hitboxWidth = 40.f;
+		data.hitboxHeight = 40.f;
+		data.acceleration = 600.f;
+		data.friction = 400.f;
+		data.speedLimit = 200.f;
+		return FigureDescription{data};
+	}
 
 	[[nodiscard]] common::ID getId() const {
 		return m_id;
@@ -25,26 +38,26 @@ public:
 	[[nodiscard]] const std::string& getName() const {
 		return m_name;
 	}
-	[[nodiscard]] const FigureSpawnParams& getSpawnParams() const {
-		return m_params;
-	}
 	[[nodiscard]] const ObjectHitbox& getHitbox() const {
-		return m_params.hitbox;
+		return m_hitbox;
 	}
 	[[nodiscard]] float getAcceleration() const {
-		return m_params.acceleration;
+		return m_acceleration;
 	}
 	[[nodiscard]] float getFriction() const {
-		return m_params.friction;
+		return m_friction;
 	}
 	[[nodiscard]] float getSpeedLimit() const {
-		return m_params.speedLimit;
+		return m_speedLimit;
 	}
 
 private:
 	common::ID m_id{};
 	std::string m_name;
-	FigureSpawnParams m_params{};
+	ObjectHitbox m_hitbox{};
+	float m_acceleration{};
+	float m_friction{};
+	float m_speedLimit{};
 };
 
 }  // namespace botf

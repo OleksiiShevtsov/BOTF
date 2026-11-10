@@ -177,8 +177,7 @@ bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) 
 
 	for (std::size_t i = 0; i < m_seats.size(); ++i) {
 		const common::ID entityId = static_cast<common::ID>(spawnSlots[i]);
-		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]],
-									 figureDescs[i]->getSpawnParams())) {
+		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]], *figureDescs[i])) {
 			botf::log::error(
 				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
 			for (std::size_t j = 0; j < i; ++j) {

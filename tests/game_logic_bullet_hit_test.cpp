@@ -1,7 +1,7 @@
 #include "common/dto.hpp"
 #include "common/global_settings.hpp"
 #include "helpers/test_env.h"
-#include "logic/figure_spawn_params.h"
+#include "logic/figure_description.h"
 #include "logic/game_logic.h"
 #include "logic/hitbox.h"
 
@@ -78,7 +78,7 @@ TEST(GameLogicBulletHit, OwnBulletDoesNotDamageShooter) {
 
 TEST(GameLogicBulletHit, PointInsideTargetAabbIsHit) {
 	const botf::common::Point center{50.f, 0.f};
-	const botf::ObjectHitbox box = botf::FigureSpawnParams::testDefault().hitbox;
+	const botf::ObjectHitbox box = botf::FigureDescription::testDefault().getHitbox();
 	EXPECT_TRUE(box.containsPoint(center, {50.f, 0.f}));
 	EXPECT_FALSE(box.containsPoint(center, {50.f, box.getHalfHeight() + 0.01f}));
 }

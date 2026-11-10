@@ -1,4 +1,4 @@
-#include "logic/figure_spawn_params.h"
+#include "logic/figure_description.h"
 #include "logic/game_logic.h"
 #include "logic/hitbox.h"
 
@@ -7,7 +7,7 @@
 namespace {
 
 constexpr float kHalf = 20.f;  // figure 1 hitbox 40 → half-extent 20
-const botf::ObjectHitbox kDefaultBox = botf::FigureSpawnParams::testDefault().hitbox;
+const botf::ObjectHitbox kDefaultBox = botf::FigureDescription::testDefault().getHitbox();
 
 }  // namespace
 

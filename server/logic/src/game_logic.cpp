@@ -9,11 +9,11 @@ botf::GameLogic::GameLogic() = default;
 
 bool botf::GameLogic::spawnFigure(const common::ID entityId,
 								  const common::Point at,
-								  FigureSpawnParams params) {
+								  const FigureDescription& description) {
 	if (findFigureMutable(entityId) != nullptr) {
 		return false;
 	}
-	m_figures.emplace_back(entityId, at, std::move(params));
+	m_figures.emplace_back(entityId, at, description);
 	if (entityId >= m_nextBulletId) {
 		m_nextBulletId = entityId + 1;
 	}

@@ -2,8 +2,8 @@
 
 #include "common/types.hpp"
 #include "logic/bullet_object.h"
+#include "logic/figure_description.h"
 #include "logic/figure_object.h"
-#include "logic/figure_spawn_params.h"
 
 #include <vector>
 
@@ -19,10 +19,10 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
-	// params from FigureDescription for matches; testDefault() for logic unit tests.
+	// description from FigureDescriptionPool for matches; testDefault() for logic unit tests.
 	[[nodiscard]] bool spawnFigure(common::ID entityId,
 								   common::Point at,
-								   FigureSpawnParams params = FigureSpawnParams::testDefault());
+								   const FigureDescription& description = FigureDescription::testDefault());
 
 	// Destroy figure and its bullets. No-op if missing.
 	void destroyFigure(common::ID entityId);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logic/dynamic_object.h"
-#include "logic/figure_spawn_params.h"
+#include "logic/figure_description.h"
 #include "logic/hitbox.h"
 
 namespace botf {
@@ -9,7 +9,8 @@ namespace botf {
 // Controllable figure with incremental accel / friction (card 36).
 class FigureObject : public DynamicObject {
 public:
-	FigureObject(const common::ID id, common::Point dot, FigureSpawnParams params);
+	// Copies tuning from description into the live entity.
+	FigureObject(common::ID id, common::Point dot, const FigureDescription& description);
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;
