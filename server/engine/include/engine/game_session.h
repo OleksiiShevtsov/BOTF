@@ -65,7 +65,6 @@ private:
 	[[nodiscard]] std::shared_ptr<Seat> findFreeSeat();
 	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId);
 	[[nodiscard]] std::shared_ptr<Seat> findSeatByPlayerId(common::ID clientId) const;
-	void randomShuffleIndex();
 
 	common::ID m_id{};
 	std::shared_ptr<const GameMap> m_gameMap;

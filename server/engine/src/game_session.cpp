@@ -148,6 +148,20 @@ bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) 
 		return false;
 	}
 
+	// Resolve figure templates before mutating seats / map.
+	std::vector<std::shared_ptr<const FigureDescription>> figureDescs;
+	figureDescs.reserve(m_seats.size());
+	for (const std::shared_ptr<Seat>& seat : m_seats) {
+		const auto figureDesc =
+			storage->figureDescriptionPool().getById(seat->getFigureTypeId());
+		if (!figureDesc) {
+			botf::log::error("[server] beginPlaying: session {} unknown figure type {}", m_id,
+							 seat->getFigureTypeId());
+			return false;
+		}
+		figureDescs.push_back(figureDesc);
+	}
+
 	const std::shared_ptr<const GameMap> gameMap = storage->gameMapPool().pickRandomGameMap();
 	if (!gameMap || gameMap->getSpawns().size() < seatCapacity()) {
 		botf::log::error(
@@ -155,53 +169,37 @@ bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) 
 			gameMap ? gameMap->getSpawns().size() : 0u, seatCapacity());
 		return false;
 	}
+
+	// Spawn using a permutation; commit seat indices only after every spawn succeeds.
+	const std::vector<std::size_t> spawnSlots = utils::randomIndices(m_seats.size());
+	const std::vector<common::Point>& spawns = gameMap->getSpawns();
 	m_gameMap = gameMap;
 
-	randomShuffleIndex();
-
-	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
-	for (const std::shared_ptr<Seat>& seat : m_seats) {
-		std::shared_ptr<const FigureDescription> figureDesc;
-		try {
-			figureDesc = storage->figureDescriptionPool().getById(seat->getFigureTypeId());
-		} catch (const std::exception& ex) {
-			botf::log::error("[server] beginPlaying: session {} figure type {}: {}", m_id,
-							 seat->getFigureTypeId(), ex.what());
-			for (const std::shared_ptr<Seat>& spawned : m_seats) {
-				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned->getIndex()));
-			}
-			m_gameMap.reset();
-			return false;
-		}
-
-		const common::ID entityId = static_cast<common::ID>(seat->getIndex());
-		if (!m_gameLogic.spawnFigure(entityId, spawns[static_cast<std::size_t>(seat->getIndex())],
-									 figureDesc->getHitbox(), figureDesc->getAcceleration(),
-									 figureDesc->getFriction())) {
+	for (std::size_t i = 0; i < m_seats.size(); ++i) {
+		const common::ID entityId = static_cast<common::ID>(spawnSlots[i]);
+		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]],
+									 figureDescs[i]->getSpawnParams())) {
 			botf::log::error(
 				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
-			for (const std::shared_ptr<Seat>& spawned : m_seats) {
-				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned->getIndex()));
+			for (std::size_t j = 0; j < i; ++j) {
+				m_gameLogic.destroyFigure(static_cast<common::ID>(spawnSlots[j]));
 			}
 			m_gameMap.reset();
 			return false;
 		}
 		botf::log::info(
 			"[server] session {} seated client {} → entity/spawn {} figureType={}", m_id,
-			seat->getPlayer()->getId(), entityId, seat->getFigureTypeId());
+			m_seats[i]->getPlayer()->getId(), entityId, m_seats[i]->getFigureTypeId());
+	}
+
+	for (std::size_t i = 0; i < m_seats.size(); ++i) {
+		m_seats[i]->setIndex(static_cast<common::IDX>(spawnSlots[i]));
 	}
 
 	m_sessionState = SessionState::Playing;
 	botf::log::info("[server] session {} Forming → Playing ({} players, mapId={})", m_id,
 					seatCapacity(), m_gameMap->getId());
 	return true;
-}
-
-void botf::GameSession::randomShuffleIndex() {
-	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
-	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i]->setIndex(static_cast<common::IDX>(indices[i]));
-	}
 }
 
 void botf::GameSession::removePlayer(const common::ID clientId) {

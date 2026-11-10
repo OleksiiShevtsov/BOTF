@@ -19,18 +19,15 @@ public:
 
 	void clear();
 
-	// Scan content/figures. Returns false if none loaded.
+	// Scan content/figures. false if none loaded or any figure.json failed.
 	bool load();
 
 	[[nodiscard]] bool empty() const;
 	[[nodiscard]] std::size_t size() const;
 
-	// First loaded template id (stable: sorted by id). Throws if empty.
-	[[nodiscard]] common::ID firstFigureTypeId() const;
-
-	// From cache (after load()). Throws if unknown id.
+	// From cache (after load()). nullptr if unknown id.
 	[[nodiscard]] std::shared_ptr<const FigureDescription> getById(
-		const common::ID figureTypeId) const;
+		common::ID figureTypeId) const;
 
 private:
 	std::vector<std::shared_ptr<const FigureDescription>> m_figures;

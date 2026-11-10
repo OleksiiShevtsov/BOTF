@@ -42,6 +42,7 @@ TEST(UtilsFigureLoader, ListAndLoadFigureOne) {
 	EXPECT_FLOAT_EQ(data->hitboxOffset.y, 0.f);
 	EXPECT_FLOAT_EQ(data->acceleration, 600.f);
 	EXPECT_FLOAT_EQ(data->friction, 400.f);
+	EXPECT_FLOAT_EQ(data->speedLimit, 200.f);
 }
 
 TEST(GameMapPool, LoadLoadsGameMap) {
@@ -77,7 +78,6 @@ TEST(FigureDescriptionPool, LoadLoadsFigure) {
 	botf::FigureDescriptionPool pool;
 	ASSERT_TRUE(pool.load());
 	EXPECT_EQ(pool.size(), 1u);
-	EXPECT_EQ(pool.firstFigureTypeId(), 1u);
 
 	const auto figure = pool.getById(1);
 	ASSERT_NE(figure, nullptr);
@@ -87,6 +87,8 @@ TEST(FigureDescriptionPool, LoadLoadsFigure) {
 	EXPECT_FLOAT_EQ(figure->getHitbox().getHeight(), 40.f);
 	EXPECT_FLOAT_EQ(figure->getAcceleration(), 600.f);
 	EXPECT_FLOAT_EQ(figure->getFriction(), 400.f);
+	EXPECT_FLOAT_EQ(figure->getSpeedLimit(), 200.f);
+	EXPECT_EQ(pool.getById(999), nullptr);
 }
 
 TEST(BootstrapStorage, LoadMapsAndFigures) {

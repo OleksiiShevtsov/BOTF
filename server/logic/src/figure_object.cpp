@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace {
 
@@ -26,20 +27,15 @@ void applyAxisFriction(float& speed, float friction, float dt) {
 
 }  // namespace
 
-botf::FigureObject::FigureObject(const common::ID id,
-								 common::Point dot,
-								 float speedLimit,
-								 ObjectHitbox hitbox,
-								 float acceleration,
-								 float friction)
+botf::FigureObject::FigureObject(const common::ID id, common::Point dot, FigureSpawnParams params)
 	: DynamicObject{id, dot},
 	  m_angle{0.0f},
-	  m_speedLimit{speedLimit},
-	  m_acceleration{acceleration},
-	  m_friction{friction},
+	  m_speedLimit{params.speedLimit},
+	  m_acceleration{params.acceleration},
+	  m_friction{params.friction},
 	  m_hp{common::GlobalSettings::maxHp},
 	  m_lifeStatus{common::LifeStatus::Alive},
-	  m_hitbox{std::move(hitbox)} {}
+	  m_hitbox{std::move(params.hitbox)} {}
 
 botf::common::Angle botf::FigureObject::getAngle() const {
 	return m_angle;

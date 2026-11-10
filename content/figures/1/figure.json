@@ -8,6 +8,7 @@
       "offset": [0, 0]
     },
     "acceleration": 600,
-    "friction": 400
+    "friction": 400,
+    "speedLimit": 200
   }
 }

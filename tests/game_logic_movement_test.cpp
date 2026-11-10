@@ -1,6 +1,6 @@
 #include "common/dto.hpp"
-#include "common/global_settings.hpp"
 #include "helpers/test_env.h"
+#include "logic/figure_spawn_params.h"
 #include "logic/game_logic.h"
 
 #include <cmath>
@@ -10,6 +10,7 @@
 namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
+constexpr float kSpeedLimit = botf::FigureSpawnParams::testDefault().speedLimit;
 
 float speedOf(const botf::FigureObject& figure) {
 	const auto v = figure.getVelocity();
@@ -29,11 +30,9 @@ TEST(GameLogicMovement, SpeedClampedByVectorMagnitude) {
 
 	for (int i = 0; i < 80; ++i) {
 		logic.tick(kDt);
-		EXPECT_LE(speedOf(logic.figures().front()),
-				  botf::common::GlobalSettings::defaultPlayerSpeedLimit + 1e-3f);
+		EXPECT_LE(speedOf(logic.figures().front()), kSpeedLimit + 1e-3f);
 	}
-	EXPECT_NEAR(speedOf(logic.figures().front()),
-				botf::common::GlobalSettings::defaultPlayerSpeedLimit, 1.f);
+	EXPECT_NEAR(speedOf(logic.figures().front()), kSpeedLimit, 1.f);
 }
 
 TEST(GameLogicMovement, DiagonalDoesNotExceedSpeedLimit) {
@@ -43,8 +42,7 @@ TEST(GameLogicMovement, DiagonalDoesNotExceedSpeedLimit) {
 
 	for (int i = 0; i < 80; ++i) {
 		logic.tick(kDt);
-		EXPECT_LE(speedOf(logic.figures().front()),
-				  botf::common::GlobalSettings::defaultPlayerSpeedLimit + 1e-3f);
+		EXPECT_LE(speedOf(logic.figures().front()), kSpeedLimit + 1e-3f);
 	}
 }
 
@@ -81,8 +79,7 @@ TEST(GameLogicMovement, DirectionChangeHasBoundedStep) {
 	}
 
 	botf::test::applyEntityInput(logic, entityId, moveInput(-1, 0));
-	const float limit = botf::common::GlobalSettings::defaultPlayerSpeedLimit;
-	const float maxStep = limit * kDt + 1.f;  // one tick of max speed + slack
+	const float maxStep = kSpeedLimit * kDt + 1.f;  // one tick of max speed + slack
 	for (int i = 0; i < 10; ++i) {
 		const auto before = logic.figures().front().getPosition();
 		logic.tick(kDt);

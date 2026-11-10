@@ -2,7 +2,6 @@
 
 #include "common/dto.hpp"
 #include "engine/bootstrap_storage.h"
-#include "engine/game_map_pool.h"
 #include "engine/game_sessions_pool.h"
 #include "engine/player.h"
 #include "net/tcp_server.hpp"
@@ -36,8 +35,6 @@ public:
 	[[nodiscard]] std::size_t clientCount() const;
 	[[nodiscard]] BootstrapStorage& getBootstrapStorage();
 	[[nodiscard]] const BootstrapStorage& getBootstrapStorage() const;
-	[[nodiscard]] GameMapPool& getGameMapPool();
-	[[nodiscard]] const GameMapPool& getGameMapPool() const;
 	[[nodiscard]] GameSessionsPool& getGameSessionsPool();
 	[[nodiscard]] const GameSessionsPool& getGameSessionsPool() const;
 	[[nodiscard]] std::uint32_t simTick() const;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logic/dynamic_object.h"
+#include "logic/figure_spawn_params.h"
 #include "logic/hitbox.h"
 
 namespace botf {
@@ -8,13 +9,7 @@ namespace botf {
 // Controllable figure with incremental accel / friction (card 36).
 class FigureObject : public DynamicObject {
 public:
-	// Defaults match content/figures/1 for unit tests that spawn without a catalog.
-	FigureObject(const common::ID id,
-				 common::Point dot,
-				 float speedLimit,
-				 ObjectHitbox hitbox = ObjectHitbox::installDefault(),
-				 float acceleration = 600.f,
-				 float friction = 400.f);
+	FigureObject(const common::ID id, common::Point dot, FigureSpawnParams params);
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;

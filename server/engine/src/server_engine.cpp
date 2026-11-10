@@ -111,14 +111,6 @@ const botf::BootstrapStorage& botf::ServerEngine::getBootstrapStorage() const {
 	return *m_bootstrapStorage;
 }
 
-botf::GameMapPool& botf::ServerEngine::getGameMapPool() {
-	return m_bootstrapStorage->gameMapPool();
-}
-
-const botf::GameMapPool& botf::ServerEngine::getGameMapPool() const {
-	return m_bootstrapStorage->gameMapPool();
-}
-
 botf::GameSessionsPool& botf::ServerEngine::getGameSessionsPool() {
 	return m_gameSessionsPool;
 }
@@ -179,6 +171,11 @@ void botf::ServerEngine::tryStartSession(const common::ID sessionId,
 void botf::ServerEngine::handleJoinSession(const common::ID clientId,
 										   const common::JoinSessionMessage& join,
 										   const std::int64_t sequence) {
+	if (!m_bootstrapStorage->figureDescriptionPool().getById(join.figureTypeId)) {
+		botf::log::warn("[server] JoinSession refused: client {} unknown figureTypeId={}",
+						clientId, join.figureTypeId);
+		return;
+	}
 	const common::ID sessionId =
 		m_gameSessionsPool.attachPlayerToSession(ensurePlayer(clientId), join.figureTypeId);
 	tryStartSession(sessionId, sequence);

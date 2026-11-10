@@ -3,6 +3,7 @@
 #include "common/types.hpp"
 #include "logic/bullet_object.h"
 #include "logic/figure_object.h"
+#include "logic/figure_spawn_params.h"
 
 #include <vector>
 
@@ -18,12 +19,10 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
-	// Hitbox / accel / friction from FigureDescription; speed limit still GlobalSettings stub.
+	// params from FigureDescription for matches; testDefault() for logic unit tests.
 	[[nodiscard]] bool spawnFigure(common::ID entityId,
 								   common::Point at,
-								   ObjectHitbox hitbox = ObjectHitbox::installDefault(),
-								   float acceleration = 600.f,
-								   float friction = 400.f);
+								   FigureSpawnParams params = FigureSpawnParams::testDefault());
 
 	// Destroy figure and its bullets. No-op if missing.
 	void destroyFigure(common::ID entityId);

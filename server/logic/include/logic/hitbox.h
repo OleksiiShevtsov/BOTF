@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common/global_settings.hpp"
 #include "common/types.hpp"
 
 namespace botf {
@@ -8,36 +7,33 @@ namespace botf {
 // Axis-aligned hitbox. Entity position + offset = AABB center; does not rotate with aim.
 class ObjectHitbox {
 public:
-	ObjectHitbox() = default;
-	ObjectHitbox(float width, float height, float offsetX = 0.f, float offsetY = 0.f)
+	constexpr ObjectHitbox() = default;
+	constexpr ObjectHitbox(float width, float height, float offsetX = 0.f, float offsetY = 0.f)
 		: m_width{width}, m_height{height}, m_offsetX{offsetX}, m_offsetY{offsetY} {}
 
-	[[nodiscard]] float getWidth() const {
+	[[nodiscard]] constexpr float getWidth() const {
 		return m_width;
 	}
-	[[nodiscard]] float getHeight() const {
+	[[nodiscard]] constexpr float getHeight() const {
 		return m_height;
 	}
-	[[nodiscard]] float getHalfWidth() const {
+	[[nodiscard]] constexpr float getHalfWidth() const {
 		return m_width * 0.5f;
 	}
-	[[nodiscard]] float getHalfHeight() const {
+	[[nodiscard]] constexpr float getHalfHeight() const {
 		return m_height * 0.5f;
 	}
-	[[nodiscard]] float getOffsetX() const {
+	[[nodiscard]] constexpr float getOffsetX() const {
 		return m_offsetX;
 	}
-	[[nodiscard]] float getOffsetY() const {
+	[[nodiscard]] constexpr float getOffsetY() const {
 		return m_offsetY;
 	}
 
 	// AABB center from entity world position.
-	[[nodiscard]] common::Point centerFromEntity(const common::Point& entityPos) const {
+	[[nodiscard]] constexpr common::Point centerFromEntity(const common::Point& entityPos) const {
 		return common::Point{entityPos.x + m_offsetX, entityPos.y + m_offsetY};
 	}
-
-	// Default stub — prefer content/figures via FigureDescriptionPool.
-	[[nodiscard]] static ObjectHitbox installDefault();
 
 	// Closed AABB: boundary counts as hit. Pass entity position (offset applied inside).
 	[[nodiscard]] bool containsPoint(const common::Point& entityPos,

@@ -57,10 +57,6 @@ bool segmentIntersectsAabb(const botf::common::Point& centerHitbox,
 
 }  // namespace
 
-botf::ObjectHitbox botf::ObjectHitbox::installDefault() {
-	return ObjectHitbox{common::GlobalSettings::hitboxSize, common::GlobalSettings::hitboxSize};
-}
-
 bool botf::ObjectHitbox::containsPoint(const common::Point& entityPos,
 									   const common::Point& pointHit) const {
 	return pointInAabb(centerFromEntity(entityPos), getHalfWidth(), getHalfHeight(), pointHit);

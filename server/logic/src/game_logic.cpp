@@ -1,7 +1,6 @@
 #include "logic/game_logic.h"
 
 #include "common/global_settings.hpp"
-#include "logic/hitbox.h"
 
 #include <algorithm>
 #include <utility>
@@ -10,14 +9,11 @@ botf::GameLogic::GameLogic() = default;
 
 bool botf::GameLogic::spawnFigure(const common::ID entityId,
 								  const common::Point at,
-								  ObjectHitbox hitbox,
-								  const float acceleration,
-								  const float friction) {
+								  FigureSpawnParams params) {
 	if (findFigureMutable(entityId) != nullptr) {
 		return false;
 	}
-	m_figures.emplace_back(entityId, at, common::GlobalSettings::defaultPlayerSpeedLimit,
-						   std::move(hitbox), acceleration, friction);
+	m_figures.emplace_back(entityId, at, std::move(params));
 	if (entityId >= m_nextBulletId) {
 		m_nextBulletId = entityId + 1;
 	}

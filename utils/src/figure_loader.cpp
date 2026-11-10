@@ -101,7 +101,8 @@ std::optional<botf::utils::FigureData> botf::utils::loadFigure(const common::ID 
 
 		data.acceleration = server.at("acceleration").get<float>();
 		data.friction = server.at("friction").get<float>();
-		if (data.acceleration <= 0.f || data.friction < 0.f) {
+		data.speedLimit = server.at("speedLimit").get<float>();
+		if (data.acceleration <= 0.f || data.friction < 0.f || data.speedLimit <= 0.f) {
 			return std::nullopt;
 		}
 	} catch (const nlohmann::json::exception&) {
