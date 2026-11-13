@@ -48,9 +48,11 @@ bool recvOneFrame(sf::TcpSocket& socket,
 	return false;
 }
 
-bool sendJoinSession(sf::TcpSocket& client, std::int64_t sequence) {
-	return sendFramed(client,
-					  botf::protocol::encodeJoinSession(botf::common::JoinSessionMessage{}, sequence));
+bool sendJoinSession(sf::TcpSocket& client,
+					 std::int64_t sequence,
+					 botf::common::ID figureTypeId = 1) {
+	return sendFramed(client, botf::protocol::encodeJoinSession(
+								  botf::common::JoinSessionMessage{figureTypeId}, sequence));
 }
 
 // Pump engine until this socket receives SessionStart; returns bound entity id.
@@ -357,6 +359,32 @@ TEST(ServerSmoke, TwoClientsInputIsolationAndThirdOpensNewForming) {
 	clientA.disconnect();
 	clientB.disconnect();
 	clientC.disconnect();
+	engine.shutdown();
+}
+
+TEST(ServerSmoke, JoinSessionUnknownFigureTypeIsIgnored) {
+	const auto port = botf::test::ephemeralPort();
+	ASSERT_TRUE(port.has_value());
+
+	botf::ServerEngine engine;
+	ASSERT_TRUE(engine.startListen(*port));
+
+	sf::TcpSocket clientA;
+	clientA.setBlocking(true);
+	ASSERT_EQ(clientA.connect(sf::IpAddress::LocalHost, *port, sf::seconds(2)),
+			  sf::Socket::Status::Done);
+
+	ASSERT_TRUE(sendJoinSession(clientA, 1, /*figureTypeId=*/999));
+	for (int i = 0; i < 50; ++i) {
+		engine.pollNetwork();
+		engine.applyInbound();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+
+	EXPECT_TRUE(engine.getGameSessionsPool().empty());
+	EXPECT_EQ(engine.getGameSessionsPool().findGameSessionByClientId(1), nullptr);
+
+	clientA.disconnect();
 	engine.shutdown();
 }
 

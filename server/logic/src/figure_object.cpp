@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace {
 
@@ -28,14 +29,15 @@ void applyAxisFriction(float& speed, float friction, float dt) {
 
 botf::FigureObject::FigureObject(const common::ID id,
 								 common::Point dot,
-								 float speedLimit,
-								 ObjectHitbox hitbox)
+								 const FigureDescription& description)
 	: DynamicObject{id, dot},
 	  m_angle{0.0f},
-	  m_speedLimit{speedLimit},
+	  m_speedLimit{description.getSpeedLimit()},
+	  m_acceleration{description.getAcceleration()},
+	  m_friction{description.getFriction()},
 	  m_hp{common::GlobalSettings::maxHp},
 	  m_lifeStatus{common::LifeStatus::Alive},
-	  m_hitbox{hitbox} {}
+	  m_hitbox{description.getHitbox()} {}
 
 botf::common::Angle botf::FigureObject::getAngle() const {
 	return m_angle;
@@ -140,8 +142,6 @@ void botf::FigureObject::update(float dt) {
 		return;
 	}
 
-	const float accel = common::GlobalSettings::playerAcceleration;
-	const float friction = common::GlobalSettings::playerFriction;
 	const bool hasInput = (m_inputDx != 0 || m_inputDy != 0);
 
 	if (hasInput) {
@@ -152,20 +152,20 @@ void botf::FigureObject::update(float dt) {
 		ix /= inputMag;
 		iy /= inputMag;
 
-		m_speedX += ix * accel * dt;
-		m_speedY += iy * accel * dt;
+		m_speedX += ix * m_acceleration * dt;
+		m_speedY += iy * m_acceleration * dt;
 
 		// Released axis still brakes (no reverse via zero-cross).
 		if (m_inputDx == 0) {
-			applyAxisFriction(m_speedX, friction, dt);
+			applyAxisFriction(m_speedX, m_friction, dt);
 		}
 		if (m_inputDy == 0) {
-			applyAxisFriction(m_speedY, friction, dt);
+			applyAxisFriction(m_speedY, m_friction, dt);
 		}
 	} else {
 		// Full idle: decelerate along velocity, or per-axis friction — same zero-cross idea.
-		applyAxisFriction(m_speedX, friction, dt);
-		applyAxisFriction(m_speedY, friction, dt);
+		applyAxisFriction(m_speedX, m_friction, dt);
+		applyAxisFriction(m_speedY, m_friction, dt);
 	}
 
 	clampSpeed();

@@ -1,17 +1,19 @@
 #include "logic/game_logic.h"
 
 #include "common/global_settings.hpp"
-#include "logic/hitbox.h"
 
 #include <algorithm>
+#include <utility>
 
 botf::GameLogic::GameLogic() = default;
 
-bool botf::GameLogic::spawnFigure(const common::ID entityId, const common::Point at) {
+bool botf::GameLogic::spawnFigure(const common::ID entityId,
+								  const common::Point at,
+								  const FigureDescription& description) {
 	if (findFigureMutable(entityId) != nullptr) {
 		return false;
 	}
-	m_figures.emplace_back(entityId, at, common::GlobalSettings::defaultPlayerSpeedLimit);
+	m_figures.emplace_back(entityId, at, description);
 	if (entityId >= m_nextBulletId) {
 		m_nextBulletId = entityId + 1;
 	}

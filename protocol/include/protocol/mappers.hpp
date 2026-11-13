@@ -54,12 +54,14 @@ namespace {
 	return result;
 }
 
-[[nodiscard]] inline botf::JoinSession toProto(const common::JoinSessionMessage&) {
-	return botf::JoinSession{};
+[[nodiscard]] inline botf::JoinSession toProto(const common::JoinSessionMessage& join) {
+	botf::JoinSession message;
+	message.set_figure_type_id(join.figureTypeId);
+	return message;
 }
 
-[[nodiscard]] inline common::JoinSessionMessage fromProto(const botf::JoinSession&) {
-	return common::JoinSessionMessage{};
+[[nodiscard]] inline common::JoinSessionMessage fromProto(const botf::JoinSession& join) {
+	return common::JoinSessionMessage{join.figure_type_id()};
 }
 
 [[nodiscard]] inline botf::SessionStart toProto(const common::SessionStartMessage& start) {

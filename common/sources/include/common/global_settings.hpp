@@ -9,12 +9,13 @@ constexpr std::size_t sizeWindowX{1080};
 constexpr std::size_t sizeWindowY{640};
 constexpr std::chrono::milliseconds pauseBetweenButtonPresses{50};
 
-// Default gameplay tuning (server logic).
-constexpr float defaultPlayerSpeedLimit{200.0f};
-// Spawns / map bounds live in content/maps/<id>/map.json (card 51), not here.
-// Movement — TODO: нет БД, load from DB later. (card 36 incremental physics)
-constexpr float playerAcceleration{600.0f};	 // world units / s^2
-constexpr float playerFriction{400};		 // decelerate when no input on axis / idle
+// Temporary match capacity until map drives seat count at beginPlaying.
+enum class SessionMode : std::size_t {
+	Default = 2,
+};
+
+// Spawns / map bounds live in content/maps/<id>/map.json (card 51).
+// Figure hitbox / acceleration / friction / speedLimit: content/figures/<id>/figure.json.
 // Ignore aim updates when the cursor is this close to the entity (world units).
 constexpr float aimEpsilon{1.0f};
 // Client Aim send: fire every frame when angle or point moves past these.
@@ -27,8 +28,6 @@ constexpr float bulletSpeed{400.0f};		// world units / second
 constexpr float bulletMaxRange{500.0f};		// destroy after this travel distance
 constexpr float bulletVisualLength{20.0f};	// client draw only (temporary)
 constexpr float bulletVisualWidth{4.0f};	// client draw only (temporary)
-// Default AABB square for ObjectHitbox stub (card 50) — TODO: нет БД / character catalog.
-constexpr float hitboxSize{40.0f};			// width=height; center = entity pos
 constexpr int maxHp{100};
 constexpr int bulletDamage{20};
 

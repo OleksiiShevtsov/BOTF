@@ -149,8 +149,8 @@ ClientInput (Playing only) → session GameLogic → WorldState
   → tick → WorldSnapshot → Scene (FigureView / BulletView)
 ```
 
-Player hitbox (server): `ObjectHitbox` on `FigureObject` (default stub = `hitboxSize`×`hitboxSize`
-from GlobalSettings via `ObjectHitbox::installDefault()`); AABB centered on entity pos; does not rotate
+Player hitbox (server): `ObjectHitbox` on `FigureObject` from `content/figures/<id>/figure.json`;
+AABB centered on entity pos (+ offset); does not rotate
 with aim. Hit-test in `logic/hitbox.h` reads hitbox from the target (point / segment ∩ AABB).
 
 HP + LifeStatus (`Alive` / `Dead` / `Waiting`): server authority; synced in WorldSnapshot.
@@ -159,7 +159,8 @@ Local HP bar — draft `InformationPanel` (bottom-right).
 Bullet hit (server): point ∩ AABB → `bulletDamage`, destroy bullet; no self-hit. Hit flash — 42.
 
 Movement (server): incremental `v += a·dt`, vector clamp `|v| ≤ speedLimit`, `pos += v·dt`;
-friction with zero-cross (no reverse). Constants `playerAcceleration` / `playerFriction` in GlobalSettings.
+friction with zero-cross (no reverse). Figure `hitbox` / `acceleration` / `friction` /
+`speedLimit` live in `content/figures/<id>/figure.json`.
 
 ### Новая нотификация (checklist)
 

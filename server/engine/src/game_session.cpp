@@ -1,5 +1,6 @@
 #include "engine/game_session.h"
 
+#include "common/global_settings.hpp"
 #include "common/log.hpp"
 #include "utils/random.hpp"
 
@@ -7,17 +8,11 @@
 #include <utility>
 #include <vector>
 
-botf::GameSession::GameSession(const common::ID id, std::shared_ptr<const GameMap> gameMap)
-	: m_id{id}, m_gameMap{std::move(gameMap)} {
-	if (!m_gameMap) {
-		throw std::runtime_error("GameSession: gameMap is null");
-	}
-	if (m_gameMap->getSpawns().size() == 0) {
-		throw std::runtime_error("GameSession: gameMap has no spawns");
-	}
-	// Seat index == figure entity id == spawn slot (0..capacity-1).
-	m_seats.reserve(m_gameMap->getSpawns().size());
-	for (common::IDX i = 0; i < static_cast<common::IDX>(m_gameMap->getSpawns().size()); ++i) {
+botf::GameSession::GameSession(const common::ID id) : m_id{id} {
+	const std::size_t capacity =
+		static_cast<std::size_t>(common::GlobalSettings::SessionMode::Default);
+	m_seats.reserve(capacity);
+	for (common::IDX i = 0; i < static_cast<common::IDX>(capacity); ++i) {
 		m_seats.push_back(std::make_shared<Seat>(i));
 	}
 }
@@ -26,7 +21,14 @@ botf::common::ID botf::GameSession::getId() const {
 	return m_id;
 }
 
+bool botf::GameSession::hasGameMap() const {
+	return static_cast<bool>(m_gameMap);
+}
+
 const botf::GameMap& botf::GameSession::getGameMap() const {
+	if (!m_gameMap) {
+		throw std::runtime_error("GameSession::getGameMap: map not assigned (call beginPlaying)");
+	}
 	return *m_gameMap;
 }
 
@@ -102,11 +104,12 @@ std::shared_ptr<botf::Seat> botf::GameSession::findSeatByPlayerId(const common::
 	return nullptr;
 }
 
-bool botf::GameSession::addPlayer(std::shared_ptr<Player> player) {
+bool botf::GameSession::addPlayer(std::shared_ptr<Player> player, const common::ID figureTypeId) {
 	if (!player) {
 		return false;
 	}
-	if (findSeatByPlayerId(player->getId()) != nullptr) {
+	if (std::shared_ptr<Seat> existing = findSeatByPlayerId(player->getId())) {
+		existing->setFigureTypeId(figureTypeId);
 		return true;
 	}
 	if (m_sessionState != SessionState::Forming) {
@@ -116,11 +119,16 @@ bool botf::GameSession::addPlayer(std::shared_ptr<Player> player) {
 	if (!seat) {
 		return false;
 	}
+	seat->setFigureTypeId(figureTypeId);
 	seat->setPlayer(std::move(player));
 	return true;
 }
 
-bool botf::GameSession::beginPlaying() {
+bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) {
+	if (!storage) {
+		botf::log::error("[server] beginPlaying refused: session {} storage is null", m_id);
+		return false;
+	}
 	if (m_sessionState != SessionState::Forming) {
 		botf::log::warn("[server] beginPlaying refused: session {} state != Forming", m_id);
 		return false;
@@ -135,36 +143,62 @@ bool botf::GameSession::beginPlaying() {
 		botf::log::error("[server] beginPlaying: session {} already has figures", m_id);
 		return false;
 	}
+	if (storage->gameMapPool().empty() || storage->figureDescriptionPool().empty()) {
+		botf::log::error("[server] beginPlaying: session {} BootstrapStorage catalogs empty", m_id);
+		return false;
+	}
 
-	randomShuffleIndex();
-
-	const std::vector<common::Point>& spawns = m_gameMap->getSpawns();
+	// Resolve figure templates before mutating seats / map.
+	std::vector<std::shared_ptr<const FigureDescription>> figureDescs;
+	figureDescs.reserve(m_seats.size());
 	for (const std::shared_ptr<Seat>& seat : m_seats) {
-		if (!m_gameLogic.spawnFigure(static_cast<common::ID>(seat->getIndex()),
-									 spawns[static_cast<std::size_t>(seat->getIndex())])) {
+		const auto figureDesc =
+			storage->figureDescriptionPool().getById(seat->getFigureTypeId());
+		if (!figureDesc) {
+			botf::log::error("[server] beginPlaying: session {} unknown figure type {}", m_id,
+							 seat->getFigureTypeId());
+			return false;
+		}
+		figureDescs.push_back(figureDesc);
+	}
+
+	const std::shared_ptr<const GameMap> gameMap = storage->gameMapPool().pickRandomGameMap();
+	if (!gameMap || gameMap->getSpawns().size() < seatCapacity()) {
+		botf::log::error(
+			"[server] beginPlaying: session {} map spawns={} < capacity={}", m_id,
+			gameMap ? gameMap->getSpawns().size() : 0u, seatCapacity());
+		return false;
+	}
+
+	// Spawn using a permutation; commit seat indices only after every spawn succeeds.
+	const std::vector<std::size_t> spawnSlots = utils::randomIndices(m_seats.size());
+	const std::vector<common::Point>& spawns = gameMap->getSpawns();
+	m_gameMap = gameMap;
+
+	for (std::size_t i = 0; i < m_seats.size(); ++i) {
+		const common::ID entityId = static_cast<common::ID>(spawnSlots[i]);
+		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]], *figureDescs[i])) {
 			botf::log::error(
-				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id,
-				static_cast<common::ID>(seat->getIndex()));
-			for (const std::shared_ptr<Seat>& spawned : m_seats) {
-				m_gameLogic.destroyFigure(static_cast<common::ID>(spawned->getIndex()));
+				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
+			for (std::size_t j = 0; j < i; ++j) {
+				m_gameLogic.destroyFigure(static_cast<common::ID>(spawnSlots[j]));
 			}
+			m_gameMap.reset();
 			return false;
 		}
 		botf::log::info(
-			"[server] session {} seated client {} → entity/spawn {}", m_id,
-			seat->getPlayer()->getId(), static_cast<common::ID>(seat->getIndex()));
+			"[server] session {} seated client {} → entity/spawn {} figureType={}", m_id,
+			m_seats[i]->getPlayer()->getId(), entityId, m_seats[i]->getFigureTypeId());
+	}
+
+	for (std::size_t i = 0; i < m_seats.size(); ++i) {
+		m_seats[i]->setIndex(static_cast<common::IDX>(spawnSlots[i]));
 	}
 
 	m_sessionState = SessionState::Playing;
-	botf::log::info("[server] session {} Forming → Playing ({} players)", m_id, seatCapacity());
+	botf::log::info("[server] session {} Forming → Playing ({} players, mapId={})", m_id,
+					seatCapacity(), m_gameMap->getId());
 	return true;
-}
-
-void botf::GameSession::randomShuffleIndex() {
-	const std::vector<std::size_t> indices = utils::randomIndices(m_seats.size());
-	for (std::size_t i = 0; i < m_seats.size(); ++i) {
-		m_seats[i]->setIndex(static_cast<common::IDX>(indices[i]));
-	}
 }
 
 void botf::GameSession::removePlayer(const common::ID clientId) {
