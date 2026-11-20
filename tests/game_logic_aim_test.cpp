@@ -36,7 +36,7 @@ TEST(GameLogicAim, StoredAimPointRetargetsAngleAfterMove) {
 
 TEST(GameLogicAim, MissingEntityAimIsIgnored) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}, botf::test::testFigureDescription()));
 	botf::test::applyEntityInput(logic, 99, botf::common::ClientInput{0, 0, {50.f, 0.f}, false, 0});
 	EXPECT_FLOAT_EQ(logic.figures().front().getAngle(), 0.f);
 }

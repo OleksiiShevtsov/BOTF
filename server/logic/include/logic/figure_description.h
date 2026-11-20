@@ -19,19 +19,6 @@ public:
 		  m_friction{data.friction},
 		  m_speedLimit{data.speedLimit} {}
 
-	// Mirrors content/figures/1 for GameLogic unit tests without catalog I/O.
-	[[nodiscard]] static FigureDescription testDefault() {
-		utils::FigureData data;
-		data.id = 1;
-		data.name = "default";
-		data.hitboxWidth = 40.f;
-		data.hitboxHeight = 40.f;
-		data.acceleration = 600.f;
-		data.friction = 400.f;
-		data.speedLimit = 200.f;
-		return FigureDescription{data};
-	}
-
 	[[nodiscard]] common::ID getId() const {
 		return m_id;
 	}

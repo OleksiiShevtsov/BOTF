@@ -7,6 +7,7 @@
 #include "engine/game_sessions_pool.h"
 #include "engine/player.h"
 #include "logic/game_logic.h"
+#include "logic/figure_description.h"
 #include "logic/game_map.h"
 
 #include <cstdint>
@@ -30,6 +31,22 @@ namespace botf::test {
 		return std::nullopt;
 	}
 	return port;
+}
+
+// Mirrors content/figures/1 for GameLogic unit tests without catalog I/O.
+[[nodiscard]] inline const FigureDescription& testFigureDescription() {
+	static const FigureDescription description = [] {
+		utils::FigureData data;
+		data.id = 1;
+		data.name = "default";
+		data.hitboxWidth = 40.f;
+		data.hitboxHeight = 40.f;
+		data.acceleration = 600.f;
+		data.friction = 400.f;
+		data.speedLimit = 200.f;
+		return FigureDescription{data};
+	}();
+	return description;
 }
 
 [[nodiscard]] inline std::shared_ptr<BootstrapStorage> loadBootstrapStorage() {
@@ -110,7 +127,7 @@ inline void applyEntityInput(GameLogic& logic,
 // Allocate the lowest free entity id and spawn (logic unit tests; session uses seat.index).
 inline common::ID spawnFigure(GameLogic& logic, const common::Point at = {0.f, 0.f}) {
 	for (common::ID id = 0;; ++id) {
-		if (logic.spawnFigure(id, at)) {
+		if (logic.spawnFigure(id, at, testFigureDescription())) {
 			return id;
 		}
 	}

@@ -78,7 +78,7 @@ TEST(GameLogicBulletHit, OwnBulletDoesNotDamageShooter) {
 
 TEST(GameLogicBulletHit, PointInsideTargetAabbIsHit) {
 	const botf::common::Point center{50.f, 0.f};
-	const botf::ObjectHitbox box = botf::FigureDescription::testDefault().getHitbox();
+	const botf::ObjectHitbox box = botf::test::testFigureDescription().getHitbox();
 	EXPECT_TRUE(box.containsPoint(center, {50.f, 0.f}));
 	EXPECT_FALSE(box.containsPoint(center, {50.f, box.getHalfHeight() + 0.01f}));
 }

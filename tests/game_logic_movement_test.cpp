@@ -10,7 +10,7 @@
 namespace {
 
 constexpr float kDt = 1.0f / 20.0f;
-const float kSpeedLimit = botf::FigureDescription::testDefault().getSpeedLimit();
+const float kSpeedLimit = botf::test::testFigureDescription().getSpeedLimit();
 
 float speedOf(const botf::FigureObject& figure) {
 	const auto v = figure.getVelocity();

@@ -58,7 +58,7 @@ TEST(GameLogicFire, FireCooldownBlocksSecondShot) {
 
 TEST(GameLogicFire, MissingEntityCannotFire) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}, botf::test::testFigureDescription()));
 	botf::test::applyEntityInput(logic, 99, aimFire({50.f, 0.f}, true));
 	EXPECT_TRUE(logic.bullets().empty());
 }

@@ -1,3 +1,4 @@
+#include "helpers/test_env.h"
 #include "logic/figure_description.h"
 #include "logic/game_logic.h"
 #include "logic/hitbox.h"
@@ -7,7 +8,7 @@
 namespace {
 
 constexpr float kHalf = 20.f;  // figure 1 hitbox 40 → half-extent 20
-const botf::ObjectHitbox kDefaultBox = botf::FigureDescription::testDefault().getHitbox();
+const botf::ObjectHitbox kDefaultBox = botf::test::testFigureDescription().getHitbox();
 
 }  // namespace
 
@@ -67,7 +68,7 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 
 TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{100.f, 100.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{100.f, 100.f}, botf::test::testFigureDescription()));
 	ASSERT_EQ(logic.figures().size(), 1u);
 	EXPECT_EQ(logic.figures().front().getId(), 0u);
 

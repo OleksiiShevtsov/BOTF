@@ -8,7 +8,7 @@
 
 TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{10.f, 20.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{10.f, 20.f}, botf::test::testFigureDescription()));
 	ASSERT_EQ(logic.figures().size(), 1u);
 	EXPECT_EQ(logic.figures().front().getId(), 0u);
 	EXPECT_EQ(logic.figures().front().getHp(), botf::common::GlobalSettings::maxHp);
@@ -18,7 +18,7 @@ TEST(GameLogicHp, SpawnStartsAliveAtMaxHp) {
 
 TEST(GameLogicHp, DamageToZeroMarksDeadAndClamps) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{0.f, 0.f}, botf::test::testFigureDescription()));
 	const int maxHp = botf::common::GlobalSettings::maxHp;
 	const int damage = botf::common::GlobalSettings::bulletDamage;
 
