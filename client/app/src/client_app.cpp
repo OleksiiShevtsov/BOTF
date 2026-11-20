@@ -90,6 +90,7 @@ void botf::app::ClientApp::sendJoinSession() {
 		return;
 	}
 
+	// TODO: temporary — read figureTypeId from content/figures (card 54).
 	constexpr common::ID kDefaultFigureTypeId = 1;
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,

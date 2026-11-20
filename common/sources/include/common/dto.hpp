@@ -27,7 +27,7 @@ struct ClientConnectMessage {
 
 // Client → server: join / find GameSession. figureTypeId → content/figures/<id>.
 struct JoinSessionMessage {
-	ID figureTypeId{1};
+	ID figureTypeId{};
 };
 
 // Server → client: match may begin (client Waiting → Playing).

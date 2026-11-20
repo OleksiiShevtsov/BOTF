@@ -43,6 +43,7 @@ public:
 	[[nodiscard]] bool hasFreeSeats() const;
 
 	// Forming only. Idempotent if already seated. false if full / wrong phase.
+	// TODO: temporary — figureTypeId comes from the client until figure selection is designed.
 	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player, common::ID figureTypeId);
 
 	// Forming → Playing: pick map + spawn figures from BootstrapStorage.

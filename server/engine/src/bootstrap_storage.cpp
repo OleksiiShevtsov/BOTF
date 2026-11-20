@@ -1,9 +1,7 @@
 #include "engine/bootstrap_storage.h"
 
 bool botf::BootstrapStorage::load() {
-	const bool mapsOk = m_gameMapPool.load();
-	const bool figuresOk = m_figureDescriptionPool.load();
-	return mapsOk && figuresOk;
+	return m_gameMapPool.load() && m_figureDescriptionPool.load();
 }
 
 botf::GameMapPool& botf::BootstrapStorage::gameMapPool() {
