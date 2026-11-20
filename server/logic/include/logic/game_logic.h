@@ -21,7 +21,7 @@ public:
 	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
 	// description from FigureDescriptionPool.
 	[[nodiscard]] bool spawnFigure(common::ID entityId,
-								   common::Point at,
+								   common::Point spawnPoint,
 								   const FigureDescription& description);
 
 	// Destroy figure and its bullets. No-op if missing.

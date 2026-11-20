@@ -10,7 +10,7 @@ namespace botf {
 class FigureObject : public DynamicObject {
 public:
 	// Copies tuning from description into the live entity.
-	FigureObject(common::ID id, common::Point dot, const FigureDescription& description);
+	FigureObject(common::ID id, common::Point spawnPoint, const FigureDescription& description);
 
 	[[nodiscard]] common::Angle getAngle() const override;
 	[[nodiscard]] int inputDx() const;

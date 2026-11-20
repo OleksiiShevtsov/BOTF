@@ -28,9 +28,9 @@ void applyAxisFriction(float& speed, float friction, float dt) {
 }  // namespace
 
 botf::FigureObject::FigureObject(const common::ID id,
-								 common::Point dot,
+								 common::Point spawnPoint,
 								 const FigureDescription& description)
-	: DynamicObject{id, dot},
+	: DynamicObject{id, spawnPoint},
 	  m_angle{0.0f},
 	  m_speedLimit{description.getSpeedLimit()},
 	  m_acceleration{description.getAcceleration()},

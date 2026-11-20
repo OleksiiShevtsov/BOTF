@@ -12,7 +12,7 @@ botf::GameSession::GameSession(const common::ID id) : m_id{id} {
 	const std::size_t capacity =
 		static_cast<std::size_t>(common::GlobalSettings::SessionMode::Default);
 	m_seats.reserve(capacity);
-	for (common::IDX i = 0; i < static_cast<common::IDX>(capacity); ++i) {
+	for (common::IDX i {}; i < static_cast<common::IDX>(capacity); ++i) {
 		m_seats.push_back(std::make_shared<Seat>(i));
 	}
 }
@@ -124,9 +124,10 @@ bool botf::GameSession::addPlayer(std::shared_ptr<Player> player, const common::
 	return true;
 }
 
-bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) {
-	if (!storage) {
-		botf::log::error("[server] beginPlaying refused: session {} storage is null", m_id);
+bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> bootstrapStorage) {
+	if (!bootstrapStorage) {
+		botf::log::error(
+			"[server] beginPlaying refused: session {} bootstrapStorage is null", m_id);
 		return false;
 	}
 	if (m_sessionState != SessionState::Forming) {
@@ -143,26 +144,28 @@ bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) 
 		botf::log::error("[server] beginPlaying: session {} already has figures", m_id);
 		return false;
 	}
-	if (storage->gameMapPool().empty() || storage->figureDescriptionPool().empty()) {
+	if (bootstrapStorage->gameMapPool().empty() ||
+		bootstrapStorage->figureDescriptionPool().empty()) {
 		botf::log::error("[server] beginPlaying: session {} BootstrapStorage catalogs empty", m_id);
 		return false;
 	}
 
 	// Resolve figure templates before mutating seats / map.
-	std::vector<std::shared_ptr<const FigureDescription>> figureDescs;
-	figureDescs.reserve(m_seats.size());
+	std::vector<std::shared_ptr<const FigureDescription>> figureDescriptions;
+	figureDescriptions.reserve(m_seats.size());
 	for (const std::shared_ptr<Seat>& seat : m_seats) {
-		const auto figureDesc =
-			storage->figureDescriptionPool().getById(seat->getFigureTypeId());
-		if (!figureDesc) {
+		const auto figureDescription =
+			bootstrapStorage->figureDescriptionPool().getById(seat->getFigureTypeId());
+		if (!figureDescription) {
 			botf::log::error("[server] beginPlaying: session {} unknown figure type {}", m_id,
 							 seat->getFigureTypeId());
 			return false;
 		}
-		figureDescs.push_back(figureDesc);
+		figureDescriptions.push_back(figureDescription);
 	}
 
-	const std::shared_ptr<const GameMap> gameMap = storage->gameMapPool().pickRandomGameMap();
+	const std::shared_ptr<const GameMap> gameMap =
+		bootstrapStorage->gameMapPool().pickRandomGameMap();
 	if (!gameMap || gameMap->getSpawns().size() < seatCapacity()) {
 		botf::log::error(
 			"[server] beginPlaying: session {} map spawns={} < capacity={}", m_id,
@@ -177,7 +180,7 @@ bool botf::GameSession::beginPlaying(std::shared_ptr<BootstrapStorage> storage) 
 
 	for (std::size_t i = 0; i < m_seats.size(); ++i) {
 		const common::ID entityId = static_cast<common::ID>(spawnSlots[i]);
-		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]], *figureDescs[i])) {
+		if (!m_gameLogic.spawnFigure(entityId, spawns[spawnSlots[i]], *figureDescriptions[i])) {
 			botf::log::error(
 				"[server] beginPlaying: session {} failed to spawn figure id {}", m_id, entityId);
 			for (std::size_t j = 0; j < i; ++j) {

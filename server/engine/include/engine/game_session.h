@@ -47,7 +47,7 @@ public:
 	[[nodiscard]] bool addPlayer(std::shared_ptr<Player> player, common::ID figureTypeId);
 
 	// Forming → Playing: pick map + spawn figures from BootstrapStorage.
-	[[nodiscard]] bool beginPlaying(std::shared_ptr<BootstrapStorage> storage);
+	[[nodiscard]] bool beginPlaying(std::shared_ptr<BootstrapStorage> bootstrapStorage);
 
 	void removePlayer(const common::ID clientId);
 
