@@ -10,8 +10,8 @@
 #   <parent>/WorkTraining/Junior/BattleOfTheFlatland/ → ../../../LIB
 #
 # Overrides:
-#   -DBOTF_LIB_ROOT=...
-#   env BOTF_LIB_ROOT
+#   -DLIB_ROOT=...
+#   env LIB_ROOT
 #   env CMAKE_BUILDS_ROOT  (same idea as CrashCourse presets)
 
 function(_botf_dir_looks_like_lib dir)
@@ -24,11 +24,11 @@ function(_botf_dir_looks_like_lib dir)
 	endif()
 endfunction()
 
-if(NOT BOTF_LIB_ROOT AND DEFINED ENV{BOTF_LIB_ROOT} AND NOT "$ENV{BOTF_LIB_ROOT}" STREQUAL "")
-	file(TO_CMAKE_PATH "$ENV{BOTF_LIB_ROOT}" BOTF_LIB_ROOT)
+if(NOT LIB_ROOT AND DEFINED ENV{LIB_ROOT} AND NOT "$ENV{LIB_ROOT}" STREQUAL "")
+	file(TO_CMAKE_PATH "$ENV{LIB_ROOT}" LIB_ROOT)
 endif()
 
-if(NOT BOTF_LIB_ROOT)
+if(NOT LIB_ROOT)
 	get_filename_component(_botf_lib_sibling "${CMAKE_SOURCE_DIR}/../LIB" ABSOLUTE)
 	get_filename_component(_botf_lib_legacy "${CMAKE_SOURCE_DIR}/../../../LIB" ABSOLUTE)
 
@@ -45,7 +45,7 @@ if(NOT BOTF_LIB_ROOT)
 		endif()
 	endif()
 
-	set(BOTF_LIB_ROOT "${_botf_lib_resolved}" CACHE PATH
+	set(LIB_ROOT "${_botf_lib_resolved}" CACHE PATH
 		"Third-party libraries directory (sibling of BOTF)")
 endif()
 
@@ -56,7 +56,7 @@ if(NOT BOTF_BUILD_ROOT)
 	else()
 		get_filename_component(_botf_build_sibling "${CMAKE_SOURCE_DIR}/../BUILD" ABSOLUTE)
 		get_filename_component(_botf_build_legacy "${CMAKE_SOURCE_DIR}/../../../BUILD" ABSOLUTE)
-		get_filename_component(_botf_lib_parent "${BOTF_LIB_ROOT}/.." ABSOLUTE)
+		get_filename_component(_botf_lib_parent "${LIB_ROOT}/.." ABSOLUTE)
 		set(_botf_build_beside_lib "${_botf_lib_parent}/BUILD")
 
 		if(EXISTS "${_botf_build_beside_lib}")
@@ -74,6 +74,6 @@ if(NOT BOTF_BUILD_ROOT)
 		"Out-of-tree build root (sibling of LIB / BOTF)")
 endif()
 
-message(STATUS "[botf] BOTF_LIB_ROOT=${BOTF_LIB_ROOT}")
+message(STATUS "[botf] LIB_ROOT=${LIB_ROOT}")
 message(STATUS "[botf] BOTF_BUILD_ROOT=${BOTF_BUILD_ROOT}  (from CMAKE_BUILDS_ROOT or sibling BUILD)")
 message(STATUS "[botf] Prefer CMake preset debug/release: binaryDir = \$env{CMAKE_BUILDS_ROOT}/\${sourceDirName}/...")

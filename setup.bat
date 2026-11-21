@@ -2,15 +2,15 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 rem Resolve LIB the same way as cmake/BotfLibRoot.cmake:
-rem   1) BOTF_LIB_ROOT env
+rem   1) LIB_ROOT env
 rem   2) <parent>/LIB  (sibling of this BOTF repo — canonical)
 rem   3) ../../../LIB  (legacy WorkTraining nesting)
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-if defined BOTF_LIB_ROOT (
-  set "LIB_DIR=%BOTF_LIB_ROOT%"
+if defined LIB_ROOT (
+  set "LIB_DIR=%LIB_ROOT%"
   goto :lib_ready
 )
 

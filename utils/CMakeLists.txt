@@ -2,11 +2,11 @@ project(utils)
 
 # Content I/O (disk / JSON). nlohmann is PRIVATE — callers use utils API only.
 
-if(NOT BOTF_LIB_ROOT)
+if(NOT LIB_ROOT)
 	include("${CMAKE_SOURCE_DIR}/cmake/BotfLibRoot.cmake")
 endif()
 
-set(_botf_nlohmann_src "${BOTF_LIB_ROOT}/nlohmann_json")
+set(_botf_nlohmann_src "${LIB_ROOT}/nlohmann_json")
 if(NOT TARGET nlohmann_json::nlohmann_json)
 	if(EXISTS "${_botf_nlohmann_src}/CMakeLists.txt")
 		message(STATUS "[botf] Using nlohmann_json from ${_botf_nlohmann_src}")

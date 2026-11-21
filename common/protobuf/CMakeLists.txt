@@ -3,7 +3,7 @@ project(proto_messages)
 # Protobuf codegen for length-prefixed game packets over SFML TCP.
 #
 # Resolution order:
-#   1) ${BOTF_LIB_ROOT}/protobuf  (Windows / setup.bat layout) — build from source
+#   1) ${LIB_ROOT}/protobuf  (Windows / setup.bat layout) — build from source
 #   2) find_package(Protobuf)     (system / vcpkg install)
 #
 # When building from LIB: tests/examples/install OFF so we do not clash with
@@ -11,13 +11,13 @@ project(proto_messages)
 
 set(BOTF_PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/messages)
 
-if(NOT BOTF_LIB_ROOT)
+if(NOT LIB_ROOT)
     include("${CMAKE_SOURCE_DIR}/cmake/BotfLibRoot.cmake")
 endif()
 
 set(BOTF_PROTOBUF_FROM_SOURCE FALSE)
 
-set(_botf_protobuf_src "${BOTF_LIB_ROOT}/protobuf")
+set(_botf_protobuf_src "${LIB_ROOT}/protobuf")
 if(EXISTS "${_botf_protobuf_src}/CMakeLists.txt")
     message(STATUS "[botf] Using protobuf from ${_botf_protobuf_src}")
 

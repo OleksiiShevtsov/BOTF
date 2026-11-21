@@ -20,11 +20,11 @@ target_include_directories(${PROJECT_NAME}
 
 # spdlog: prefer LIB/spdlog (setup.bat / setup.sh). System package only as Linux fallback.
 if(NOT TARGET spdlog::spdlog)
-	if(NOT BOTF_LIB_ROOT)
+	if(NOT LIB_ROOT)
 		include("${CMAKE_SOURCE_DIR}/cmake/BotfLibRoot.cmake")
 	endif()
 
-	set(_botf_spdlog_src "${BOTF_LIB_ROOT}/spdlog")
+	set(_botf_spdlog_src "${LIB_ROOT}/spdlog")
 	if(EXISTS "${_botf_spdlog_src}/CMakeLists.txt")
 		message(STATUS "[botf] Using spdlog from ${_botf_spdlog_src}")
 		set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
@@ -42,7 +42,7 @@ if(NOT TARGET spdlog::spdlog)
 				"[botf] spdlog not found.\n"
 				"  Expected: ${_botf_spdlog_src}\n"
 				"  Fix: run setup.bat (or setup.sh) from BattleOfTheFlatland — it clones LIB/spdlog if missing.\n"
-				"  Or set BOTF_LIB_ROOT to your LIB folder that contains spdlog/")
+				"  Or set LIB_ROOT to your LIB folder that contains spdlog/")
 		endif()
 		message(STATUS "[botf] Using system spdlog")
 	endif()

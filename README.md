@@ -21,7 +21,7 @@
 
 Опционально:
 
-- `BOTF_LIB_ROOT` → папка `LIB` (если CMake/setup не находят её сами)
+- `LIB_ROOT` → папка `LIB` (если CMake/setup не находят её сами)
 - `BOTF_CONTENT_ROOT` → папка `content/` (карты/ассеты; иначе CMake default = `<repo>/content`)
 
 ## CMakePresets
@@ -52,7 +52,7 @@
 setup.bat
 ```
 
-Ищет `LIB` рядом с `BOTF` (или `BOTF_LIB_ROOT`).  
+Ищет `LIB` рядом с `BOTF` (или `LIB_ROOT`).  
 Если SFML / googletest / protobuf / spdlog / nlohmann_json уже есть — **не клонирует**.  
 Protobuf: тег `v21.12` в `%LIB%\protobuf` (битую папку без `CMakeLists.txt` переклонирует).  
 CMake на Windows/LIB собирает protobuf из исходников (`protobuf_BUILD_TESTS=OFF`), без системного `find_package`.  

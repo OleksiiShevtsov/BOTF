@@ -14,8 +14,8 @@ lib_looks_ok() {
   [[ -d "${d}/SFML" || -d "${d}/sfml" || -d "${d}/googletest" || -d "${d}/protobuf" || -d "${d}/spdlog" || -d "${d}/nlohmann_json" || -f "${d}/README.md" ]]
 }
 
-if [[ -n "${BOTF_LIB_ROOT:-}" ]]; then
-  LIB_DIR="${BOTF_LIB_ROOT}"
+if [[ -n "${LIB_ROOT:-}" ]]; then
+  LIB_DIR="${LIB_ROOT}"
 else
   # Sibling of this repo (canonical). Legacy WorkTraining nesting as fallback.
   LIB_SIBLING="$(cd "${SCRIPT_DIR}/.." && pwd)/LIB"
