@@ -30,8 +30,8 @@ else
 fi
 
 PARENT_DIR="$(cd "${LIB_DIR}/.." && pwd)"
-if [[ -n "${CMAKE_BUILDS_ROOT:-}" ]]; then
-  BUILD_DIR="${CMAKE_BUILDS_ROOT}"
+if [[ -n "${BUILDS_ROOT:-}" ]]; then
+  BUILD_DIR="${BUILDS_ROOT}"
 else
   BUILD_DIR="${PARENT_DIR}/BUILD"
 fi
@@ -105,9 +105,9 @@ echo "[botf] Done."
 echo "[botf] LIB=${LIB_DIR}"
 echo "[botf] protobuf=${LIB_DIR}/protobuf  (tag ${PROTOBUF_TAG})"
 echo "[botf] spdlog=${LIB_DIR}/spdlog"
-if [[ -n "${CMAKE_BUILDS_ROOT:-}" ]]; then
-  echo "[botf] CMAKE_BUILDS_ROOT=${CMAKE_BUILDS_ROOT}"
+if [[ -n "${BUILDS_ROOT:-}" ]]; then
+  echo "[botf] BUILDS_ROOT=${BUILDS_ROOT}"
   echo "[botf] Use preset: cmake --preset debug"
 else
-  echo "[botf] WARNING: CMAKE_BUILDS_ROOT is not set — set it to your BUILD folder."
+  echo "[botf] WARNING: BUILDS_ROOT is not set — set it to your BUILD folder."
 fi

@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include("${CMAKE_SOURCE_DIR}/cmake/BotfLibRoot.cmake")
 
 # Guard: binary dir must not be inside the source tree.
-# Use CMakePresets.json → $env{CMAKE_BUILDS_ROOT}/${sourceDirName}/debug|release
+# Use CMakePresets.json → $env{BUILDS_ROOT}/${sourceDirName}/debug|release
 get_filename_component(_botf_src "${CMAKE_SOURCE_DIR}" ABSOLUTE)
 get_filename_component(_botf_bin "${CMAKE_BINARY_DIR}" ABSOLUTE)
 string(FIND "${_botf_bin}" "${_botf_src}/" _botf_bin_inside)
@@ -15,7 +15,7 @@ if(_botf_bin_inside EQUAL 0)
     message(WARNING
         "[botf] Build directory is inside the project:\n"
         "  ${CMAKE_BINARY_DIR}\n"
-        "Use preset debug/release (CMAKE_BUILDS_ROOT), not an in-tree build/ folder.")
+        "Use preset debug/release (BUILDS_ROOT), not an in-tree build/ folder.")
 endif()
 
 function(botf_add_lib_subdir dep_name)

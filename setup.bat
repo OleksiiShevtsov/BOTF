@@ -35,7 +35,7 @@ set "LIB_DIR=%LIB_SIBLING%"
 :lib_ready
 for %%I in ("%LIB_DIR%\..") do set "PARENT_DIR=%%~fI"
 set "BUILD_DIR=%PARENT_DIR%\BUILD"
-if defined CMAKE_BUILDS_ROOT set "BUILD_DIR=%CMAKE_BUILDS_ROOT%"
+if defined BUILDS_ROOT set "BUILD_DIR=%BUILDS_ROOT%"
 
 rem Pin: matches typical system protobuf 3.21.x; avoids bleeding-edge main + heavy deps.
 set "PROTOBUF_TAG=v21.12"
@@ -68,11 +68,11 @@ echo [botf] Done.
 echo [botf] LIB=%LIB_DIR%
 echo [botf] protobuf=%LIB_DIR%\protobuf  (tag %PROTOBUF_TAG%)
 echo [botf] spdlog=%LIB_DIR%\spdlog
-if defined CMAKE_BUILDS_ROOT (
-  echo [botf] CMAKE_BUILDS_ROOT=%CMAKE_BUILDS_ROOT%
+if defined BUILDS_ROOT (
+  echo [botf] BUILDS_ROOT=%BUILDS_ROOT%
   echo [botf] Use preset: cmake --preset debug
 ) else (
-  echo [botf] WARNING: CMAKE_BUILDS_ROOT is not set — set it to your BUILD folder.
+  echo [botf] WARNING: BUILDS_ROOT is not set — set it to your BUILD folder.
 )
 endlocal
 exit /b 0

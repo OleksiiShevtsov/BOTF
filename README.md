@@ -10,14 +10,14 @@
 <parent>/
 ├── BOTF/     ← этот репозиторий (исходники)
 ├── LIB/      ← SFML, googletest, protobuf, spdlog, nlohmann_json
-└── BUILD/    ← CMAKE_BUILDS_ROOT указывает сюда
+└── BUILD/    ← BUILDS_ROOT указывает сюда
 ```
 
 ## Окружение
 
 Глобально в системе (как в CrashCourse):
 
-- `CMAKE_BUILDS_ROOT` → папка `BUILD` (рядом с `LIB` и `BOTF`)
+- `BUILDS_ROOT` → папка `BUILD` (рядом с `LIB` и `BOTF`)
 
 Опционально:
 
@@ -34,11 +34,11 @@
   "configurePresets": [
     {
       "name": "debug",
-      "binaryDir": "$env{CMAKE_BUILDS_ROOT}/${sourceDirName}/debug"
+      "binaryDir": "$env{BUILDS_ROOT}/${sourceDirName}/debug"
     },
     {
       "name": "release",
-      "binaryDir": "$env{CMAKE_BUILDS_ROOT}/${sourceDirName}/release"
+      "binaryDir": "$env{BUILDS_ROOT}/${sourceDirName}/release"
     }
   ]
 }
@@ -107,7 +107,7 @@ cmake --preset debug
 cmake --build --preset debug
 ```
 
-Бинарники: `botf_server`, `botf_client` в `%CMAKE_BUILDS_ROOT%\BOTF\debug` (или `release`), если папка репозитория называется `BOTF`.
+Бинарники: `botf_server`, `botf_client` в `%BUILDS_ROOT%\BOTF\debug` (или `release`), если папка репозитория называется `BOTF`.
 
 ## Транспорт
 
@@ -178,18 +178,18 @@ friction with zero-cross (no reverse). Constants `playerAcceleration` / `playerF
 
 ```bat
 cmake --build --preset debug --target tests
-ctest --test-dir %CMAKE_BUILDS_ROOT%\BOTF\debug --output-on-failure
+ctest --test-dir %BUILDS_ROOT%\BOTF\debug --output-on-failure
 ```
 
 или напрямую:
 
 ```bat
-%CMAKE_BUILDS_ROOT%\BOTF\debug\tests\tests.exe
+%BUILDS_ROOT%\BOTF\debug\tests\tests.exe
 ```
 
 Linux:
 
 ```bash
-cmake --build "$CMAKE_BUILDS_ROOT/BOTF/debug" --target tests
-ctest --test-dir "$CMAKE_BUILDS_ROOT/BOTF/debug" --output-on-failure
+cmake --build "$BUILDS_ROOT/BOTF/debug" --target tests
+ctest --test-dir "$BUILDS_ROOT/BOTF/debug" --output-on-failure
 ```

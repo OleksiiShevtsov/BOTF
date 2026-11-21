@@ -12,7 +12,7 @@
 # Overrides:
 #   -DLIB_ROOT=...
 #   env LIB_ROOT
-#   env CMAKE_BUILDS_ROOT  (same idea as CrashCourse presets)
+#   env BUILDS_ROOT  (same idea as CrashCourse presets)
 
 function(_botf_dir_looks_like_lib dir)
 	if(EXISTS "${dir}/SFML" OR EXISTS "${dir}/sfml" OR EXISTS "${dir}/README.md"
@@ -51,8 +51,8 @@ endif()
 
 # Recommended out-of-tree build root (do not build inside the project folder).
 if(NOT BOTF_BUILD_ROOT)
-	if(DEFINED ENV{CMAKE_BUILDS_ROOT} AND NOT "$ENV{CMAKE_BUILDS_ROOT}" STREQUAL "")
-		file(TO_CMAKE_PATH "$ENV{CMAKE_BUILDS_ROOT}" _botf_build_resolved)
+	if(DEFINED ENV{BUILDS_ROOT} AND NOT "$ENV{BUILDS_ROOT}" STREQUAL "")
+		file(TO_CMAKE_PATH "$ENV{BUILDS_ROOT}" _botf_build_resolved)
 	else()
 		get_filename_component(_botf_build_sibling "${CMAKE_SOURCE_DIR}/../BUILD" ABSOLUTE)
 		get_filename_component(_botf_build_legacy "${CMAKE_SOURCE_DIR}/../../../BUILD" ABSOLUTE)
@@ -75,5 +75,5 @@ if(NOT BOTF_BUILD_ROOT)
 endif()
 
 message(STATUS "[botf] LIB_ROOT=${LIB_ROOT}")
-message(STATUS "[botf] BOTF_BUILD_ROOT=${BOTF_BUILD_ROOT}  (from CMAKE_BUILDS_ROOT or sibling BUILD)")
-message(STATUS "[botf] Prefer CMake preset debug/release: binaryDir = \$env{CMAKE_BUILDS_ROOT}/\${sourceDirName}/...")
+message(STATUS "[botf] BOTF_BUILD_ROOT=${BOTF_BUILD_ROOT}  (from BUILDS_ROOT or sibling BUILD)")
+message(STATUS "[botf] Prefer CMake preset debug/release: binaryDir = \$env{BUILDS_ROOT}/\${sourceDirName}/...")
