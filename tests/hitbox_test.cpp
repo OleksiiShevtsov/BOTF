@@ -1,4 +1,5 @@
-#include "common/global_settings.hpp"
+#include "helpers/test_env.h"
+#include "logic/figure_description.h"
 #include "logic/game_logic.h"
 #include "logic/hitbox.h"
 
@@ -6,14 +7,14 @@
 
 namespace {
 
-constexpr float kHalf = 20.f;  // hitboxSize 40 → half-extent 20
-const botf::ObjectHitbox kDefaultBox = botf::ObjectHitbox::installDefault();
+constexpr float kHalf = 20.f;  // figure 1 hitbox 40 → half-extent 20
+const botf::ObjectHitbox kDefaultBox = botf::test::testFigureDescription().getHitbox();
 
 }  // namespace
 
-TEST(Hitbox, DefaultDescMatchesGlobalSettings) {
-	EXPECT_FLOAT_EQ(kDefaultBox.getWidth(), botf::common::GlobalSettings::hitboxSize);
-	EXPECT_FLOAT_EQ(kDefaultBox.getHeight(), botf::common::GlobalSettings::hitboxSize);
+TEST(Hitbox, DefaultDescMatchesFigureOne) {
+	EXPECT_FLOAT_EQ(kDefaultBox.getWidth(), 40.f);
+	EXPECT_FLOAT_EQ(kDefaultBox.getHeight(), 40.f);
 	EXPECT_FLOAT_EQ(kDefaultBox.getHalfWidth(), kHalf);
 	EXPECT_FLOAT_EQ(kDefaultBox.getHalfHeight(), kHalf);
 }
@@ -67,13 +68,13 @@ TEST(Hitbox, DegenerateSegmentIsPointTest) {
 
 TEST(Hitbox, FigureSpawnCarriesDefaultHitbox) {
 	botf::GameLogic logic;
-	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{100.f, 100.f}));
+	ASSERT_TRUE(logic.spawnFigure(0, botf::common::Point{100.f, 100.f}, botf::test::testFigureDescription()));
 	ASSERT_EQ(logic.figures().size(), 1u);
 	EXPECT_EQ(logic.figures().front().getId(), 0u);
 
 	const auto& figure = logic.figures().front();
-	EXPECT_FLOAT_EQ(figure.getHitbox().getWidth(), botf::common::GlobalSettings::hitboxSize);
-	EXPECT_FLOAT_EQ(figure.getHitbox().getHeight(), botf::common::GlobalSettings::hitboxSize);
+	EXPECT_FLOAT_EQ(figure.getHitbox().getWidth(), 40.f);
+	EXPECT_FLOAT_EQ(figure.getHitbox().getHeight(), 40.f);
 
 	const botf::common::Point centerHitbox = figure.getPosition();
 	EXPECT_TRUE(figure.getHitbox().containsPoint(centerHitbox, {100.f, 100.f}));

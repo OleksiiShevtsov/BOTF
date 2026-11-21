@@ -2,6 +2,7 @@
 
 #include "common/types.hpp"
 #include "logic/bullet_object.h"
+#include "logic/figure_description.h"
 #include "logic/figure_object.h"
 
 #include <vector>
@@ -18,8 +19,10 @@ public:
 	GameLogic& operator=(const GameLogic&) = delete;
 
 	// Spawn a controllable figure with an explicit id (seat.index). false if id taken.
-	// Speed limit from GlobalSettings stub until character catalog / DB.
-	[[nodiscard]] bool spawnFigure(common::ID entityId, common::Point at);
+	// description from FigureDescriptionPool.
+	[[nodiscard]] bool spawnFigure(common::ID entityId,
+								   common::Point spawnPoint,
+								   const FigureDescription& description);
 
 	// Destroy figure and its bullets. No-op if missing.
 	void destroyFigure(common::ID entityId);

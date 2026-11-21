@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common/types.hpp"
-#include "engine/game_map_pool.h"
 #include "engine/game_session.h"
 #include "engine/player.h"
 
@@ -15,13 +14,13 @@ namespace botf {
 // Client → session is resolved via seats (Player id), not a side index.
 class GameSessionsPool {
 public:
-	explicit GameSessionsPool(GameMapPool& gameMapPool);
+	GameSessionsPool() = default;
 
 	GameSessionsPool(const GameSessionsPool&) = delete;
 	GameSessionsPool& operator=(const GameSessionsPool&) = delete;
 
-	// JoinSession: first Forming with free seats, else create (map picked now).
-	common::ID attachPlayerToSession(std::shared_ptr<Player> player);
+	// JoinSession: first Forming with free seats, else create (map assigned at beginPlaying).
+	common::ID attachPlayerToSession(std::shared_ptr<Player> player, common::ID figureTypeId);
 
 	[[nodiscard]] GameSession* findGameSessionByClientId(const common::ID clientId);
 	[[nodiscard]] const GameSession* findGameSessionByClientId(const common::ID clientId) const;
@@ -42,7 +41,6 @@ public:
 private:
 	GameSession& createSession();
 
-	GameMapPool& m_gameMapPool;
 	std::vector<std::unique_ptr<GameSession>> m_sessions;
 	common::ID m_nextId{1};
 };

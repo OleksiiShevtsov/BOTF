@@ -3,8 +3,6 @@
 #include "utils/map_loader.hpp"
 #include "utils/random.hpp"
 
-#include <stdexcept>
-
 void botf::GameMapPool::clear() {
 	m_gameMaps.clear();
 }
@@ -14,8 +12,8 @@ bool botf::GameMapPool::load() {
 	for (const common::ID mapId : utils::listMapIds()) {
 		const auto data = utils::loadMap(mapId);
 		if (!data) {
-			throw std::runtime_error("GameMapPool::load: failed to load map id " +
-									 std::to_string(mapId));
+			clear();
+			return false;
 		}
 		m_gameMaps.push_back(std::make_shared<const GameMap>(*data));
 	}
@@ -32,7 +30,7 @@ std::size_t botf::GameMapPool::size() const {
 
 std::shared_ptr<const botf::GameMap> botf::GameMapPool::pickRandomGameMap() const {
 	if (m_gameMaps.empty()) {
-		throw std::runtime_error("GameMapPool::pickRandomGameMap: pool is empty (call load)");
+		return nullptr;
 	}
 	return m_gameMaps[utils::randomIndex(m_gameMaps.size())];
 }
@@ -44,6 +42,5 @@ std::shared_ptr<const botf::GameMap> botf::GameMapPool::getGameMapById(
 			return gameMap;
 		}
 	}
-	throw std::runtime_error("GameMapPool::getGameMapById: unknown map id " +
-							 std::to_string(mapId));
+	return nullptr;
 }

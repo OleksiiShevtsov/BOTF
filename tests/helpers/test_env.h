@@ -1,11 +1,13 @@
 #pragma once
 
 #include "common/dto.hpp"
+#include "engine/bootstrap_storage.h"
 #include "engine/game_map_pool.h"
 #include "engine/game_session.h"
 #include "engine/game_sessions_pool.h"
 #include "engine/player.h"
 #include "logic/game_logic.h"
+#include "logic/figure_description.h"
 #include "logic/game_map.h"
 
 #include <cstdint>
@@ -31,32 +33,73 @@ namespace botf::test {
 	return port;
 }
 
-[[nodiscard]] inline std::shared_ptr<const GameMap> loadSharedGameMap(
-	const common::ID mapId = 1) {
-	GameMapPool mapPool;
-	if (!mapPool.load()) {
+// Mirrors content/figures/1 for GameLogic unit tests without catalog I/O.
+[[nodiscard]] inline const FigureDescription& testFigureDescription() {
+	static const FigureDescription description = [] {
+		utils::FigureData data;
+		data.id = 1;
+		data.name = "default";
+		data.hitboxWidth = 40.f;
+		data.hitboxHeight = 40.f;
+		data.acceleration = 600.f;
+		data.friction = 400.f;
+		data.speedLimit = 200.f;
+		return FigureDescription{data};
+	}();
+	return description;
+}
+
+[[nodiscard]] inline std::shared_ptr<BootstrapStorage> loadBootstrapStorage() {
+	auto storage = std::make_shared<BootstrapStorage>();
+	if (!storage->load()) {
 		return nullptr;
 	}
-	return mapPool.getGameMapById(mapId);
+	return storage;
+}
+
+[[nodiscard]] inline std::shared_ptr<const GameMap> loadSharedGameMap(
+	const common::ID mapId = 1) {
+	const auto storage = loadBootstrapStorage();
+	if (!storage) {
+		return nullptr;
+	}
+	return storage->gameMapPool().getGameMapById(mapId);
 }
 
 struct TestSession {
-	explicit TestSession(const common::ID sessionId = 1, const common::ID mapId = 1)
-		: session{sessionId, loadSharedGameMap(mapId)} {}
+	explicit TestSession(const common::ID sessionId = 1)
+		: storage{loadBootstrapStorage()}, session{sessionId} {
+		if (!storage) {
+			throw std::runtime_error("TestSession: BootstrapStorage load failed");
+		}
+	}
 
+	[[nodiscard]] bool beginPlaying() {
+		return session.beginPlaying(storage);
+	}
+
+	std::shared_ptr<BootstrapStorage> storage;
 	GameSession session;
 };
 
 struct TestSessionPool {
-	TestSessionPool() : pool{mapPool} {
-		if (!mapPool.load()) {
-			throw std::runtime_error("TestSessionPool: no maps in content/maps");
+	TestSessionPool() : storage{loadBootstrapStorage()} {
+		if (!storage) {
+			throw std::runtime_error("TestSessionPool: BootstrapStorage load failed");
 		}
 	}
 
-	common::ID joinClient(const common::ID clientId) {
+	common::ID joinClient(const common::ID clientId, const common::ID figureTypeId = 1) {
 		auto player = std::make_shared<Player>(clientId);
-		return pool.attachPlayerToSession(std::move(player));
+		return pool.attachPlayerToSession(std::move(player), figureTypeId);
+	}
+
+	[[nodiscard]] bool beginPlaying(const common::ID sessionId) {
+		GameSession* gameSession = sessionById(sessionId);
+		if (!gameSession) {
+			return false;
+		}
+		return gameSession->beginPlaying(storage);
 	}
 
 	[[nodiscard]] GameSession* sessionById(const common::ID sessionId) {
@@ -67,7 +110,7 @@ struct TestSessionPool {
 		return pool.findGameSessionByClientId(clientId);
 	}
 
-	GameMapPool mapPool;
+	std::shared_ptr<BootstrapStorage> storage;
 	GameSessionsPool pool;
 };
 
@@ -84,7 +127,7 @@ inline void applyEntityInput(GameLogic& logic,
 // Allocate the lowest free entity id and spawn (logic unit tests; session uses seat.index).
 inline common::ID spawnFigure(GameLogic& logic, const common::Point at = {0.f, 0.f}) {
 	for (common::ID id = 0;; ++id) {
-		if (logic.spawnFigure(id, at)) {
+		if (logic.spawnFigure(id, at, testFigureDescription())) {
 			return id;
 		}
 	}

@@ -28,6 +28,7 @@ add_library(${PROJECT_NAME} STATIC
 	src/path.cpp
 	src/json_file.cpp
 	src/map_loader.cpp
+	src/figure_loader.cpp
 	src/random.cpp
 )
 

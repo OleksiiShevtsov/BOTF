@@ -15,8 +15,10 @@ message ClientConnect {
 }
 
 // Client → server: request to join / find a GameSession (card 45).
-// Empty payload for now; server handling + map_id → card 47.
-message JoinSession {}
+// figure_type_id selects content/figures/<id> template for this seat.
+message JoinSession {
+  int64 figure_type_id = 1;
+}
 
 // Server → client: match may begin (client Waiting → Playing).
 // object_id = bound entity id for the recipient (seat.index; 0 is valid).

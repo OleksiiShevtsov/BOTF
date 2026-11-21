@@ -39,3 +39,13 @@ std::filesystem::path botf::utils::mapJsonPath(const std::filesystem::path& root
 											   const std::uint32_t mapId) {
 	return mapDir(root, mapId) / "map.json";
 }
+
+std::filesystem::path botf::utils::figureDir(const std::filesystem::path& root,
+											 const std::uint32_t figureId) {
+	return root / "figures" / std::to_string(figureId);
+}
+
+std::filesystem::path botf::utils::figureJsonPath(const std::filesystem::path& root,
+												  const std::uint32_t figureId) {
+	return figureDir(root, figureId) / "figure.json";
+}

@@ -90,13 +90,15 @@ void botf::app::ClientApp::sendJoinSession() {
 		return;
 	}
 
+	// TODO: temporary — read figureTypeId from content/figures (card 54).
+	constexpr common::ID kDefaultFigureTypeId = 1;
 	m_outbound.push(net::OutboundNotification{
 		std::nullopt,
-		protocol::encodeJoinSession(common::JoinSessionMessage{}, m_sequence),
+		protocol::encodeJoinSession(common::JoinSessionMessage{kDefaultFigureTypeId}, m_sequence),
 	});
 	++m_sequence;
 	m_joinSessionSent = true;
-	botf::log::info("[client] JoinSession sent");
+	botf::log::info("[client] JoinSession sent (figureTypeId={})", kDefaultFigureTypeId);
 }
 
 void botf::app::ClientApp::onStartGamePressed() {

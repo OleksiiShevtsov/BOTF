@@ -30,9 +30,13 @@ public:
 	void setPlayer(std::shared_ptr<Player> player);
 	void clearPlayer();
 
+	[[nodiscard]] common::ID getFigureTypeId() const;
+	void setFigureTypeId(common::ID figureTypeId);
+
 private:
 	common::IDX m_index{};
 	std::shared_ptr<Player> m_player{};
+	common::ID m_figureTypeId{1};
 };
 
 }  // namespace botf
